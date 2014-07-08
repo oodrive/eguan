@@ -1,0 +1,77 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.eguan</groupId>
+        <artifactId>rest</artifactId>
+        <version>0.6-SNAPSHOT</version>
+    </parent>
+    <artifactId>rest-it</artifactId>
+    <packaging>nar</packaging>
+    <name>REST integration tests</name>
+
+    <properties>
+        <!-- skip tests due to nar dependency in vold -->
+        <skipTests>true</skipTests>
+    </properties>
+
+    <build>
+        <defaultGoal>install</defaultGoal>
+        <plugins>
+            <plugin>
+                <artifactId>maven-nar-plugin</artifactId>
+                <configuration>
+                    <!-- Tests: do not rerun JNI unit tests during the nar-integration-test goal -->
+                    <skipNarTests>true</skipNarTests>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <!-- test dependencies -->
+        <dependency>
+            <groupId>io.eguan</groupId>
+            <artifactId>rest-launcher</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.eguan</groupId>
+            <artifactId>vold</artifactId>
+            <version>${project.version}</version>
+            <type>nar</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>ibs-java</artifactId>
+            <version>${project.version}</version>
+            <type>nar</type>
+        </dependency>
+        
+        <dependency>
+            <groupId>io.eguan</groupId>
+            <artifactId>vold</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>${jerseyVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.eguan</groupId>
+            <artifactId>servlet-container</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sun</groupId>
+            <artifactId>tools</artifactId>
+            <version>1.7</version>
+            <scope>system</scope>
+            <systemPath>${java.home}/../lib/tools.jar</systemPath>
+        </dependency>
+    </dependencies>
+</project>

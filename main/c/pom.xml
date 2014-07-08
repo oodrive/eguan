@@ -1,0 +1,107 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.eguan</groupId>
+        <artifactId>main</artifactId>
+        <version>0.6-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>c</artifactId>
+    <packaging>pom</packaging>
+    <name>nuage SP2 C/C++ modules</name>
+
+    <modules>
+        <module>ibs</module>
+        <module>ibsc</module>
+        <module>ibsreplay</module>
+    </modules>
+
+    <profiles>
+        <profile>
+            <!-- Default -->
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-nar-plugin</artifactId>
+                        <configuration>
+                            <tests>
+                                <test>
+                                    <name>unit_test</name>
+                                    <run>true</run>
+                                    <args>
+                                        <arg>--gtest_filter=*-*L</arg>
+                                    </args>
+                                </test>
+                            </tests>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>skipNarTestsCompile</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-nar-plugin</artifactId>
+                        <configuration>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>skipNarTestsRun</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-nar-plugin</artifactId>
+                        <configuration>
+                            <tests>
+                                <test>
+                                    <name>unit_test</name>
+                                    <run>false</run>
+                                </test>
+                            </tests>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <!-- Coverage: add dependencies to gcov -->
+            <id>coverage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-nar-plugin</artifactId>
+                        <configuration>
+                            <gnuConfigureArgSet>--enable-gcov</gnuConfigureArgSet>
+                            <linker>
+                                <sysLibSet>gcov:shared</sysLibSet>
+                            </linker>
+                            <cpp>
+                                <optionSet>-fprofile-arcs -ftest-coverage</optionSet>
+                            </cpp>
+                            <tests>
+                                <test>
+                                    <name>unit_test</name>
+                                    <run>true</run>
+                                    <args>
+                                        <arg>--gtest_filter=*</arg>
+                                    </args>
+                                </test>
+                            </tests>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

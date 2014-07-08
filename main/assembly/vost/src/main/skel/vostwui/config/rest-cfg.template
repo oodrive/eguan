@@ -1,0 +1,6 @@
+com.oodrive.nuage.jetty.server.address=COM_OODRIVE_NUAGE_JETTY_SERVER_ADDRESS
+com.oodrive.nuage.jetty.server.port=COM_OODRIVE_NUAGE_JETTY_SERVER_PORT
+com.oodrive.nuage.jetty.shutdownOnExit=COM_OODRIVE_NUAGE_JETTY_SHUTDOWNONEXIT
+com.oodrive.nuage.jetty.rest.contextpath=COM_OODRIVE_NUAGE_JETTY_REST_CONTEXTPATH
+com.oodrive.nuage.jetty.webui.contextpath=COM_OODRIVE_NUAGE_JETTY_WEBUI_CONTEXTPATH
+com.oodrive.nuage.jetty.webui.warname=webui.war

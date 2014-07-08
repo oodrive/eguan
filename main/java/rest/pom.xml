@@ -1,0 +1,22 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.eguan</groupId>
+        <artifactId>java</artifactId>
+        <version>0.6-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>rest</artifactId>
+    <packaging>pom</packaging>
+    <name>REST API implementation and runtime</name>
+
+    <modules>
+        <module>rest-launcher</module>
+        <module>rest-it</module>
+        <module>servlet-container</module>
+        <module>vold-adm-rest</module>
+    </modules>
+
+</project>

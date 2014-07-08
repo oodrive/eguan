@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.eguan</groupId>
+        <artifactId>thirdparty</artifactId>
+        <version>0.6-SNAPSHOT</version>
+    </parent>
+
+    <groupId>com.google</groupId>
+    <artifactId>leveldb</artifactId>
+    <packaging>nar</packaging>
+    <version>1.16.0-oodrive</version>
+
+    <name>levelDB</name>
+
+    <properties>
+        <skipTests>true</skipTests>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-nar-plugin</artifactId>
+                <configuration>
+                    <gnuMakeEnv>CFLAGS=-I${basedir}/target/nar/snappy-${snappyVersion}-noarch/include,LDFLAGS=-L${basedir}/target/nar/snappy-${snappyVersion}-${localAOL}-bin/lib,PREFIX=${basedir}/target/nar/gnu/${localAOL}/target</gnuMakeEnv>
+                    <gnuMakeArgs>-j all OPT_INC=-I${basedir}/target/nar/snappy-${snappyVersion}-noarch/include</gnuMakeArgs>
+                    <libraries>
+                        <library>
+                            <type>shared</type>
+                            <run>true</run>
+                        </library>
+                    </libraries>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.google</groupId>
+            <artifactId>snappy</artifactId>
+            <version>${snappyVersion}</version>
+            <type>nar</type>
+        </dependency>
+    </dependencies>
+
+</project>

@@ -1,0 +1,24 @@
+#!/bin/bash
+#
+# Starts an ibsbench
+# Usage: $0 [arguments of ibsbench]
+#
+
+DIR=$(dirname $0)
+if test "$DIR" == "."
+then
+    DIR=$PWD
+fi
+
+cd $DIR/../lib
+LIBDIR=$PWD
+cd $OLDPWD
+if test -z "$LD_LIBRARY_PATH" 
+then
+    export LD_LIBRARY_PATH=$LIBDIR
+else
+    export LD_LIBRARY_PATH=$LIBDIR:$LD_LIBRARY_PATH
+fi
+
+cd $DIR
+exec ./ibsbench $@

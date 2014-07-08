@@ -1,0 +1,123 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.eguan</groupId>
+        <artifactId>rest</artifactId>
+        <version>0.6-SNAPSHOT</version>
+    </parent>
+    <artifactId>rest-launcher</artifactId>
+    <name>Launcher for REST runtime</name>
+
+    <properties>
+        <!-- skip tests due to nar dependency in vold -->
+        <skipTests>true</skipTests>
+    </properties>
+
+    <build>
+        <defaultGoal>install</defaultGoal>
+        <plugins>
+            <plugin>
+                <!-- Creates a jar with dependencies -->
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.oodrive.nuage.vold.adm.RestLauncher</mainClass>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer">
+                                </transformer>
+                            </transformers>
+                            <filters>
+                                <!-- Remove signatures -->
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                                <!-- keep only adm-stub class -->
+                                <filter>
+                                    <artifact>com.oodrive.nuage:dtx*</artifact>
+                                    <includes>
+                                        <include>com/oodrive/nuage/dtx/DtxTaskStatus.class</include>
+                                        <include>com/oodrive/nuage/dtx/DtxTaskAdm.class</include>
+                                        <include>com/oodrive/nuage/dtx/DtxResourceManagerAdm.class</include>
+                                        <include>com/oodrive/nuage/dtx/DtxRequestQueueAdm.class</include>
+                                        <include>com/oodrive/nuage/dtx/DtxTaskInfo.class</include>
+                                        <include>com/oodrive/nuage/dtx/DtxNodeState.class</include>
+                                        <include>com/oodrive/nuage/dtx/DtxResourceManagerState</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.oodrive.nuage:vvr*</artifact>
+                                    <includes>
+                                        <include>com/oodrive/nuage/vvr/persistence/repository/VvrTaskInfo.class</include>
+                                        <include>com/oodrive/nuage/vvr/persistence/repository/VvrTaskOperation.class</include>
+                                        <include>com/oodrive/nuage/vvr/persistence/repository/VvrTargetType.class</include>
+                                    </includes>
+                                </filter>
+
+                            </filters>
+                            <!-- Remove adm-stub dependencies -->
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>com.oodrive.nuage:net-proto</exclude>
+                                    <exclude>com.oodrive.nuage:java-net</exclude>
+                                    <exclude>com.oodrive.nuage:nrs</exclude>
+                                    <exclude>com.oodrive.nuage:ibs*</exclude>
+                                    <exclude>com.oodrive.nuage:hash-java</exclude>
+                                    <exclude>org.jscsi:*</exclude>
+                                    <exclude>com.hazelcast:*</exclude>
+                                    <exclude>com.googlecode.*</exclude>
+                                    <exclude>io.netty:*</exclude>
+                                    <exclude>commons-logging:commons-logging</exclude>
+                                    <exclude>net.sourceforge:log4cplus</exclude>
+                                    <exclude>com.sysmas:lmdb</exclude>
+                                    <exclude>com.google:*</exclude>
+                                    <exclude>org.rocksdb:rocksdb</exclude>
+                                </excludes>
+                            </artifactSet>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>io.eguan</groupId>
+            <artifactId>servlet-container</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.eguan</groupId>
+            <artifactId>vold-adm-rest</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- test dependencies -->
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>${jerseyVersion}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.eguan</groupId>
+            <artifactId>vold-adm-rest</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

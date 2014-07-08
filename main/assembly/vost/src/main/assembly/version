@@ -1,0 +1,21 @@
+#!/bin/bash
+
+[ $# == 0 ] && echo $USAGE && exit 1
+while getopts "p:v:b:" OPTION
+do
+    case $OPTION in
+        p) PATH=$OPTARG;;
+        v) VERSION=$OPTARG;;
+        b) BRANCH=$OPTARG;;
+    esac
+done
+
+[ -z $PATH ] && exit 1
+
+if [ -n $VERSION ]; then
+    echo "SVN revision = $VERSION" > $PATH
+
+    if [ -n $BRANCH ]; then
+        echo "SVN branch = $BRANCH" >> $PATH
+    fi
+fi

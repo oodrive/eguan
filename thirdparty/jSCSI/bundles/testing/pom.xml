@@ -1,0 +1,134 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.jscsi</groupId>
+        <artifactId>pom</artifactId>
+        <version>2.5.1-oodrive</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+    <groupId>org.jscsi.testing</groupId>
+    <artifactId>testing</artifactId>
+    <name>Testing module</name>
+    <description>This module breaks the cyclic dependency within target and initiator and enables
+testing both together.</description>
+
+    <url>http://disy.github.com/jSCSI/</url>
+    <scm>
+        <url>git@github.com:disy/jSCSI.git</url>
+        <connection>scm:git:git@github.com:disy/jSCSI.git</connection>
+        <developerConnection>scm:git:git@github.com:disy/jSCSI.git</developerConnection>
+    </scm>
+    
+    <properties>
+        <!-- Tests: skip testng unit test (fails, missing test resource?) -->
+        <skipTests>true</skipTests>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/assembly/jarAssembly.xml</descriptor>
+                    </descriptors>
+                </configuration>
+            </plugin>
+		    <plugin>
+		        <groupId>org.codehaus.mojo</groupId>
+		        <artifactId>aspectj-maven-plugin</artifactId>
+		        <version>1.4</version>
+		        <configuration>
+					<aspectLibraries>
+					  <aspectLibrary>
+					    <groupId>org.jscsi</groupId>
+					    <artifactId>initiator</artifactId>
+					  </aspectLibrary>
+					</aspectLibraries>
+					<source>1.7</source>
+					<target>1.7</target>
+					<encoding>utf-8</encoding>
+					<complianceLevel>1.7</complianceLevel>
+					<verbose>true</verbose>
+					<showWeaveInfo>true</showWeaveInfo>
+		        </configuration>
+		        <executions>
+		          <execution>
+		            <goals>
+		              <goal>compile</goal>       <!-- use this goal to weave all your main classes -->
+		              <goal>test-compile</goal>  <!-- use this goal to weave all your test classes -->
+		            </goals>
+		          </execution>
+		        </executions>
+		    </plugin>
+        </plugins>
+	    <pluginManagement>
+	        <plugins>
+		        <plugin>
+	                <groupId>org.eclipse.m2e</groupId>
+	                <artifactId>lifecycle-mapping</artifactId>
+	                <version>1.0.0</version>
+	                <configuration>
+	                    <lifecycleMappingMetadata>
+	                        <pluginExecutions>
+	                            <pluginExecution>
+	                                <pluginExecutionFilter>
+	                                    <groupId>org.codehaus.mojo</groupId>
+	                                    <artifactId>aspectj-maven-plugin</artifactId>
+	                                    <versionRange>[1.4,)</versionRange>
+	                                    <goals>
+	                                        <goal>compile</goal>
+	                                        <goal>test-compile</goal>
+	                                    </goals>
+	                                </pluginExecutionFilter>
+	                                <action>
+	                                    <ignore />
+	                                </action>
+	                            </pluginExecution>
+	                        </pluginExecutions>
+	                    </lifecycleMappingMetadata>
+	                </configuration>
+	            </plugin>
+            </plugins>
+	    </pluginManagement>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.jscsi</groupId>
+            <artifactId>commons</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jscsi</groupId>
+            <artifactId>commons</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.jscsi</groupId>
+            <artifactId>initiator</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jscsi</groupId>
+            <artifactId>initiator</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.jscsi</groupId>
+            <artifactId>target</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jscsi</groupId>
+            <artifactId>target</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+        </dependency>
+
+
+    </dependencies>
+</project>

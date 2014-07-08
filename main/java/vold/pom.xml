@@ -1,0 +1,222 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.eguan</groupId>
+        <artifactId>java</artifactId>
+        <version>0.6-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>vold</artifactId>
+    <packaging>nar</packaging>
+    <name>Devices management daemon</name>
+
+    <properties>
+        <!-- Tests: can not run JNI unit tests during the nar-test goal -->
+        <skipTests>true</skipTests>
+    </properties>
+
+    <build>
+        <defaultGoal>install</defaultGoal>
+        <plugins>
+            <plugin>
+                <artifactId>maven-nar-plugin</artifactId>
+                <configuration>
+                    <!-- Tests: do not rerun JNI unit tests during the nar-integration-test goal -->
+                    <skipNarTests>true</skipNarTests>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <!-- Creates a jar with dependencies -->
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.oodrive.nuage.vold.Vold</mainClass>
+                                </transformer>
+                            </transformers>
+                            <minimizeJar>true</minimizeJar>
+                            <filters>
+                                <!-- Remove protobuf files -->
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>**/*.proto</exclude>
+                                    </excludes>
+                                </filter>
+                                <!-- Remove signatures -->
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                                <!-- Remove useless config file -->
+                                <filter>
+                                    <artifact>com.hazelcast:hazelcast</artifact>
+                                    <excludes>
+                                        <exclude>run.*</exclude>
+                                        <exclude>server.*</exclude>
+                                        <exclude>test.*</exclude>
+                                        <exclude>hazelcast-default.xml</exclude>
+                                        <exclude>hazelcast-fullconfig.xml*</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.jscsi:target</artifact>
+                                    <excludes>
+                                        <exclude>jscsi-target.*</exclude>
+                                        <exclude>log4j.xml</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.jscsi:commons</artifact>
+                                    <excludes>
+                                        <exclude>-logback-*</exclude>
+                                        <exclude>DisyCodeFormatter.xml</exclude>
+                                    </excludes>
+                                </filter>
+
+                                <!-- Make sure NarSystem classes are not removed -->
+                                <filter>
+                                    <artifact>com.oodrive.nuage:hash-java</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.oodrive.nuage:ibs-java</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.oodrive.nuage:java-utils</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <!-- Make sure sfl4j classes are not removed -->
+                                <filter>
+                                    <artifact>org.slf4j:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+
+                    <!-- Build test jar -->
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+
+                    <!-- Build vold-adm-stub jar -->
+                    <execution>
+                        <id>vold-adm-stub</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <classifier>adm-stub</classifier>
+                            <includes>
+                                <include>**/*MXBean*</include>
+                                <include>**/*Exception.class</include>
+                                <include>**/VvrTask.class</include>
+                                <include>**/VvrManagerTask.class</include>
+                                <include>**/VvrManagerTaskOperation.class</include>
+                                <include>**/VvrManagerTaskInfo.class</include>
+                                <include>**/VvrManagerTargetType.class</include>
+                                <include>**/VvrObjectNameFactory*</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${basedir}</directory>
+                            <includes>
+                                <include>dependency-reduced-pom.xml</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>iscsisrv</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>nbdsrv</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>vvr-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>hash-java</artifactId>
+            <version>${project.version}</version>
+            <type>nar</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>java-utils</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jscsi</groupId>
+            <artifactId>initiator</artifactId>
+            <version>${jscsiVersion}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>nbdsrv</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>iscsisrv</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
+</project>

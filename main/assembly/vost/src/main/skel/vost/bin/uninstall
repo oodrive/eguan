@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+# uninstall a volume manager daemon and a rest server
+#
+
+NAME=vost
+
+# stop service
+sudo /etc/init.d/$NAME stop
+
+# uninstall init script links
+sudo update-rc.d -f $NAME remove
+
+# remove user vost if exists
+if getent passwd $NAME >/dev/null; then    
+    sudo userdel $NAME
+fi
+
+# delete init script
+sudo rm -f /etc/init.d/$NAME

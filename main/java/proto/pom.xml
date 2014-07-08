@@ -1,0 +1,79 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.eguan</groupId>
+        <artifactId>java</artifactId>
+        <version>0.6-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>proto</artifactId>
+    <packaging>pom</packaging>
+    <name>nuage SP2 Java modules with protobuf protocols</name>
+
+    <modules>
+        <module>common-proto</module>
+        <module>dtx-proto</module>
+        <module>net-proto</module>
+        <module>nrs-proto</module>
+        <module>vvr-proto</module>
+    </modules>
+
+    <build>
+        <defaultGoal>install</defaultGoal>
+        <plugins>
+            <plugin>
+                <!-- Expand protoc executable -->
+                <artifactId>maven-nar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>expand-nar</id>
+                        <goals>
+                            <goal>nar-download</goal>
+                            <goal>nar-unpack</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <!-- Create protobuf classes -->
+                <groupId>com.google.protobuf.tools</groupId>
+                <artifactId>maven-protoc-plugin</artifactId>
+                <version>0.1.11-oodrive</version>
+                <executions>
+                    <execution>
+                        <id>generate proto sources</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <!-- Must be done after expand of protoc -->
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <protocExecutable>${project.build.directory}/nar/protoc-${protobufVersion}-amd64-Linux-gpp-bin/bin/protoc</protocExecutable>
+                            <protoSourceRoot>${basedir}/src/main/resources</protoSourceRoot>
+                            <includes>
+                                <param>**/*.proto</param>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.google</groupId>
+            <artifactId>protoc</artifactId>
+            <version>${protobufVersion}</version>
+            <type>nar</type>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protobufVersion}</version>
+        </dependency>
+    </dependencies>
+
+</project>

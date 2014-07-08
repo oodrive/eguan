@@ -1,0 +1,119 @@
+#
+# Configuration file for nu@ge Volume manager daemon.
+#
+# Without any change, this file works 'out-of-the-box', but does not define
+# a safe configuration. You MUST update the values defined in the 'MUST READ'
+# section.
+#
+# The format of this file must conform to the Java Properties file format with
+# the following main characteristics:
+# - A line assigning a value to a key are written as follows:
+#   key=value
+# - A comment line has an ASCII '#' or '!' as its first non-white space
+#   character.
+#
+# For details about the format, see
+# - http://docs.oracle.com/javase/7/docs/api/java/util/Properties.html
+#
+# Parameters are grouped into sections. Each parameter is described together
+# with specific constraints and information on default and example values.
+# Parameters required to provide a value are explicitly set, optional
+# parameters are commented out.
+
+# =============================================================================
+# 'MUST READ' SECTION
+# Parameters in this section must be understood and set to custom values or at
+# least acknowledged as valid by the user.
+# =============================================================================
+
+# com.oodrive.nuage.vold.owner defines the ownership of the managed volumes.
+#
+# The owner is identified by a unique identifier (UUID, see RFC 4122). The
+# command 'uuid' produces valid random unique identifiers.
+#
+# Default value: none
+# Example: com.oodrive.nuage.vold.owner=ad9fb5f4-3a12-11e2-bfaa-180373e17308
+#
+com.oodrive.nuage.vold.owner=
+
+# com.oodrive.nuage.vold.node defines the node on which this vold is
+# running.
+#
+# The node is identified by a unique identifier (UUID, see RFC 4122). The
+# command 'uuid' produces valid random unique identifiers.
+#
+# Default value: none
+# Example: com.oodrive.nuage.vold.node=9d076da6-4906-11e2-b385-180373e17308
+#
+com.oodrive.nuage.vold.node=
+
+# com.oodrive.nuage.vold.iscsi.started tells if the iSCSI server associated
+# to the vold must be started by default.
+#
+# Legal values are 'yes', 'true', 'no' and 'false'.
+# Default value: 'no'
+# Example: com.oodrive.nuage.vold.iscsi.started=yes
+#
+#com.oodrive.nuage.vold.iscsi.started=no
+
+# com.oodrive.nuage.iscsisrv.address selects the address on which the iSCSI
+# server associated to the vold will be bound.
+#
+# Legal values are a valid IP local address.
+# Default value: '0.0.0.0'
+# Example: com.oodrive.nuage.iscsisrv.address=192.168.55.11
+#
+#com.oodrive.nuage.iscsisrv.address=0.0.0.0
+
+# com.oodrive.nuage.vold.nbd.started tells if the NBD server associated
+# to the vold must be started by default.
+#
+# Legal values are 'yes', 'true', 'no' and 'false'.
+# Default value: 'no'
+# Example: com.oodrive.nuage.vold.nbd.started=yes
+#
+#com.oodrive.nuage.vold.nbd.started=no
+
+# com.oodrive.nuage.nbdsrv.address selects the address on which the NBD
+# server associated to the vold will be bound.
+#
+# Legal values are a valid IP local address.
+# Default value: '0.0.0.0'
+# Example: com.oodrive.nuage.nbdsrv.address=192.168.55.11
+#
+#com.oodrive.nuage.nbdsrv.address=0.0.0.0
+
+# =============================================================================
+# END 'MUST READ' SECTION
+# =============================================================================
+
+# =============================================================================
+# ADVANCED SECTION
+# Parameters in this section are for intermediate users for modifying some
+# advanced parameters, possibly breaking things
+# along the way, yet with the option to going back to the safe default.
+# =============================================================================
+
+# com.oodrive.nuage.iscsisrv.port selects the TCP port on which the iSCSI
+# server associated to the vold will be bound. The default value is the
+# well-known TCP port reserved for iSCSI (see RFC 3720).
+#
+# Legal values are a valid IP port.
+# Default value: 3260
+# Example: com.oodrive.nuage.iscsisrv.port=55001
+#
+#com.oodrive.nuage.iscsisrv.port=3260
+
+# com.oodrive.nuage.nbdsrv.port selects the TCP port on which the NBD
+# server associated to the vold will be bound. The default value is the
+# well-known TCP port reserved for NBD.
+#
+# Legal values are a valid IP port.
+# Default value: 10809
+# Example: com.oodrive.nuage.nbdsrv.port=55001
+#
+#com.oodrive.nuage.nbdsrv.port=10809
+
+# =============================================================================
+# END ADVANCED SECTION
+# =============================================================================

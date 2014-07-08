@@ -1,0 +1,10 @@
+#!/bin/sh
+cd cpptasks-parallel
+mvn clean install clean
+cd ../maven-nar-plugin
+mvn clean install clean
+cd ../com.google-protoc
+mvn clean install clean
+cd ../maven-protoc-plugin
+mvn clean install clean
+cd ..

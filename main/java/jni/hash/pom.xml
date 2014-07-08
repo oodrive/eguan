@@ -1,0 +1,55 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.eguan</groupId>
+        <artifactId>jni</artifactId>
+        <version>0.6-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>hash-java</artifactId>
+    <packaging>nar</packaging>
+    <name>Native hash - Java Bindings</name>
+
+    <build>
+        <defaultGoal>install</defaultGoal>
+        <plugins>
+            <plugin>
+                <artifactId>maven-nar-plugin</artifactId>
+                <configuration>
+                    <cpp>
+                        <debug>false</debug>
+                        <optimize>extreme</optimize>
+                    </cpp>
+                    <c>
+                        <debug>false</debug>
+                        <optimize>extreme</optimize>
+                    </c>
+                    <libraries>
+                        <library>
+                            <type>jni</type>
+                            <narSystemPackage>com.oodrive.nuage.hash</narSystemPackage>
+                            <linkCPP>false</linkCPP>
+                        </library>
+                    </libraries>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <!-- Dependency on protobuf for the hash of ByteString -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protobufVersion}</version>
+        </dependency>
+        <!-- Dependency on java-utils for the ByteBufferCache -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>java-utils</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
+</project>

@@ -1,0 +1,22 @@
+import "common.proto";
+package com.oodrive.nuage.proto.net;
+
+option optimize_for = LITE_RUNTIME;
+option java_outer_classname = "MsgWrapper";
+
+// request message
+message MsgRequest {
+    required ProtocolVersion version = 1; // add protocol version
+    required sint64 msgId = 2;
+    required bool synchronous = 3;
+    required bytes msgData = 4;
+}
+
+// reply message to a request
+message MsgReply {
+    required ProtocolVersion version = 1; // add protocol version
+    required sint64 msgId = 2;
+    required bool status = 3;
+    optional string exception = 4;
+    optional bytes repData = 5;
+}

@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+    xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>vvr</artifactId>
+        <groupId>io.eguan</groupId>
+        <version>0.6-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>vvr-it</artifactId>
+    <name>VVR - Integration Tests</name>
+    <description>VVR - Integration Tests</description>
+    <packaging>nar</packaging>
+
+    <properties>
+        <!-- Tests: can not run JNI unit tests during the nar-test goal -->
+        <skipTests>true</skipTests>
+    </properties>
+
+    <build>
+        <defaultGoal>install</defaultGoal>
+        <plugins>
+            <plugin>
+                <artifactId>maven-nar-plugin</artifactId>
+                <configuration>
+                    <!-- Tests: do not rerun JNI unit tests during the nar-integration-test goal -->
+                    <skipNarTests>true</skipNarTests>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <!-- Coverage: copy source and tests for other VVR artifacts -->
+            <id>coverage</id>
+            <build>
+                <!-- Ugly, but not too much: copy VVR source so they are taken into account in code coverage -->
+                <resources>
+                    <resource>
+                        <directory>../core/src/main/java</directory>
+                        <targetPath>../../src/main/java</targetPath>
+                    </resource>
+                    <resource>
+                        <directory>../core/src/test/java</directory>
+                        <targetPath>../../src/test/java</targetPath>
+                    </resource>
+                </resources>
+
+                <!-- Clean copied sources -->
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-clean-plugin</artifactId>
+                        <configuration>
+                            <filesets>
+                                <fileset>
+                                    <directory>src/main</directory>
+                                </fileset>
+                                <fileset>
+                                    <directory>src/test/java/com/oodrive/nuage/vvr</directory>
+                                    <excludes>
+                                        <exclude>**/it/*.java</exclude>
+                                        <exclude>**/.svn/*</exclude>
+                                        <exclude>**/.svn/*/*</exclude>
+                                        <exclude>**/.svn/*/*/*</exclude>
+                                        <exclude>**/.svn/*/*/*/*</exclude>
+                                    </excludes>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>vvr-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>java-utils</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>java-utils</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>nrs</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>vvr-core</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+</project>

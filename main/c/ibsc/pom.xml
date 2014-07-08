@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.eguan</groupId>
+        <artifactId>c</artifactId>
+        <version>0.6-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>ibsc</artifactId>
+    <packaging>nar</packaging>
+    <name>Immutable Block System - C Bindings</name>
+
+    <properties>
+        <skipTests>true</skipTests>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-nar-plugin</artifactId>
+                <configuration>
+                    <gnuConfigureArgs>
+                        <gnuConfigureArg>--disable-static</gnuConfigureArg>
+                        <gnuConfigureArg>CFLAGS=""</gnuConfigureArg>
+                        <gnuConfigureArg>CXXFLAGS="-std=c++0x"</gnuConfigureArg>
+                        <gnuConfigureArg>LDFLAGS="-L${basedir}/target/nar/log4cplus-${log4cplusVersion}-${localAOL}-bin/lib</gnuConfigureArg>
+                        <gnuConfigureArg>-L${basedir}/target/nar/snappy-${snappyVersion}-${localAOL}-bin/lib</gnuConfigureArg>
+                        <gnuConfigureArg>-L${basedir}/target/nar/leveldb-${leveldbVersion}-${localAOL}-bin/lib</gnuConfigureArg>
+                        <gnuConfigureArg>-L${basedir}/target/nar/ibs-${project.version}-${localAOL}-bin/lib"</gnuConfigureArg>
+                        <gnuConfigureArg>CPPFLAGS="-I${basedir}/target/nar/log4cplus-${log4cplusVersion}-noarch/include</gnuConfigureArg>
+                        <gnuConfigureArg>-I${basedir}/target/nar/ibs-${project.version}-noarch/include"</gnuConfigureArg>
+                    </gnuConfigureArgs>
+                    <libraries>
+                        <library>
+                            <type>shared</type>
+                            <run>false</run>
+                        </library>
+                    </libraries>
+                    <linker>
+                        <sysLibs>
+                            <sysLib>
+                                <name>pthread</name>
+                            </sysLib>
+                        </sysLibs>
+                    </linker>
+                    <cpp>
+                        <clearDefaultOptions>true</clearDefaultOptions>
+                        <options>
+                            <option>-std=c++0x</option>
+                        </options>
+                    </cpp>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>ibs</artifactId>
+            <version>${project.version}</version>
+            <type>nar</type>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge</groupId>
+            <artifactId>log4cplus</artifactId>
+            <version>${log4cplusVersion}</version>
+            <type>nar</type>
+        </dependency>
+        <dependency>
+            <groupId>com.google</groupId>
+            <artifactId>gtest</artifactId>
+            <version>${GgleTestVersion}</version>
+            <type>nar</type>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

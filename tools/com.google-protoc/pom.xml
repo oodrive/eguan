@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.google</groupId>
+    <artifactId>protoc</artifactId>
+    <packaging>nar</packaging>
+    <version>2.4.1</version>
+
+    <name>protoc</name>
+    <description>Protobuf compiler</description>
+
+    <properties>
+        <skipTests>true</skipTests>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+
+                <artifactId>maven-nar-plugin</artifactId>
+                <version>2.1-oodrive</version>
+                <extensions>true</extensions>
+
+                <configuration>
+                    <gnuAutogenSkip>true</gnuAutogenSkip>
+                    <!-- Static link to ease deployment -->
+                    <gnuConfigureArgSet>--disable-shared</gnuConfigureArgSet>
+                    <libraries>
+                        <library>
+                            <type>executable</type>
+                            <run>false</run>
+                        </library>
+                    </libraries>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

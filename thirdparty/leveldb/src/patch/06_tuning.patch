@@ -1,0 +1,179 @@
+diff -rupN 05_fix_crash/db/dbformat.h 06_tuning/db/dbformat.h
+--- 05_fix_crash/db/dbformat.h	2014-04-03 15:15:12.000000000 +0200
++++ 06_tuning/db/dbformat.h	2014-04-03 15:24:08.000000000 +0200
+@@ -19,16 +19,16 @@ namespace leveldb {
+ // Grouping of constants.  We may want to make some of these
+ // parameters set via options.
+ namespace config {
+-static const int kNumLevels = 7;
++static const int kNumLevels = 10;
+ 
+-// Level-0 compaction is started when we hit this many files.
+-static const int kL0_CompactionTrigger = 4;
++// Level-0 compaction is started when we hit this many ".sst" files.
++static const int kL0_CompactionTrigger = 8;
+ 
+ // Soft limit on number of level-0 files.  We slow down writes at this point.
+-static const int kL0_SlowdownWritesTrigger = 8;
++static const int kL0_SlowdownWritesTrigger = 128;
+ 
+ // Maximum number of level-0 files.  We stop writes at this point.
+-static const int kL0_StopWritesTrigger = 12;
++static const int kL0_StopWritesTrigger = 256;
+ 
+ // Maximum level to which a new compacted memtable is pushed if it
+ // does not create overlap.  We try to push to level 2 to avoid the
+diff -rupN 05_fix_crash/db/db_impl.cc 06_tuning/db/db_impl.cc
+--- 05_fix_crash/db/db_impl.cc	2014-04-03 15:14:49.000000000 +0200
++++ 06_tuning/db/db_impl.cc	2014-04-03 15:26:00.000000000 +0200
+@@ -1446,19 +1446,35 @@ bool DBImpl::GetProperty(const Slice& pr
+              );
+     value->append(buf);
+     for (int level = 0; level < config::kNumLevels; level++) {
++      snprintf(buf, sizeof(buf), "%3d ", level);
++      value->append(buf);
+       int files = versions_->NumLevelFiles(level);
+-      if (stats_[level].micros > 0 || files > 0) {
++      if (files > 0) {
++        snprintf(buf, sizeof(buf), "%8d ", files);
++        value->append(buf);
++      }else{
++        snprintf(buf, sizeof(buf), "%s ", "N/A ");
++        value->append(buf);
++      }
++      snprintf(buf, sizeof(buf), "%8.0f ",
++          versions_->NumLevelBytes(level) / 1048576.0);
++      value->append(buf);
++      if (stats_[level].micros > 0) {
+         snprintf(
+             buf, sizeof(buf),
+-            "%3d %8d %8.0f %9.0f %8.0f %9.0f\n",
+-            level,
+-            files,
+-            versions_->NumLevelBytes(level) / 1048576.0,
+-            stats_[level].micros / 1e6,
+-            stats_[level].bytes_read / 1048576.0,
+-            stats_[level].bytes_written / 1048576.0);
++            "%9.0f ",
++            stats_[level].micros / 1e6);
+         value->append(buf);
++      }else{
++          snprintf(buf, sizeof(buf), "%s", "N/A ");
++          value->append(buf);
+       }
++      snprintf(
++          buf, sizeof(buf),
++          "%8.0f %9.0f\n",
++          stats_[level].bytes_read / 1048576.0,
++          stats_[level].bytes_written / 1048576.0);
++      value->append(buf);
+     }
+     return true;
+   } else if (in == "sstables") {
+diff -rupN 05_fix_crash/db/version_set.cc 06_tuning/db/version_set.cc
+--- 05_fix_crash/db/version_set.cc	2014-04-03 15:14:12.000000000 +0200
++++ 06_tuning/db/version_set.cc	2014-04-03 15:24:08.000000000 +0200
+@@ -20,11 +20,17 @@
+ 
+ namespace leveldb {
+ 
+-static const int kTargetFileSize = 2 * 1048576;
++static const int64_t kTargetFileSize = 32 * 1048576; // 32 Mb size limit for .sst file
++static const double kStartLevelMaxBytes = 128.0 * 1048576.0; // 128 Mb for level-0 size limit
++static const double kLevel0to1MaxBytesMultiplier = 2.0; // Duplicate size from level-0 to level-1
++static const double kLevelNMaxBytesMultiplier = 16.0; // multiplier for calculating level size starting from level-2
++static const int64_t kAllowedSeekThreshold = 16384; // threshold for allowed seek
++static const int64_t kMinimumAllowedSeekBeforeCompaction = kTargetFileSize/kAllowedSeekThreshold; // minimum allowed seek before compaction
++
+ 
+ // Maximum bytes of overlaps in grandparent (i.e., level+2) before we
+ // stop building a single file in a level->level+1 compaction.
+-static const int64_t kMaxGrandParentOverlapBytes = 10 * kTargetFileSize;
++static const int64_t kMaxGrandParentOverlapBytes = 25 * kTargetFileSize;
+ 
+ // Maximum number of bytes in all compacted files.  We avoid expanding
+ // the lower level file set of a compaction if it would make the
+@@ -34,16 +40,18 @@ static const int64_t kExpandedCompaction
+ static double MaxBytesForLevel(int level) {
+   // Note: the result for level zero is not really used since we set
+   // the level-0 compaction threshold based on number of files.
+-  double result = 10 * 1048576.0;  // Result for both level-0 and level-1
++
++  double result = kStartLevelMaxBytes;
++  if (1==level) result *= kLevel0to1MaxBytesMultiplier;
+   while (level > 1) {
+-    result *= 10;
++    result *= kLevelNMaxBytesMultiplier;
+     level--;
+   }
+   return result;
+ }
+ 
+ static uint64_t MaxFileSizeForLevel(int level) {
+-  return kTargetFileSize;  // We could vary per level to reduce number of files?
++  return kTargetFileSize << (level>>1); // Vary the size limit of .sst files depending on level to reduce the files number
+ }
+ 
+ static int64_t TotalFileSize(const std::vector<FileMetaData*>& files) {
+@@ -818,10 +826,10 @@ class VersionSet::Builder {
+       // This implies that 25 seeks cost the same as the compaction
+       // of 1MB of data.  I.e., one seek costs approximately the
+       // same as the compaction of 40KB of data.  We are a little
+-      // conservative and allow approximately one seek for every 16KB
++      // conservative and allow approximately one seek for every 16KB (kAllowedSeekThreshold)
+       // of data before triggering a compaction.
+-      f->allowed_seeks = (f->file_size / 16384);
+-      if (f->allowed_seeks < 100) f->allowed_seeks = 100;
++      f->allowed_seeks = (f->file_size / kAllowedSeekThreshold);
++      if (f->allowed_seeks < kMinimumAllowedSeekBeforeCompaction) f->allowed_seeks = kMinimumAllowedSeekBeforeCompaction;
+ 
+       levels_[level].deleted_files.erase(f->number);
+       levels_[level].added_files->insert(f);
+@@ -1219,16 +1227,20 @@ int VersionSet::NumLevelFiles(int level)
+ 
+ const char* VersionSet::LevelSummary(LevelSummaryStorage* scratch) const {
+   // Update code if kNumLevels changes
+-  assert(config::kNumLevels == 7);
++  // FIXME: use stringstream and remove the need for this assert ...
++  assert(config::kNumLevels == 10);
+   snprintf(scratch->buffer, sizeof(scratch->buffer),
+-           "files[ %d %d %d %d %d %d %d ]",
++           "files[ %d %d %d %d %d %d %d %d %d %d ]",
+            int(current_->files_[0].size()),
+            int(current_->files_[1].size()),
+            int(current_->files_[2].size()),
+            int(current_->files_[3].size()),
+            int(current_->files_[4].size()),
+            int(current_->files_[5].size()),
+-           int(current_->files_[6].size()));
++           int(current_->files_[6].size()),
++           int(current_->files_[7].size()),
++           int(current_->files_[8].size()),
++           int(current_->files_[9].size()));
+   return scratch->buffer;
+ }
+ 
+diff -rupN 05_fix_crash/util/env_posix.cc 06_tuning/util/env_posix.cc
+--- 05_fix_crash/util/env_posix.cc	2014-04-03 15:04:03.000000000 +0200
++++ 06_tuning/util/env_posix.cc	2014-04-03 15:24:07.000000000 +0200
+@@ -32,6 +32,8 @@ namespace leveldb {
+ 
+ namespace {
+ 
++static const int64_t kMaxMappedFile = 1000; // max mapped file on virtual memory for read
++
+ static Status IOError(const std::string& context, int err_number) {
+   return Status::IOError(context, strerror(err_number));
+ }
+@@ -98,9 +100,9 @@ class PosixRandomAccessFile: public Rand
+ // problems for very large databases.
+ class MmapLimiter {
+  public:
+-  // Up to 1000 mmaps for 64-bit binaries; none for smaller pointer sizes.
++  // Up to kMaxMappedFile mmaps for 64-bit binaries; none for smaller pointer sizes.
+   MmapLimiter() {
+-    SetAllowed(sizeof(void*) >= 8 ? 1000 : 0);
++    SetAllowed(sizeof(void*) >= 8 ? kMaxMappedFile : 0);
+   }
+ 
+   // If another mmap slot is available, acquire it and return true.

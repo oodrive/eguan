@@ -1,0 +1,13 @@
+diff -rupN 06_tuning/db/db_impl.cc 07_keep_paranoid_check/db/db_impl.cc
+--- 06_tuning/db/db_impl.cc	2014-04-03 15:26:00.000000000 +0200
++++ 07_keep_paranoid_check/db/db_impl.cc	2014-04-03 15:29:27.000000000 +0200
+@@ -739,6 +739,9 @@ void DBImpl::BackgroundCompaction() {
+   } else {
+     Log(options_.info_log,
+         "Compaction error: %s", status.ToString().c_str());
++    if (options_.paranoid_checks && bg_error_.ok()) {
++      bg_error_ = status;
++    }
+   }
+ 
+   if (is_manual) {

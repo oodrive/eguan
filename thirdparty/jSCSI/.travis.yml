@@ -1,0 +1,10 @@
+language: java
+jdk: openjdk6
+branches:
+  only:
+    - master
+install: echo 'Skipping mvn install' 
+script: mvn clean test -U -P all
+notifications:
+    on_success: never
+    on_failure: always

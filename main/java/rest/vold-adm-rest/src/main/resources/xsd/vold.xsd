@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema xmlns:vold="http://www.oodrive.com/nuage/vold/model" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    jxb:version="2.0" xmlns:jxb="http://java.sun.com/xml/ns/jaxb" xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+    jxb:extensionBindingPrefixes="xjc" targetNamespace="http://www.oodrive.com/nuage/vold/model">
+    <xsd:annotation>
+        <xsd:appinfo>
+            <jxb:bindings node="/xsd:schema">
+                <jxb:globalBindings>
+                    <xjc:simple />
+                </jxb:globalBindings>
+            </jxb:bindings>
+        </xsd:appinfo>
+    </xsd:annotation>
+
+    <!-- root elements, i.e. potential roots for a document/message -->
+    <xsd:element name="VersionedVolumeRepository" type="vold:VersionedVolumeRepository" />
+    <xsd:element name="VersionedVolumeRepositoryList">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="vold:VersionedVolumeRepository" minOccurs="0" maxOccurs="unbounded" />
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="Snapshot" type="vold:Snapshot" />
+    <xsd:element name="SnapshotList">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="vold:Snapshot" minOccurs="0" maxOccurs="unbounded" />
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="Device" type="vold:Device" />
+    <xsd:element name="DeviceList">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="vold:Device" minOccurs="0" maxOccurs="unbounded" />
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="Task" type="vold:Task" />
+    <xsd:element name="TaskList">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="vold:Task" minOccurs="0" maxOccurs="unbounded" />
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="ConnectionInfo" type="vold:ConnectionInfo" />
+
+    <!-- type definitions -->
+
+    <!-- simple types -->
+
+    <xsd:simpleType name="UUID">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="EN" xmlns="http://www.w3.org/1999/xhtml">
+                <p>
+                    A universally unique identifier. Definition copied from openstack cs API v2.
+                </p>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:string">
+            <xsd:length value="36" fixed="true" />
+            <xsd:pattern value="[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}" />
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="execState">
+        <xsd:annotation>
+            <xsd:documentation> Execution states for tasks.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="PENDING" />
+            <xsd:enumeration value="IN_PROGRESS" />
+            <xsd:enumeration value="DONE" />
+            <xsd:enumeration value="FAILED" />
+            <xsd:enumeration value="CANCELED" />
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <!-- abstract complex types -->
+
+    <xsd:complexType name="UniqueObject" abstract="true">
+        <xsd:annotation>
+            <xsd:documentation>
+                Abstract type for all classes whose instances must have UUID identifiers.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="uuid" type="vold:UUID" use="required">
+            <xsd:annotation>
+                <xsd:documentation>Unique id of the object
+                </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="NamedObject" abstract="true">
+        <xsd:annotation>
+            <xsd:documentation>
+                Abstract type for all classes whose instances can have an optional name and description.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="vold:UniqueObject">
+                <xsd:attribute name="name" type="xsd:string" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>Human readable short name of the object
+                        </xsd:documentation>
+                    </xsd:annotation>
+                </xsd:attribute>
+                <xsd:attribute name="description" type="xsd:string" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>Description of the object
+                        </xsd:documentation>
+                    </xsd:annotation>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="VvrItem" abstract="true">
+        <xsd:complexContent>
+            <xsd:extension base="vold:NamedObject">
+                <xsd:attribute name="vvr" type="vold:UUID" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>UUID of the VVR this item is part of
+                        </xsd:documentation>
+                    </xsd:annotation>
+                </xsd:attribute>
+                <xsd:attribute name="parent" type="vold:UUID" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>UUID of the parent snapshot of this item
+                        </xsd:documentation>
+                    </xsd:annotation>
+                </xsd:attribute>
+                <xsd:attribute name="partial" type="xsd:boolean" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>True if the contents of the VVR item contains only the
+                            modifications from the
+                            contents of its parent
+                        </xsd:documentation>
+                    </xsd:annotation>
+                </xsd:attribute>
+                <xsd:attribute name="dataSize" type="xsd:long" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>Size in bytes of the data needed to store the contents
+                            of this item (partial
+                            or full contents)
+                        </xsd:documentation>
+                    </xsd:annotation>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <!-- complex types -->
+
+    <xsd:complexType name="VersionedVolumeRepository">
+        <xsd:complexContent>
+            <xsd:extension base="vold:NamedObject">
+                <xsd:attribute name="ownerid" type="vold:UUID" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>This VVR's owner's UUID. Set once when the VVR is created
+                        </xsd:documentation>
+                    </xsd:annotation>
+                </xsd:attribute>
+                <xsd:attribute name="size" type="xsd:long" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>Total size in bytes of one copy of the VVR. It is the sum of the data size of
+                            its snapshots and devices
+                        </xsd:documentation>
+                    </xsd:annotation>
+                </xsd:attribute>
+                <xsd:attribute name="quota" type="xsd:long" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>Maximum size in bytes. Set by an administrator of
+                            nu@ge
+                        </xsd:documentation>
+                    </xsd:annotation>
+                </xsd:attribute>
+                <xsd:attribute name="instanceCount" type="xsd:int" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>Number of copies of the VVR to create Set by an
+                            administrator of nu@ge
+                        </xsd:documentation>
+                    </xsd:annotation>
+                </xsd:attribute>
+                <xsd:attribute name="initialized" type="xsd:boolean" default="false" use="optional" />
+                <xsd:attribute name="started" type="xsd:boolean" default="false" use="optional" />
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="Snapshot">
+        <xsd:complexContent>
+            <xsd:extension base="vold:VvrItem">
+                <xsd:attribute name="size" type="xsd:long" use="required" />
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="Device">
+        <xsd:complexContent>
+            <xsd:extension base="vold:VvrItem">
+                <xsd:attribute name="size" type="xsd:long" use="required" />
+                <xsd:attribute name="active" type="xsd:boolean" use="required" />
+                <xsd:attribute name="readOnly" type="xsd:boolean" use="required" />
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="Task">
+        <xsd:annotation>
+            <xsd:documentation>Generic task class providing an execution state and an optional reference to a result
+                resource.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="vold:UniqueObject">
+                <xsd:attribute name="progress" type="xsd:int" use="required" />
+                <xsd:attribute name="state" type="vold:execState" use="required" />
+                <xsd:attribute name="resultRef" type="xsd:anyURI" use="optional" />
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="ConnectionInfo">
+        <xsd:attribute name="driver_volume_type" type="xsd:string" use="required" />
+        <xsd:attribute name="server_address" type="xsd:string" use="required" />
+        <xsd:attribute name="server_port" type="xsd:int" />
+        <xsd:attribute name="iqn" type="xsd:string" />
+        <xsd:attribute name="iscsiAlias" type="xsd:string" />
+        <xsd:attribute name="devName" type="xsd:string" />
+    </xsd:complexType>
+
+</xsd:schema>

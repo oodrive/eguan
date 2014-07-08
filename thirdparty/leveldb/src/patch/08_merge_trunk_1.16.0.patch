@@ -1,0 +1,161 @@
+diff -rupN 07_keep_paranoid_check/db/log_reader.cc 08_merge_trunk_1.16.0/db/log_reader.cc
+--- 07_keep_paranoid_check/db/log_reader.cc	2014-04-03 15:29:27.000000000 +0200
++++ 08_merge_trunk_1.16.0/db/log_reader.cc	2014-04-03 17:43:38.000000000 +0200
+@@ -133,7 +133,9 @@ bool Reader::ReadRecord(Slice* record, s
+ 
+       case kEof:
+         if (in_fragmented_record) {
+-          ReportCorruption(scratch->size(), "partial record without end(3)");
++          // This can be caused by the writer dying immediately after
++          // writing a physical record but before completing the next; don't
++          // treat it as a corruption, just ignore the entire logical record.
+           scratch->clear();
+         }
+         return false;
+@@ -193,13 +195,12 @@ unsigned int Reader::ReadPhysicalRecord(
+           eof_ = true;
+         }
+         continue;
+-      } else if (buffer_.size() == 0) {
+-        // End of file
+-        return kEof;
+       } else {
+-        size_t drop_size = buffer_.size();
++        // Note that if buffer_ is non-empty, we have a truncated header at the
++        // end of the file, which can be caused by the writer crashing in the
++        // middle of writing the header. Instead of considering this an error,
++        // just report EOF.
+         buffer_.clear();
+-        ReportCorruption(drop_size, "truncated record at end of file");
+         return kEof;
+       }
+     }
+@@ -213,8 +214,14 @@ unsigned int Reader::ReadPhysicalRecord(
+     if (kHeaderSize + length > buffer_.size()) {
+       size_t drop_size = buffer_.size();
+       buffer_.clear();
+-      ReportCorruption(drop_size, "bad record length");
+-      return kBadRecord;
++      if (!eof_) {
++        ReportCorruption(drop_size, "bad record length");
++        return kBadRecord;
++      }
++      // If the end of the file has been reached without reading |length| bytes
++      // of payload, assume the writer died in the middle of writing the record.
++      // Don't report a corruption.
++      return kEof;
+     }
+ 
+     if (type == kZeroType && length == 0) {
+diff -rupN 07_keep_paranoid_check/db/log_test.cc 08_merge_trunk_1.16.0/db/log_test.cc
+--- 07_keep_paranoid_check/db/log_test.cc	2014-04-03 15:29:27.000000000 +0200
++++ 08_merge_trunk_1.16.0/db/log_test.cc	2014-04-03 17:43:38.000000000 +0200
+@@ -351,20 +351,32 @@ TEST(LogTest, BadRecordType) {
+   ASSERT_EQ("OK", MatchError("unknown record type"));
+ }
+ 
+-TEST(LogTest, TruncatedTrailingRecord) {
++TEST(LogTest, TruncatedTrailingRecordIsIgnored) {
+   Write("foo");
+   ShrinkSize(4);   // Drop all payload as well as a header byte
+   ASSERT_EQ("EOF", Read());
+-  ASSERT_EQ(kHeaderSize - 1, DroppedBytes());
+-  ASSERT_EQ("OK", MatchError("truncated record at end of file"));
++  // Truncated last record is ignored, not treated as an error.
++  ASSERT_EQ(0, DroppedBytes());
++  ASSERT_EQ("", ReportMessage());
+ }
+ 
+ TEST(LogTest, BadLength) {
++  const int kPayloadSize = kBlockSize - kHeaderSize;
++  Write(BigString("bar", kPayloadSize));
++  Write("foo");
++  // Least significant size byte is stored in header[4].
++  IncrementByte(4, 1);
++  ASSERT_EQ("foo", Read());
++  ASSERT_EQ(kBlockSize, DroppedBytes());
++  ASSERT_EQ("OK", MatchError("bad record length"));
++}
++
++TEST(LogTest, BadLengthAtEndIsIgnored) {
+   Write("foo");
+   ShrinkSize(1);
+   ASSERT_EQ("EOF", Read());
+-  ASSERT_EQ(kHeaderSize + 2, DroppedBytes());
+-  ASSERT_EQ("OK", MatchError("bad record length"));
++  ASSERT_EQ(0, DroppedBytes());
++  ASSERT_EQ("", ReportMessage());
+ }
+ 
+ TEST(LogTest, ChecksumMismatch) {
+@@ -415,6 +427,24 @@ TEST(LogTest, UnexpectedFirstType) {
+   ASSERT_EQ("OK", MatchError("partial record without end"));
+ }
+ 
++TEST(LogTest, MissingLastIsIgnored) {
++  Write(BigString("bar", kBlockSize));
++  // Remove the LAST block, including header.
++  ShrinkSize(14);
++  ASSERT_EQ("EOF", Read());
++  ASSERT_EQ("", ReportMessage());
++  ASSERT_EQ(0, DroppedBytes());
++}
++
++TEST(LogTest, PartialLastIsIgnored) {
++  Write(BigString("bar", kBlockSize));
++  // Cause a bad record length in the LAST block.
++  ShrinkSize(1);
++  ASSERT_EQ("EOF", Read());
++  ASSERT_EQ("", ReportMessage());
++  ASSERT_EQ(0, DroppedBytes());
++}
++
+ TEST(LogTest, ErrorJoinsRecords) {
+   // Consider two fragmented records:
+   //    first(R1) last(R1) first(R2) last(R2)
+diff -rupN 07_keep_paranoid_check/db/repair.cc 08_merge_trunk_1.16.0/db/repair.cc
+--- 07_keep_paranoid_check/db/repair.cc	2014-04-03 15:29:27.000000000 +0200
++++ 08_merge_trunk_1.16.0/db/repair.cc	2014-04-03 17:43:38.000000000 +0200
+@@ -242,7 +242,6 @@ class Repairer {
+   }
+ 
+   void ExtractMetaData() {
+-    std::vector<TableInfo> kept;
+     for (size_t i = 0; i < table_numbers_.size(); i++) {
+       ScanTable(table_numbers_[i]);
+     }
+diff -rupN 07_keep_paranoid_check/include/leveldb/c.h 08_merge_trunk_1.16.0/include/leveldb/c.h
+--- 07_keep_paranoid_check/include/leveldb/c.h	2014-04-03 15:29:27.000000000 +0200
++++ 08_merge_trunk_1.16.0/include/leveldb/c.h	2014-04-03 17:43:38.000000000 +0200
+@@ -9,7 +9,6 @@
+   Does not support:
+   . getters for the option types
+   . custom comparators that implement key shortening
+-  . capturing post-write-snapshot
+   . custom iter, db, env, cache implementations using just the C bindings
+ 
+   Some conventions:
+diff -rupN 07_keep_paranoid_check/include/leveldb/db.h 08_merge_trunk_1.16.0/include/leveldb/db.h
+--- 07_keep_paranoid_check/include/leveldb/db.h	2014-04-03 15:29:27.000000000 +0200
++++ 08_merge_trunk_1.16.0/include/leveldb/db.h	2014-04-03 17:43:38.000000000 +0200
+@@ -14,7 +14,7 @@ namespace leveldb {
+ 
+ // Update Makefile if you change these
+ static const int kMajorVersion = 1;
+-static const int kMinorVersion = 15;
++static const int kMinorVersion = 16;
+ 
+ struct Options;
+ struct ReadOptions;
+diff -rupN 07_keep_paranoid_check/Makefile 08_merge_trunk_1.16.0/Makefile
+--- 07_keep_paranoid_check/Makefile	2014-04-03 15:29:27.000000000 +0200
++++ 08_merge_trunk_1.16.0/Makefile	2014-04-03 17:43:38.000000000 +0200
+@@ -74,7 +74,7 @@ SHARED = $(SHARED1)
+ else
+ # Update db.h if you change these.
+ SHARED_MAJOR = 1
+-SHARED_MINOR = 15
++SHARED_MINOR = 16
+ SHARED1 = libleveldb.$(PLATFORM_SHARED_EXT)
+ SHARED2 = $(SHARED1).$(SHARED_MAJOR)
+ SHARED3 = $(SHARED1).$(SHARED_MAJOR).$(SHARED_MINOR)

@@ -1,0 +1,77 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.eguan</groupId>
+        <artifactId>java</artifactId>
+        <version>0.6-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>dtx</artifactId>
+    <name>Distributed transaction execution</name>
+    <description>Distributed transaction management and execution on resources.</description>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <!-- Build dtx-adm-stub jar -->
+                    <execution>
+                        <id>dtx-adm-stub</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <classifier>adm-stub</classifier>
+                            <includes>
+                                <include>**/*MXBean*</include>
+                                <include>**/DtxTaskStatus.class</include>
+                                <include>**/DtxTaskAdm.class</include>
+                                <include>**/DtxResourceManagerAdm.class</include>
+                                <include>**/DtxRequestQueueAdm.class</include>
+                                <include>**/DtxTaskInfo.class</include>
+                                <include>**/DtxNodeState.class</include>
+                                <include>**/DtxResourceManagerState</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>dtx-proto</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.hazelcast</groupId>
+            <artifactId>hazelcast</artifactId>
+            <version>${hazelcastVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.eguan</groupId>
+            <artifactId>java-utils</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>${mockitoVersion}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.eguan</groupId>
+            <artifactId>java-utils</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>

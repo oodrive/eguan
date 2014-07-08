@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.eguan</groupId>
+        <artifactId>thirdparty</artifactId>
+        <version>0.6-SNAPSHOT</version>
+    </parent>
+
+    <groupId>net.sourceforge</groupId>
+    <artifactId>log4cplus</artifactId>
+    <packaging>nar</packaging>
+    <version>1.1.2-rc2-oodrive</version>
+
+    <name>Log4cplus thread-safe C++ logging API</name>
+
+    <properties>
+        <skipTests>true</skipTests>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-nar-plugin</artifactId>
+                <configuration>
+                    <gnuConfigureArgs>
+                      <gnuConfigureArg>CFLAGS=""</gnuConfigureArg>
+                      <gnuConfigureArg>CXXFLAGS="-std=c++0x"</gnuConfigureArg>
+		      <gnuConfigureArg>--disable-dependency-tracking</gnuConfigureArg>
+		      <gnuConfigureArg>--disable-static</gnuConfigureArg>
+		      <gnuConfigureArg>--enable-threads=yes</gnuConfigureArg>
+		      <gnuConfigureArg>--without-qt</gnuConfigureArg>
+                    </gnuConfigureArgs>
+                    <libraries>
+                        <library>
+                            <type>shared</type>
+                            <run>true</run>
+                        </library>
+                    </libraries>
+                    <linker>
+                        <sysLibs>
+                            <sysLib>
+                                <name>pthread</name>
+                            </sysLib>
+                        </sysLibs>
+                    </linker>
+                    <cpp>
+                        <clearDefaultOptions>true</clearDefaultOptions>
+                        <options>
+                            <option>-std=c++0x</option>
+                        </options>
+                    </cpp>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

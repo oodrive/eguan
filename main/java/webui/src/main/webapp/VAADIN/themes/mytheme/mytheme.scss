@@ -1,0 +1,15 @@
+/* Import the reindeer theme. */
+/* This only allows us to use the mixins defined in it and does not add any styles by itself. */
+@import "../runo/runo.scss";
+
+/* This contains all of your theme. */
+/* If somebody wants to extend the theme she will include this mixin. */
+@mixin mytheme {
+  /* Include all the styles from the reindeer theme */
+  @include runo;
+
+  /* Insert your theme rules here */
+    .v-tree-node {
+    line-height: 24px;
+    }
+}

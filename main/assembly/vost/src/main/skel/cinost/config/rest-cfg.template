@@ -1,0 +1,4 @@
+com.oodrive.nuage.jetty.server.address=127.0.0.1
+com.oodrive.nuage.jetty.server.port=8080
+com.oodrive.nuage.jetty.shutdownOnExit=true
+com.oodrive.nuage.jetty.rest.contextpath=/storage

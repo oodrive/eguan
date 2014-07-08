@@ -1,0 +1,112 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.eguan</groupId>
+        <artifactId>rest</artifactId>
+        <version>0.6-SNAPSHOT</version>
+    </parent>
+    <artifactId>vold-adm-rest</artifactId>
+    <name>REST API implementation for vold-adm</name>
+
+    <properties>
+        <!-- skip tests due to nar dependency in vold -->
+        <skipTests>true</skipTests>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-wadl2java-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-sources</id>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <sourceRoot>${project.build.directory}/generated-sources/</sourceRoot>
+                            <noAddressBinding>true</noAddressBinding>
+                            <wadlOptions>
+                                <wadlOption>
+                                    <wadl>${basedir}/src/main/resources/vold.wadl</wadl>
+                                    <interface>true</interface>
+                                    <impl>false</impl>
+                                    <packagename>com.oodrive.nuage.vold.rest.generated.resources</packagename>
+                                    <schemaPackagenames>
+                                        <schemaPackagename>http://www.oodrive.com/nuage/vold/model=com.oodrive.nuage.vold.rest.generated.model</schemaPackagename>
+                                    </schemaPackagenames>
+                                    <extraargs>
+                                        <extraarg>-verbose</extraarg>
+                                    </extraargs>
+                                </wadlOption>
+                            </wadlOptions>
+                        </configuration>
+                        <goals>
+                            <goal>wadl2java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-core</artifactId>
+            <version>${jerseyVersion}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.eguan</groupId>
+            <artifactId>vold</artifactId>
+            <version>${project.version}</version>
+            <classifier>adm-stub</classifier>
+        </dependency>
+
+        <dependency>
+            <groupId>io.eguan</groupId>
+            <artifactId>iscsisrv</artifactId>
+            <version>${project.version}</version>
+            <classifier>adm-stub</classifier>
+        </dependency>
+
+        <dependency>
+            <groupId>io.eguan</groupId>
+            <artifactId>nbdsrv</artifactId>
+            <version>${project.version}</version>
+            <classifier>adm-stub</classifier>
+        </dependency>
+
+        <dependency>
+            <groupId>io.eguan</groupId>
+            <artifactId>vvr-core</artifactId>
+            <version>${project.version}</version>
+            <classifier>adm-stub</classifier>
+        </dependency>
+
+        <dependency>
+            <groupId>io.eguan</groupId>
+            <artifactId>dtx</artifactId>
+            <version>${project.version}</version>
+            <classifier>adm-stub</classifier>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-json</artifactId>
+            <version>${jerseyVersion}</version>
+        </dependency>
+
+    </dependencies>
+</project>

@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.eguan</groupId>
+    <artifactId>eguan</artifactId>
+    <packaging>pom</packaging>
+    <version>0.6-SNAPSHOT</version>
+
+    <name>Project eguan</name>
+    <description>
+    Eguan is a replicated storage system in Java and C/C++.
+    </description>
+
+    <prerequisites>
+        <maven>3.0.4</maven>
+    </prerequisites>
+
+    <organization>
+        <name>Oodrive</name>
+        <url>http://www.oodrive.com/</url>
+    </organization>
+    <!-- the first year of project -->
+    <inceptionYear>2012</inceptionYear>
+    <licenses>
+        <license>
+            <name>Apache 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <properties>
+        <projectName>eguan</projectName>
+
+        <!-- NAR AOL supported by this project -->
+        <localAOL>amd64-Linux-gpp</localAOL>
+
+        <!-- Default temporary file directory -->
+        <tmpdir>/tmp</tmpdir>
+
+        <!-- Version of dependencies -->
+        <apacheCxfVersion>2.7.0</apacheCxfVersion>
+        <aspectjrtVersion>1.7.2</aspectjrtVersion>
+        <bcprovVersion>1.47</bcprovVersion>
+        <GgleTestVersion>1.6.0</GgleTestVersion>
+        <guavaVersion>15.0</guavaVersion>
+        <hazelcastVersion>2.5</hazelcastVersion>
+        <hppcVersion>0.5.3</hppcVersion>
+        <jettyVersion>8.1.5.v20120716</jettyVersion>
+        <jerseyVersion>1.13</jerseyVersion>
+        <jsr305Version>2.0.1</jsr305Version>
+        <junitVersion>4.10</junitVersion>
+        <jscsiVersion>2.5.1-oodrive</jscsiVersion>
+        <leveldbVersion>1.16.0-oodrive</leveldbVersion>
+        <log4cplusVersion>1.1.2-rc2-oodrive</log4cplusVersion>
+        <logbackVersion>1.1.1</logbackVersion>
+        <mockitoVersion>1.9.5</mockitoVersion>
+        <nettyVersion>3.8.0.Final</nettyVersion>
+        <perfidixVersion>3.6.8-SNAPSHOT</perfidixVersion>
+        <protobufRpcProVersion>3.0.0</protobufRpcProVersion>
+        <protobufVersion>2.4.1</protobufVersion>
+        <snappyVersion>1.1.0</snappyVersion>
+        <testngVersion>6.8</testngVersion>
+    </properties>
+
+    <modules>
+        <module>thirdparty</module>
+        <module>main</module>
+    </modules>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+
+                <!-- add license to sources -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>license-maven-plugin</artifactId>
+                    <version>1.7</version>
+                    <configuration>
+                        <licenseName>apache_v2</licenseName>
+                        <canUpdateCopyright>true</canUpdateCopyright>
+                        <canUpdateDescription>true</canUpdateDescription>
+                        <canUpdateLicense>true</canUpdateLicense>
+                        <verbose>true</verbose>
+                        <roots>
+                            <root>main</root>
+                        </roots>
+                        <excludes>
+                            <exclude>**/*.xml</exclude>
+                            <exclude>**/*.sh</exclude>
+                            <exclude>**/*.css</exclude>
+                        </excludes>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>first</id>
+                            <goals>
+                                <goal>update-file-header</goal>
+                            </goals>
+                            <phase>process-sources</phase>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <!-- Set default version of Java -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.1</version>
+                    <configuration>
+                        <source>1.7</source>
+                        <target>1.7</target>
+                    </configuration>
+                </plugin>
+
+                <!-- Unit test plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.17</version>
+                    <configuration>
+                        <!-- Raise max memory for unit tests -->
+                        <!-- Added to fix run of emma with Java 7. See http://stackoverflow.com/questions/7010665/testng-emma-cobertura-coverage-and-jdk-7-result-in-classformaterror-and-verif -->
+                        <argLine>-Xmx1536m -XX:-UseSplitVerifier</argLine>
+                        <!-- Ignore 'long' JAR tests by default -->
+                        <excludes>
+                            <exclude>**/*L.java</exclude>
+                        </excludes>
+                        <!-- Set temporary file directory -->
+                        <systemPropertyVariables>
+                            <java.io.tmpdir>${tmpdir}</java.io.tmpdir>
+                        </systemPropertyVariables>
+                    </configuration>
+                </plugin>
+
+                <!-- Unit test coverage plugin -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>emma-maven-plugin</artifactId>
+                    <version>1.0-alpha-3</version>
+                </plugin>
+
+                <!-- Needs the oodrive version of the NAR plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-nar-plugin</artifactId>
+                    <version>2.1-oodrive</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <!-- Ignore 'long' NAR tests by default -->
+                        <excludes>
+                            <exclude>**/*L.java</exclude>
+                            <exclude>**/*$*</exclude>
+                        </excludes>
+                        <!-- Set temporary file directory -->
+                        <systemProperties>
+                            <property>
+                                <name>java.io.tmpdir</name>
+                                <value>${tmpdir}</value>
+                            </property>
+                        </systemProperties>
+                    </configuration>
+                </plugin>
+
+                <!-- Integration test plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>2.16</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>integration-test</goal>
+                                <goal>verify</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <!-- Create jar with dependencies -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>2.2</version>
+                </plugin>
+
+                <!-- Assembly plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>2.4</version>
+                </plugin>
+
+                <!-- Clean plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>2.5</version>
+                </plugin>
+
+                <!-- Jar plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>2.4</version>
+                </plugin>
+
+                <!-- War plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-war-plugin</artifactId>
+                    <version>2.4</version>
+                </plugin>
+
+                <!-- Source plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.2.1</version>
+                </plugin>
+
+                <!-- Ant run plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>1.7</version>
+                </plugin>
+
+                <!-- Apache CXF wadl2java plugin -->
+                <plugin>
+                    <groupId>org.apache.cxf</groupId>
+                    <artifactId>cxf-wadl2java-plugin</artifactId>
+                    <version>2.7.5</version>
+                </plugin>
+
+                <!-- Codehaus build number plugin -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>buildnumber-maven-plugin</artifactId>
+                    <version>1.2</version>
+                </plugin>
+
+                <!-- Codehaus exec plugin -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>1.2.1</version>
+                </plugin>
+
+                <!-- Workaround the lack of m2eclipse plugin for NAR projects. See http://stackoverflow.com/questions/6352208/how-to-solve-plugin-execution-not-covered-by-lifecycle-configuration-for-sprin 
+                    for details -->
+                <plugin>
+                    <groupId>org.eclipse.m2e</groupId>
+                    <artifactId>lifecycle-mapping</artifactId>
+                    <version>1.0.0</version>
+                    <configuration>
+                        <lifecycleMappingMetadata>
+                            <pluginExecutions>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-nar-plugin</artifactId>
+                                        <versionRange>[2.1-oodrive,)</versionRange>
+                                        <goals>
+                                            <goal>nar-assembly</goal>
+                                            <goal>nar-compile</goal>
+                                            <goal>nar-download</goal>
+                                            <goal>nar-gnu-configure</goal>
+                                            <goal>nar-gnu-make</goal>
+                                            <goal>nar-gnu-process</goal>
+                                            <goal>nar-gnu-resources</goal>
+                                            <goal>nar-javah</goal>
+                                            <goal>nar-resources</goal>
+                                            <goal>nar-system-generate</goal>
+                                            <goal>nar-testCompile</goal>
+                                            <goal>nar-testDownload</goal>
+                                            <goal>nar-testUnpack</goal>
+                                            <goal>nar-unpack</goal>
+                                            <goal>nar-validate</goal>
+                                            <goal>nar-vcproj</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore />
+                                    </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>com.google.protobuf.tools</groupId>
+                                        <artifactId>maven-protoc-plugin</artifactId>
+                                        <versionRange>[0.1.11-oodrive,)</versionRange>
+                                        <goals>
+                                            <goal>compile</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore />
+                                    </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.apache.cxf</groupId>
+                                        <artifactId>cxf-wadl2java-plugin</artifactId>
+                                        <versionRange>[2.4.2,)</versionRange>
+                                        <goals>
+                                            <goal>wadl2java</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <execute>
+                                            <runOnIncremental>true</runOnIncremental>
+                                        </execute>
+                                    </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-antrun-plugin</artifactId>
+                                        <versionRange>[1.6,)</versionRange>
+                                        <goals>
+                                            <goal>run</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore></ignore>
+                                    </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.codehaus.mojo</groupId>
+                                        <artifactId>exec-maven-plugin</artifactId>
+                                        <versionRange>[1.2.1,)</versionRange>
+                                        <goals>
+                                            <goal>exec</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore></ignore>
+                                    </action>
+                                </pluginExecution>
+                            </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+</project>

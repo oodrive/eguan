@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.eguan</groupId>
+        <artifactId>eguan</artifactId>
+        <version>0.6-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>thirdparty</artifactId>
+    <packaging>pom</packaging>
+
+    <name>Third-party projects</name>
+    <description>
+    This project is the parent project for third-party projects, needed by the SP2 software.
+    </description>
+
+    <modules>
+        <!-- C/C++ -->
+        <module>gtest</module>
+        <module>leveldb</module>
+        <module>log4cplus</module>
+        <module>snappy</module>
+        <!-- Java -->
+        <module>jSCSI</module>
+    </modules>
+
+</project>

@@ -1,0 +1,27 @@
+diff -rupN 02_add_contains/util/env_posix.cc 03_nospace_left/util/env_posix.cc
+--- 02_add_contains/util/env_posix.cc	2013-12-10 20:15:01.000000000 +0100
++++ 03_nospace_left/util/env_posix.cc	2014-04-03 15:00:56.000000000 +0200
+@@ -26,6 +26,7 @@
+ #include "util/logging.h"
+ #include "util/mutexlock.h"
+ #include "util/posix_logger.h"
++#include <sys/statvfs.h>
+ 
+ namespace leveldb {
+ 
+@@ -192,6 +193,15 @@ class PosixWritableFile : public Writabl
+   }
+ 
+   virtual Status Append(const Slice& data) {
++    // check that the device is not full
++    // to avoid SIGBUS
++    size_t n = data.size();
++    struct statvfs buf;
++    int res = statvfs(filename_.c_str(), &buf);
++    if((res != 0) || (n > (buf.f_bsize * buf.f_bavail))){
++      // no space left
++      return Status::IOError("No space left for " + filename_);
++    }
+     size_t r = fwrite_unlocked(data.data(), 1, data.size(), file_);
+     if (r != data.size()) {
+       return IOError(filename_, errno);

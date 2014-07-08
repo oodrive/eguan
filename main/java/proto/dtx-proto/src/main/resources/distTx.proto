@@ -1,0 +1,42 @@
+import "common.proto";
+package com.oodrive.nuage.proto.dtx;
+
+option optimize_for = LITE_RUNTIME;
+option java_outer_classname = "DistTxWrapper";
+
+// Transaction node representation
+message TxNode {
+    required Uuid nodeId = 1;
+    required bytes ipAddress = 2; // should accommodate IPv4 and IPv6 addresses
+    required sint32 port = 3;
+}
+
+// Complete distributed transaction
+message TxMessage {
+    required ProtocolVersion version = 1; // add protocol version
+    required sint64 txId = 2; // transaction ID
+    required Uuid taskId = 3; // global ID of the public task
+    required Uuid initiatorId = 4; // node ID of the initiator
+    required Uuid resId = 5; // global ID of the target resource manager(s)
+    required sint64 timeout = 6; // mandatory global transaction timeout in seconds
+    optional bytes payload = 7; // binary encoded operation encapsulated by the transaction
+}
+
+// local transaction journal entry
+message TxJournalEntry {
+
+    // tx operations to include in the journal
+    enum TxOpCode {
+        START = 1;
+        COMMIT = 2;
+        ROLLBACK = 3;
+    }
+
+    required ProtocolVersion version = 1; // add protocol version
+    required sint64 timestamp = 2; // timestamp of the journal entry creation (ms since epoch)
+    required sint64 txId = 3; // transaction ID
+    required TxOpCode op = 4; // operation identifier
+    repeated TxNode txNodes = 5; // list of node IDs of participating nodes
+    optional TxMessage tx = 6; // transaction message mandatory for start opcode
+    optional int32 errCode = 7; // optional error code for rollback message
+}

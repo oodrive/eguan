@@ -1,0 +1,152 @@
+diff -rupN 03_nospace_left/db/db_impl.cc 04_mutex/db/db_impl.cc
+--- 03_nospace_left/db/db_impl.cc	2014-04-03 14:56:48.000000000 +0200
++++ 04_mutex/db/db_impl.cc	2014-04-03 15:10:13.000000000 +0200
+@@ -147,30 +147,46 @@ DBImpl::DBImpl(const Options& raw_option
+ 
+ DBImpl::~DBImpl() {
+   // Wait for background work to finish
+-  mutex_.Lock();
+-  shutting_down_.Release_Store(this);  // Any non-NULL value is ok
+-  while (bg_compaction_scheduled_) {
+-    bg_cv_.Wait();
++  {
++    MutexLock l(&mutex_);
++    shutting_down_.Release_Store(this);  // Any non-NULL value is ok
++    while (bg_compaction_scheduled_) {
++      bg_cv_.Wait();
++    }
+   }
+-  mutex_.Unlock();
+ 
+   if (db_lock_ != NULL) {
+     env_->UnlockFile(db_lock_);
+   }
+ 
+-  delete versions_;
+-  if (mem_ != NULL) mem_->Unref();
+-  if (imm_ != NULL) imm_->Unref();
+-  delete tmp_batch_;
+-  delete log_;
+-  delete logfile_;
+-  delete table_cache_;
+-
+-  if (owns_info_log_) {
+-    delete options_.info_log;
++  {
++    MutexLock l(&mutex_);
++    // unblock all waiters
++    // and avoid busy error
++    // on bg_cv_ destruction
++    bg_cv_.SignalAll();
+   }
+-  if (owns_cache_) {
+-    delete options_.block_cache;
++
++  {
++    MutexLock l(&mutex_);
++    delete versions_;
++    if (mem_ != NULL) {
++  	  mem_->Unref();
++    }
++    if (imm_ != NULL) {
++      imm_->Unref();
++    }
++    delete tmp_batch_;
++    delete log_;
++    delete logfile_;
++    delete table_cache_;
++
++    if (owns_info_log_) {
++      delete options_.info_log;
++    }
++    if (owns_cache_) {
++      delete options_.block_cache;
++    }
+   }
+ }
+ 
+@@ -536,12 +552,15 @@ void DBImpl::CompactMemTable() {
+ void DBImpl::CompactRange(const Slice* begin, const Slice* end) {
+   int max_level_with_files = 1;
+   {
+-    MutexLock l(&mutex_);
+-    Version* base = versions_->current();
+-    for (int level = 1; level < config::kNumLevels; level++) {
+-      if (base->OverlapInLevel(level, begin, end)) {
+-        max_level_with_files = level;
++    // only check if not already doing it ...
++    if (mutex_.TryLock()) {
++      Version* base = versions_->current();
++      for (int level = 1; level < config::kNumLevels; level++) {
++        if (base->OverlapInLevel(level, begin, end)) {
++          max_level_with_files = level;
++        }
+       }
++      mutex_.Unlock();
+     }
+   }
+   TEST_CompactMemTable(); // TODO(sanjay): Skip if memtable does not overlap
+diff -rupN 03_nospace_left/port/port_posix.cc 04_mutex/port/port_posix.cc
+--- 03_nospace_left/port/port_posix.cc	2013-12-10 20:15:01.000000000 +0100
++++ 04_mutex/port/port_posix.cc	2014-04-03 15:03:15.000000000 +0200
+@@ -7,6 +7,7 @@
+ #include <cstdlib>
+ #include <stdio.h>
+ #include <string.h>
++#include <errno.h>
+ #include "util/logging.h"
+ 
+ namespace leveldb {
+@@ -21,11 +22,38 @@ static void PthreadCall(const char* labe
+ 
+ Mutex::Mutex() { PthreadCall("init mutex", pthread_mutex_init(&mu_, NULL)); }
+ 
+-Mutex::~Mutex() { PthreadCall("destroy mutex", pthread_mutex_destroy(&mu_)); }
++Mutex::~Mutex() {
++  int rc = pthread_mutex_destroy(&mu_);
++  if(rc != 0){
++    if(rc == EBUSY){
++      rc = pthread_mutex_unlock(&mu_);
++      PthreadCall("destroy mutex unlock second chance", rc);
++    }else{
++      PthreadCall("destroy mutex", rc);
++    }
++  }
++}
+ 
+-void Mutex::Lock() { PthreadCall("lock", pthread_mutex_lock(&mu_)); }
++void Mutex::Lock() {
++  int rc = pthread_mutex_lock(&mu_);
++  if(rc != 0){
++    if(rc == EINVAL){
++      PthreadCall("init mutex", pthread_mutex_init(&mu_, NULL));
++      PthreadCall("lock second chance", pthread_mutex_lock(&mu_));
++    }else{
++	  PthreadCall("lock", rc);
++    }
++  }
++}
++
++void Mutex::Unlock() {
++  int rc = pthread_mutex_unlock(&mu_);
++  if(rc != 0 && rc != EINVAL){
++    PthreadCall("unlock", rc);
++  }
++}
+ 
+-void Mutex::Unlock() { PthreadCall("unlock", pthread_mutex_unlock(&mu_)); }
++bool Mutex::TryLock() { return pthread_mutex_trylock(&mu_) == 0; }
+ 
+ CondVar::CondVar(Mutex* mu)
+     : mu_(mu) {
+diff -rupN 03_nospace_left/port/port_posix.h 04_mutex/port/port_posix.h
+--- 03_nospace_left/port/port_posix.h	2013-12-10 20:15:01.000000000 +0100
++++ 04_mutex/port/port_posix.h	2014-04-03 15:03:15.000000000 +0200
+@@ -90,6 +90,7 @@ class Mutex {
+   void Lock();
+   void Unlock();
+   void AssertHeld() { }
++  bool TryLock();
+ 
+  private:
+   friend class CondVar;

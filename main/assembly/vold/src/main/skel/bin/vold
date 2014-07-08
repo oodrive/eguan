@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+# Starts a volume manager daemon
+# Usage: $0 <path to VOLD>
+#
+
+[ $# != 1 ] && echo "Usage: $0 <path to VOLD>" && exit 1
+
+export VOLD_DIR="$1"
+
+[ ! -e "$VOLD_DIR" ] && echo "'$VOLD_DIR' does not exist" && exit 2
+[ ! -d "$VOLD_DIR" ] && echo "'$VOLD_DIR' is not a directory" && exit 3
+
+case "$VOLD_DIR" in
+     /*) export VOLD_DIR_ABS="$VOLD_DIR" ;;
+     *)  export VOLD_DIR_ABS="`pwd`/$VOLD_DIR" ;;
+esac
+
+cd `dirname $0`/../lib
+if [ -z "$LD_LIBRARY_PATH" ];then
+ export LD_LIBRARY_PATH=.
+else
+ export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
+fi
+
+exec java -jar vold.jar "$VOLD_DIR_ABS"

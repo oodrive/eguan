@@ -1,0 +1,38 @@
+package com.oodrive.nuage.proto;
+
+// Smaller classes
+option optimize_for = LITE_RUNTIME;
+option java_outer_classname = "Common";
+
+// Universally Unique IDentifier
+message Uuid {
+    required sint64 msb = 1;
+    required sint64 lsb = 2;
+}
+
+// Protocol type
+enum Type {
+    VOLD = 1;
+    VVR = 2;
+    DEVICE = 3;
+    SNAPSHOT = 4;
+    NRS = 5;
+    IBS = 6;
+}
+
+// Operation code
+enum OpCode {
+    CREATE = 1; // VVR, TAKE_SNAPSHOT, CREATE_DEVICE
+    SET = 2;
+    DELETE = 3;
+    START = 4; // VVR
+    STOP = 5; // VVR
+    LIST = 6; // NRS
+    UPDATE = 7; // NRS
+    GET = 8; // IBS
+    CLONE = 9; // DEVICE
+}
+
+enum ProtocolVersion {
+    VERSION_1 = 1;
+}

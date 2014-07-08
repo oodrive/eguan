@@ -1,0 +1,38 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.eguan</groupId>
+        <artifactId>java</artifactId>
+        <version>0.6-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>jni</artifactId>
+    <packaging>pom</packaging>
+    <name>nuage SP2 Java modules with native code</name>
+
+    <properties>
+        <!-- Tests: can not run JNI unit tests during the nar-test goal -->
+        <skipTests>true</skipTests>
+    </properties>
+
+    <build>
+        <defaultGoal>install</defaultGoal>
+        <plugins>
+            <plugin>
+                <artifactId>maven-nar-plugin</artifactId>
+                <configuration>
+                    <!-- Tests: do not rerun JNI unit tests during the nar-integration-test goal -->
+                    <skipNarTests>true</skipNarTests>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <modules>
+        <module>hash</module>
+        <module>ibs-java</module>
+    </modules>
+
+</project>

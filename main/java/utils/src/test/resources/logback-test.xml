@@ -1,0 +1,19 @@
+<configuration scan="false">
+
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <!-- encoders are assigned the type
+         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <logger name="com.hazelcast" level="INFO" />
+  <logger name="com.oodrive.nuage.nrs" level="DEBUG" />
+  <logger name="com.oodrive.nuage.utils.Files" level="DEBUG" />
+  <logger name="org.jscsi" level="WARN" />
+
+  <root level="INFO">
+    <appender-ref ref="STDOUT" />
+  </root>
+</configuration>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration xmlns="http://www.jscsi.org/2006-09" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.jscsi.org/2006-09 jscsi.xsd">
+
+    <global>
+        <AuthMethod>None</AuthMethod>
+        <DataDigest>None</DataDigest>
+        <DataPDUInOrder>Yes</DataPDUInOrder>
+        <DataSequenceInOrder>Yes</DataSequenceInOrder>
+        <DefaultTime2Retain>20</DefaultTime2Retain>
+        <DefaultTime2Wait>2</DefaultTime2Wait>
+        <ErrorRecoveryLevel>0</ErrorRecoveryLevel>
+        <FirstBurstLength>65536</FirstBurstLength>
+        <HeaderDigest>None</HeaderDigest>
+        <IFMarker>No</IFMarker>
+        <!-- 
+        <IFMarkInt>2048</IFMarkInt>
+         -->
+        <ImmediateData>Yes</ImmediateData>
+        <InitialR2T>Yes</InitialR2T>
+        <InitiatorAlias>TestInitiatorAlias</InitiatorAlias>
+        <InitiatorName>TestInitiatorName</InitiatorName>
+        <MaxBurstLength>262144</MaxBurstLength>
+        <MaxConnections>1</MaxConnections>
+        <MaxOutstandingR2T>1</MaxOutstandingR2T>
+        <MaxRecvDataSegmentLength>8192</MaxRecvDataSegmentLength>
+        <OFMarker>No</OFMarker>
+        <!-- 
+        <OFMarkInt>2048</OFMarkInt>
+         -->
+        <SessionType>Normal</SessionType>
+    </global>
+
+    <target id="test-nuage" address="localhost" port="3260">
+        <ImmediateData>No</ImmediateData>
+        <InitiatorName>TestingInitiator</InitiatorName>
+        <TargetName>iqn.2000-06.com.oodrive:test-target</TargetName>
+    </target>
+
+</configuration>

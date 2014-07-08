@@ -1,0 +1,9 @@
+
+This directory contains the series of patch applied to "official" leveldb-1.15.0 sources to obtain our flavour of leveldb.
+
+Patch should be applied in order, the easiest way is like this :
+
+cp *.patch src_of_levedb-1.15.0
+cd src_of_levedb-1.15.0
+for i in *.patch ; do patch -p1 < $i ; done
+

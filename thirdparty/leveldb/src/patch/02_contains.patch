@@ -1,0 +1,299 @@
+diff -rupN 01_maven_changes/db/db_impl.cc 02_add_contains/db/db_impl.cc
+--- 01_maven_changes/db/db_impl.cc	2014-04-03 14:27:21.000000000 +0200
++++ 02_add_contains/db/db_impl.cc	2014-04-03 14:56:48.000000000 +0200
+@@ -1121,6 +1121,54 @@ Status DBImpl::Get(const ReadOptions& op
+   return s;
+ }
+ 
++Status DBImpl::Contains(const ReadOptions& options,
++                        const Slice& key) {
++  Status s;
++  MutexLock l(&mutex_);
++  SequenceNumber snapshot;
++  if (options.snapshot != NULL) {
++    snapshot = reinterpret_cast<const SnapshotImpl*>(options.snapshot)->number_;
++  } else {
++    snapshot = versions_->LastSequence();
++  }
++
++  MemTable* mem = mem_;
++  MemTable* imm = imm_;
++  assert(versions_ != NULL);
++  Version* current = versions_->current();
++  if (mem != NULL) mem->Ref();
++  if (imm != NULL) imm->Ref();
++  assert(current != NULL);
++  current->Ref();
++
++  bool have_stat_update = false;
++  Version::GetStats stats;
++
++  // Unlock while reading from files and memtables
++  {
++    mutex_.Unlock();
++    // First look in the memtable, then in the immutable memtable (if any).
++    LookupKey lkey(key, snapshot);
++    if (mem != NULL && mem->Contains(lkey, &s)) {
++      // Done
++    } else if (imm != NULL && imm->Contains(lkey, &s)) {
++      // Done
++    } else {
++      s = current->Contains(options, lkey, &stats);
++      have_stat_update = true;
++    }
++    mutex_.Lock();
++  }
++
++  if (have_stat_update && current->UpdateStats(stats)) {
++    MaybeScheduleCompaction();
++  }
++  mem->Unref();
++  if (imm != NULL) imm->Unref();
++  current->Unref();
++  return s;
++}
++
+ Iterator* DBImpl::NewIterator(const ReadOptions& options) {
+   SequenceNumber latest_snapshot;
+   uint32_t seed;
+diff -rupN 01_maven_changes/db/db_impl.h 02_add_contains/db/db_impl.h
+--- 01_maven_changes/db/db_impl.h	2014-04-03 14:27:30.000000000 +0200
++++ 02_add_contains/db/db_impl.h	2014-04-03 14:22:50.000000000 +0200
+@@ -35,6 +35,8 @@ class DBImpl : public DB {
+   virtual Status Get(const ReadOptions& options,
+                      const Slice& key,
+                      std::string* value);
++  virtual Status Contains(const ReadOptions& options,
++                          const Slice& key);
+   virtual Iterator* NewIterator(const ReadOptions&);
+   virtual const Snapshot* GetSnapshot();
+   virtual void ReleaseSnapshot(const Snapshot* snapshot);
+diff -rupN 01_maven_changes/db/memtable.cc 02_add_contains/db/memtable.cc
+--- 01_maven_changes/db/memtable.cc	2013-12-10 20:15:01.000000000 +0100
++++ 02_add_contains/db/memtable.cc	2014-04-03 14:54:00.000000000 +0200
+@@ -142,4 +142,39 @@ bool MemTable::Get(const LookupKey& key,
+   return false;
+ }
+ 
++bool MemTable::Contains(const LookupKey& key, Status* s) {
++  Slice memkey = key.memtable_key();
++  Table::Iterator iter(&table_);
++  iter.Seek(memkey.data());
++  if (iter.Valid()) {
++    // entry format is:
++    //    klength  varint32
++    //    userkey  char[klength]
++    //    tag      uint64
++    //    vlength  varint32
++    //    value    char[vlength]
++    // Check that it belongs to same user key.  We do not check the
++    // sequence number since the Seek() call above should have skipped
++    // all entries with overly large sequence numbers.
++    const char* entry = iter.key();
++    uint32_t key_length;
++    const char* key_ptr = GetVarint32Ptr(entry, entry+5, &key_length);
++    if (comparator_.comparator.user_comparator()->Compare(
++            Slice(key_ptr, key_length - 8),
++            key.user_key()) == 0) {
++      // Correct user key
++      const uint64_t tag = DecodeFixed64(key_ptr + key_length - 8);
++      switch (static_cast<ValueType>(tag & 0xff)) {
++        case kTypeValue: {
++          return true;
++        }
++        case kTypeDeletion:
++          *s = Status::NotFound(Slice());
++          return true;
++      }
++    }
++  }
++  return false;
++}
++
+ }  // namespace leveldb
+diff -rupN 01_maven_changes/db/memtable.h 02_add_contains/db/memtable.h
+--- 01_maven_changes/db/memtable.h	2014-04-03 14:27:59.000000000 +0200
++++ 02_add_contains/db/memtable.h	2014-04-03 14:53:11.000000000 +0200
+@@ -63,6 +63,12 @@ class MemTable {
+   // Else, return false.
+   bool Get(const LookupKey& key, std::string* value, Status* s);
+ 
++  // If memtable contains a value for key, return true.
++  // If memtable contains a deletion for key, store a NotFound() error
++  // in *status and return true.
++  // Else, return false.
++  bool Contains(const LookupKey& key, Status* s);
++
+  private:
+   ~MemTable();  // Private since only Unref() should be used to delete it
+ 
+diff -rupN 01_maven_changes/db/version_set.cc 02_add_contains/db/version_set.cc
+--- 01_maven_changes/db/version_set.cc	2013-12-10 20:15:01.000000000 +0100
++++ 02_add_contains/db/version_set.cc	2014-04-03 14:52:28.000000000 +0200
+@@ -269,6 +269,11 @@ struct Saver {
+   Slice user_key;
+   std::string* value;
+ };
++struct EmptySaver {
++  SaverState state;
++  const Comparator* ucmp;
++  Slice user_key;
++};
+ }
+ static void SaveValue(void* arg, const Slice& ikey, const Slice& v) {
+   Saver* s = reinterpret_cast<Saver*>(arg);
+@@ -285,6 +290,20 @@ static void SaveValue(void* arg, const S
+   }
+ }
+ 
++static void SaveDummy(void* arg, const Slice& ikey, const Slice& v) {
++  EmptySaver* s = reinterpret_cast<EmptySaver*>(arg);
++  ParsedInternalKey parsed_key;
++  if (!ParseInternalKey(ikey, &parsed_key)) {
++    s->state = kCorrupt;
++  } else {
++    if (s->ucmp->Compare(parsed_key.user_key, s->user_key) == 0) {
++      s->state = (parsed_key.type == kTypeValue) ? kFound : kDeleted;
++      if (s->state == kFound) {
++      }
++    }
++  }
++}
++
+ static bool NewestFirst(FileMetaData* a, FileMetaData* b) {
+   return a->number > b->number;
+ }
+@@ -415,6 +434,103 @@ Status Version::Get(const ReadOptions& o
+       if (!s.ok()) {
+         return s;
+       }
++      switch (saver.state) {
++        case kNotFound:
++          break;      // Keep searching in other files
++        case kFound:
++          return s;
++        case kDeleted:
++          s = Status::NotFound(Slice());  // Use empty error message for speed
++          return s;
++        case kCorrupt:
++          s = Status::Corruption("corrupted key for ", user_key);
++          return s;
++      }
++    }
++  }
++
++  return Status::NotFound(Slice());  // Use an empty error message for speed
++}
++
++Status Version::Contains(const ReadOptions& options,
++                         const LookupKey& k,
++                         GetStats* stats) {
++  Slice ikey = k.internal_key();
++  Slice user_key = k.user_key();
++  const Comparator* ucmp = vset_->icmp_.user_comparator();
++  Status s;
++
++  stats->seek_file = NULL;
++  stats->seek_file_level = -1;
++  FileMetaData* last_file_read = NULL;
++  int last_file_read_level = -1;
++
++  // We can search level-by-level since entries never hop across
++  // levels.  Therefore we are guaranteed that if we find data
++  // in an smaller level, later levels are irrelevant.
++  std::vector<FileMetaData*> tmp;
++  FileMetaData* tmp2;
++  for (int level = 0; level < config::kNumLevels; level++) {
++    size_t num_files = files_[level].size();
++    if (num_files == 0) continue;
++
++    // Get the list of files to search in this level
++    FileMetaData* const* files = &files_[level][0];
++    if (level == 0) {
++      // Level-0 files may overlap each other.  Find all files that
++      // overlap user_key and process them in order from newest to oldest.
++      tmp.reserve(num_files);
++      for (uint32_t i = 0; i < num_files; i++) {
++        FileMetaData* f = files[i];
++        if (ucmp->Compare(user_key, f->smallest.user_key()) >= 0 &&
++            ucmp->Compare(user_key, f->largest.user_key()) <= 0) {
++          tmp.push_back(f);
++        }
++      }
++      if (tmp.empty()) continue;
++
++      std::sort(tmp.begin(), tmp.end(), NewestFirst);
++      files = &tmp[0];
++      num_files = tmp.size();
++    } else {
++      // Binary search to find earliest index whose largest key >= ikey.
++      uint32_t index = FindFile(vset_->icmp_, files_[level], ikey);
++      if (index >= num_files) {
++        files = NULL;
++        num_files = 0;
++      } else {
++        tmp2 = files[index];
++        if (ucmp->Compare(user_key, tmp2->smallest.user_key()) < 0) {
++          // All of "tmp2" is past any data for user_key
++          files = NULL;
++          num_files = 0;
++        } else {
++          files = &tmp2;
++          num_files = 1;
++        }
++      }
++    }
++
++    for (uint32_t i = 0; i < num_files; ++i) {
++      if (last_file_read != NULL && stats->seek_file == NULL) {
++        // We have had more than one seek for this read.  Charge the 1st file.
++        stats->seek_file = last_file_read;
++        stats->seek_file_level = last_file_read_level;
++      }
++
++      FileMetaData* f = files[i];
++      last_file_read = f;
++      last_file_read_level = level;
++
++      EmptySaver saver;
++      saver.state = kNotFound;
++      saver.ucmp = ucmp;
++      saver.user_key = user_key;
++      s = vset_->table_cache_->Get(options, f->number, f->file_size,
++                                   ikey, &saver, SaveDummy);
++      if (!s.ok()) {
++        return s;
++      }
+       switch (saver.state) {
+         case kNotFound:
+           break;      // Keep searching in other files
+diff -rupN 01_maven_changes/db/version_set.h 02_add_contains/db/version_set.h
+--- 01_maven_changes/db/version_set.h	2013-12-10 20:15:01.000000000 +0100
++++ 02_add_contains/db/version_set.h	2014-04-03 14:22:50.000000000 +0200
+@@ -72,6 +72,7 @@ class Version {
+   };
+   Status Get(const ReadOptions&, const LookupKey& key, std::string* val,
+              GetStats* stats);
++  Status Contains(const ReadOptions&, const LookupKey& key, GetStats* stats);
+ 
+   // Adds "stats" into the current state.  Returns true if a new
+   // compaction may need to be triggered, false otherwise.
+diff -rupN 01_maven_changes/include/leveldb/db.h 02_add_contains/include/leveldb/db.h
+--- 01_maven_changes/include/leveldb/db.h	2013-12-10 20:15:01.000000000 +0100
++++ 02_add_contains/include/leveldb/db.h	2014-04-03 14:22:50.000000000 +0200
+@@ -83,6 +83,15 @@ class DB {
+   virtual Status Get(const ReadOptions& options,
+                      const Slice& key, std::string* value) = 0;
+ 
++  // If the database contains an entry for "key" return OK.
++  //
++  // If there is no entry for "key" leave value unchanged and return
++  // a status for which Status::IsNotFound() returns true.
++  //
++  // May return some other Status on an error.
++  virtual Status Contains(const ReadOptions& options,
++                          const Slice& key) = 0;
++
+   // Return a heap-allocated iterator over the contents of the database.
+   // The result of NewIterator() is initially invalid (caller must
+   // call one of the Seek methods on the iterator before using it).

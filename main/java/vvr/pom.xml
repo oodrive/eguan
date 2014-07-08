@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>java</artifactId>
+        <groupId>io.eguan</groupId>
+        <version>0.6-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>vvr</artifactId>
+    <packaging>pom</packaging>
+    <name>VVR - Versioned Volume Repository</name>
+    <description>Versioned Volume Repository (VVR)</description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>main</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>core</module>
+                <module>vvr-it</module>
+            </modules>
+        </profile>
+        <profile>
+            <!-- Coverage: only vvr-it -->
+            <id>coverage</id>
+
+            <modules>
+                <module>vvr-it</module>
+            </modules>
+        </profile>
+    </profiles>
+
+</project>

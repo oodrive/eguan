@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application xmlns="http://wadl.dev.java.net/2009/02" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://wadl.dev.java.net/2009/02 xsd/wadl.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:vold="http://www.oodrive.com/nuage/vold/model">
+    <grammars>
+        <include href="xsd/vold.xsd" />
+    </grammars>
+
+    <resources>
+        <resource path="vvrs" id="VvrsResource">
+            <doc>Resource representing all VVR instances contained in a vold.
+            </doc>
+            <param name="ownerId" style="query" type="xsd:string" required="true" />
+
+            <method name="GET" id="getAllVvr">
+                <doc> Gets all VVR instances in a vold.
+                </doc>
+                <request>
+                    <doc>Optional filters for returned VVRs
+                        TODO: does filtering by ownerId still make sense?
+                    </doc>
+                    <param id="ownerIdFilter" name="ownerIdFilter" style="query" type="xsd:string" required="false" />
+                    <param id="machineIdFilter" name="machineIdFilter" style="query" type="xsd:string" required="false" />
+                    <param id="dcIdFilter" name="dcIdFilter" style="query" type="xsd:string" required="false" />
+                </request>
+                <response status="200">
+                    <representation mediaType="application/xml" element="vold:VersionedVolumeRepositoryList" />
+                    <representation mediaType="application/json" element="vold:VersionedVolumeRepositoryList" />
+                </response>
+            </method>
+
+            <resource path="action/createVvr" id="CreateVvrResource">
+                <param name="ownerId" style="query" type="xsd:string" required="true" />
+                <method name="POST" id="createVvr">
+                    <doc> Spawns and launches a task which creates a new VVR instance</doc>
+                    <request>
+                        <param name="uuid" style="query" type="xsd:string" required="false" />
+                    </request>
+                    <response status="202">
+                        <representation href="#taskRefXml" />
+                        <representation href="#taskRefJson" />
+                    </response>
+                </method>
+            </resource>
+
+            <resource path="{vvrId}" id="VvrResource">
+                <doc>Sub-resource representing one particular VVR instance.
+                </doc>
+                <param name="ownerId" style="query" type="xsd:string" required="true" />
+                <param name="vvrId" style="template" type="xsd:string" required="true" />
+
+                <method name="GET" id="getVvr">
+                    <doc>Gets the designated VVR instance.
+                    </doc>
+                    <response>
+                        <representation mediaType="application/xml" element="vold:VersionedVolumeRepository" />
+                        <representation mediaType="application/json" element="vold:VersionedVolumeRepository" />
+                    </response>
+                </method>
+
+                <method name="POST" id="postVvr">
+                    <doc>Modifies the designated VVR instance.
+                    </doc>
+                    <request>
+                        <representation mediaType="application/xml" element="vold:VersionedVolumeRepository" />
+                        <representation mediaType="application/json" element="vold:VersionedVolumeRepository" />
+                    </request>
+                    <response status="200 403">
+                        <representation mediaType="application/xml" element="vold:VersionedVolumeRepository" />
+                        <representation mediaType="application/json" element="vold:VersionedVolumeRepository" />
+                    </response>
+                </method>
+
+                <method name="DELETE" id="deleteVvr">
+                    <doc>Deletes the designated VVR instance.
+                        Returns a 403 return code if the VVR is active/started.
+                    </doc>
+                    <response status="202">
+                        <representation href="#taskRefXml" />
+                        <representation href="#taskRefJson" />
+                    </response>
+                    <response status="403">
+                        <doc>
+                            Returned if any of the VVR's devices are active.
+                        </doc>
+                    </response>
+                </method>
+
+                <resource path="/action/start" id="VvrStartResource">
+                    <param name="ownerId" style="query" type="xsd:string" required="true" />
+                    <method name="POST" id="start">
+                        <response status="202">
+                            <representation href="#taskRefXml" />
+                            <representation href="#taskRefJson" />
+                        </response>
+                    </method>
+                </resource>
+
+                <resource path="/action/stop" id="VvrStopResource">
+                    <param name="ownerId" style="query" type="xsd:string" required="true" />
+                    <method name="POST" id="stop">
+                        <response status="202">
+                            <representation href="#taskRefXml" />
+                            <representation href="#taskRefJson" />
+                        </response>
+                    </method>
+                </resource>
+
+                <resource path="root" id="RootSnapshotResource" type="#snapshot">
+                    <param name="ownerId" style="query" type="xsd:string" required="true" />
+                </resource>
+
+                <resource path="snapshots" id="SnapshotsResource" type="#snapshots" />
+
+                <resource path="devices" id="DevicesResource" type="#devices" />
+
+                <resource path="tasks" id="VvrTasksResource" type="#tasks" />
+
+            </resource>
+
+            <resource path="tasks" id="VvrsTasksResource" type="#tasks" />
+        </resource>
+    </resources>
+
+    <!-- resource types -->
+
+    <resource_type id="snapshots">
+        <doc> Resource representing a snapshot contained in a VVR.</doc>
+        <param name="ownerId" style="query" type="xsd:string" required="true" />
+        <method name="GET" id="getAllSnapshots">
+            <response>
+                <representation mediaType="application/xml" element="vold:SnapshotList" />
+                <representation mediaType="application/json" element="vold:SnapshotList" />
+            </response>
+        </method>
+        <resource path="{snapshotId}" id="SnapshotResource" type="#snapshot">
+            <param name="ownerId" style="query" type="xsd:string" required="true" />
+            <param name="snapshotId" style="template" type="xsd:string" required="true" />
+        </resource>
+    </resource_type>
+
+    <resource_type id="snapshot">
+        <doc> Resource representing a snapshot contained in a VVR.</doc>
+        <param name="ownerId" style="query" type="xsd:string" required="true" />
+        <method name="GET" id="getSnapshot">
+            <doc>Gets the snapshot instance.
+            </doc>
+            <response>
+                <representation mediaType="application/xml" element="vold:Snapshot" />
+                <representation mediaType="application/json" element="vold:Snapshot" />
+            </response>
+        </method>
+        <method name="POST" id="postSnapshot">
+            <doc>Modifies the snapshot instance.
+            </doc>
+            <request>
+                <representation mediaType="application/xml" element="vold:Snapshot" />
+                <representation mediaType="application/json" element="vold:Snapshot" />
+            </request>
+            <response status="200">
+                <representation mediaType="application/xml" element="vold:Snapshot" />
+                <representation mediaType="application/json" element="vold:Snapshot" />
+            </response>
+        </method>
+
+        <method name="DELETE" id="deleteSnapshot">
+            <doc>Deletes the snapshot instance.
+            </doc>
+            <response status="202">
+                <representation href="#taskRefXml" />
+                <representation href="#taskRefJson" />
+            </response>
+            <response status="403">
+                <doc>
+                    Returned if this is the root snapshot.
+                </doc>
+            </response>
+        </method>
+
+        <resource path="action/newDevice" id="NewDeviceResource">
+            <param name="ownerId" style="query" type="xsd:string" required="true" />
+            <method name="POST" id="newDevice">
+                <request>
+                    <param name="name" style="query" type="xsd:string" required="true" />
+                    <param name="description" style="query" type="xsd:string" required="false" />
+                    <param name="uuid" style="query" type="xsd:string" required="false" />
+                    <param name="size" style="query" type="xsd:long" required="false" />
+                </request>
+                <response status="202">
+                    <representation href="#taskRefXml" />
+                    <representation href="#taskRefJson" />
+                </response>
+                <response status="403">
+                    <doc>
+                        Returned if the provided size is invalid.
+                    </doc>
+                </response>
+            </method>
+        </resource>
+
+        <resource path="action/uploadSnapshot" id="UploadSnapshotResource">
+            <param name="ownerId" style="query" type="xsd:string" required="true" />
+            <method name="POST" id="uploadSnapshot">
+                <request>
+                    <param name="size" style="query" type="xsd:long" required="true" />
+                    <!-- TODO: find a way to efficiently represent/transfer binary data according to spec -->
+                    <representation mediaType="application/octet-stream" element="xsd:byte" />
+                </request>
+                <response status="202">
+                    <representation href="#taskRefXml" />
+                    <representation href="#taskRefJson" />
+                </response>
+                <response status="403">
+                    <doc>in case of an invalid size parameter</doc>
+                </response>
+            </method>
+        </resource>
+
+        <resource path="snapshots" id="ChildSnapshotsResource">
+            <doc>Represents all child snapshots of a snapshot instance.</doc>
+            <param name="ownerId" style="query" type="xsd:string" required="true" />
+            <method name="GET" id="getChildSnapshots">
+                <response status="200">
+                    <representation mediaType="application/xml" element="vold:SnapshotList" />
+                    <representation mediaType="application/json" element="vold:SnapshotList" />
+                </response>
+            </method>
+        </resource>
+
+        <resource path="devices" id="DescendantDevicesResource">
+            <doc>Represents descendant devices of a snapshot instance.</doc>
+            <param name="ownerId" style="query" type="xsd:string" required="true" />
+            <method name="GET" id="getDescendantDevices">
+                <request>
+                    <param name="recursive" style="query" type="xsd:boolean" default="false" required="false" />
+                </request>
+                <response status="200">
+                    <representation mediaType="application/xml" element="vold:DeviceList" />
+                    <representation mediaType="application/json" element="vold:DeviceList" />
+                </response>
+            </method>
+        </resource>
+
+        <resource path="bin" id="BinarySnapshotResource">
+            <param name="ownerId" style="query" type="xsd:string" required="true" />
+            <method name="GET" id="getBinarySnapshot">
+                <response status="200">
+                    <!-- TODO: find a way to efficiently represent/transfer binary data according to spec -->
+                    <representation mediaType="application/octet-stream" element="xsd:byte" />
+                </response>
+            </method>
+        </resource>
+    </resource_type>
+
+    <resource_type id="devices">
+        <param name="ownerId" style="query" type="xsd:string" required="true" />
+        <method name="GET" id="getAllDevices">
+            <response>
+                <representation mediaType="application/xml" element="vold:DeviceList" />
+                <representation mediaType="application/json" element="vold:DeviceList" />
+            </response>
+        </method>
+        <resource path="{deviceId}" id="DeviceResource" type="#device">
+            <param name="ownerId" style="query" type="xsd:string" required="true" />
+            <param name="deviceId" style="template" type="xsd:string" required="true" />
+        </resource>
+    </resource_type>
+
+    <resource_type id="device">
+        <doc> Resource representing a device of a snapshot.</doc>
+        <param name="ownerId" style="query" type="xsd:string" required="true" />
+        <method name="GET" id="getDevice">
+            <doc>Gets the device instance.
+            </doc>
+            <response>
+                <representation mediaType="application/xml" element="vold:Device" />
+                <representation mediaType="application/json" element="vold:Device" />
+            </response>
+        </method>
+
+        <method name="POST" id="postDevice">
+            <doc>Modifies the device instance.
+            </doc>
+            <request>
+                <representation mediaType="application/xml" element="vold:Device" />
+                <representation mediaType="application/json" element="vold:Device" />
+            </request>
+            <response status="200">
+                <representation mediaType="application/xml" element="vold:Device" />
+                <representation mediaType="application/json" element="vold:Device" />
+            </response>
+        </method>
+
+        <method name="DELETE" id="deleteDevice">
+            <doc>Deletes the device instance.
+            </doc>
+            <response status="202">
+                <representation href="#taskRefXml" />
+                <representation href="#taskRefJson" />
+            </response>
+            <response status="403">
+                <doc>
+                    Returned if the device is active.
+                </doc>
+            </response>
+        </method>
+
+        <resource path="action/activate" id="ActivateDeviceResource">
+            <param name="ownerId" style="query" type="xsd:string" required="true" />
+            <method name="POST" id="activateDevice">
+                <request>
+                    <param name="readOnly" style="query" type="xsd:boolean" required="true" />
+                </request>
+                <response status="202">
+                    <representation href="#taskRefXml" />
+                    <representation href="#taskRefJson" />
+                </response>
+                <response status="403">
+                    <doc>
+                        Returned if the device is already active.
+                    </doc>
+                </response>
+            </method>
+        </resource>
+
+        <resource path="action/deactivate" id="DeactivateDeviceResource">
+            <param name="ownerId" style="query" type="xsd:string" required="true" />
+            <method name="POST" id="deactivateDevice">
+                <response status="202">
+                    <representation href="#taskRefXml" />
+                    <representation href="#taskRefJson" />
+                </response>
+                <response status="403">
+                    <doc>
+                        Returned if the device is not active.
+                    </doc>
+                </response>
+            </method>
+        </resource>
+
+        <resource path="action/resize" id="ResizeDeviceResource">
+            <param name="ownerId" style="query" type="xsd:string" required="true" />
+            <method name="POST" id="resizeDevice">
+                <request>
+                    <param name="size" style="query" type="xsd:long" required="true" />
+                </request>
+                <response status="202">
+                    <representation href="#taskRefXml" />
+                    <representation href="#taskRefJson" />
+                </response>
+                <response status="403">
+                    <doc>
+                        Returned if the new device size is invalid or less than the current size and the device is
+                        active.
+                    </doc>
+                </response>
+            </method>
+        </resource>
+
+        <resource path="action/newSnapshot" id="NewSnapshotResource">
+            <param name="ownerId" style="query" type="xsd:string" required="true" />
+            <method name="POST" id="newSnapshot">
+                <request>
+                    <param name="name" style="query" type="xsd:string" required="true" />
+                    <param name="description" style="query" type="xsd:string" required="false" />
+                    <param name="uuid" style="query" type="xsd:string" required="false" />
+                </request>
+                <response status="202">
+                    <representation href="#taskRefXml" />
+                    <representation href="#taskRefJson" />
+                </response>
+                <response status="403">
+                    <doc>
+                        Returned if the device has not changed (neither in size nor in content) since the last
+                        snapshot.
+                    </doc>
+                </response>
+            </method>
+        </resource>
+
+        <resource path="connection" id="ConnectionResource">
+            <param name="ownerId" style="query" type="xsd:string" required="true" />
+            <method name="GET" id="getConnection">
+                <request>
+                    <param name="ip" style="query" type="xsd:string" required="true" />
+                    <param name="clientProtocol" style="query" type="xsd:string" required="false" />
+                </request>
+                <response status="200">
+                    <representation mediaType="application/xml" element="vold:ConnectionInfo" />
+                    <representation mediaType="application/json" element="vold:ConnectionInfo" />
+                </response>
+                <response status="403">
+                    <doc>
+                        Returned if the device is not active.
+                    </doc>
+                </response>
+            </method>
+        </resource>
+        
+        <resource path="action/clone" id="CloneDeviceResource">
+            <param name="ownerId" style="query" type="xsd:string" required="true" />
+            <method name="POST" id="cloneDevice">
+                <request>
+                    <param name="name" style="query" type="xsd:string" required="true" />
+                    <param name="description" style="query" type="xsd:string" required="false" />
+                    <param name="uuid" style="query" type="xsd:string" required="false" />
+                </request>
+                <response status="202">
+                    <representation href="#taskRefXml" />
+                    <representation href="#taskRefJson" />
+                </response>
+            </method>
+        </resource>
+        
+    </resource_type>
+
+    <resource_type id="tasks">
+        <param name="ownerId" style="query" type="xsd:string" required="true" />
+        <method name="GET" id="getAllTasks">
+            <doc>Gets all tasks.
+            </doc>
+            <response>
+                <representation mediaType="application/xml" element="vold:TaskList" />
+                <representation mediaType="application/json" element="vold:TaskList" />
+            </response>
+        </method>
+        <resource path="{taskId}" id="TaskResource" type="#task">
+            <param name="ownerId" style="query" type="xsd:string" required="true" />
+            <param name="taskId" style="template" type="xsd:string" required="true" />
+        </resource>
+    </resource_type>
+
+    <resource_type id="task">
+        <param name="ownerId" style="query" type="xsd:string" required="true" />
+        <method name="GET" id="getTask">
+            <doc>Gets the task with its current status.</doc>
+            <response status="200">
+                <representation mediaType="application/xml" element="vold:Task" />
+                <representation mediaType="application/json" element="vold:Task" />
+            </response>
+        </method>
+        <resource path="action/cancel" id="CancelTaskResource">
+            <param name="ownerId" style="query" type="xsd:string" required="true" />
+            <method name="POST" id="cancelTask">
+                <doc>Cancels the task and returns it.</doc>
+                <response status="200">
+                    <representation mediaType="application/xml" element="vold:Task" />
+                    <representation mediaType="application/json" element="vold:Task" />
+                </response>
+            </method>
+        </resource>
+
+        <method name="DELETE" id="deleteTask" />
+    </resource_type>
+
+    <!-- representation types -->
+
+    <representation id="taskRefXml" mediaType="application/xml" element="xsd:anyUri">
+        <param name="location" style="header" type="xsd:anyURI" required="true" />
+    </representation>
+    <representation id="taskRefJson" mediaType="application/json" element="xsd:anyUri">
+        <param name="location" style="header" type="xsd:anyURI" required="true" />
+    </representation>
+
+</application>

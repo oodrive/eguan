@@ -1,0 +1,186 @@
+diff -rupN 04_mutex/db/db_impl.cc 05_fix_crash/db/db_impl.cc
+--- 04_mutex/db/db_impl.cc	2014-04-03 15:10:13.000000000 +0200
++++ 05_fix_crash/db/db_impl.cc	2014-04-03 15:14:49.000000000 +0200
+@@ -1107,9 +1107,11 @@ Status DBImpl::Get(const ReadOptions& op
+ 
+   MemTable* mem = mem_;
+   MemTable* imm = imm_;
++  assert(versions_ != NULL);
+   Version* current = versions_->current();
+-  mem->Ref();
++  if (mem != NULL) mem->Ref();
+   if (imm != NULL) imm->Ref();
++  assert(current != NULL);
+   current->Ref();
+ 
+   bool have_stat_update = false;
+@@ -1120,7 +1122,7 @@ Status DBImpl::Get(const ReadOptions& op
+     mutex_.Unlock();
+     // First look in the memtable, then in the immutable memtable (if any).
+     LookupKey lkey(key, snapshot);
+-    if (mem->Get(lkey, value, &s)) {
++    if (mem != NULL && mem->Get(lkey, value, &s)) {
+       // Done
+     } else if (imm != NULL && imm->Get(lkey, value, &s)) {
+       // Done
+@@ -1374,7 +1376,7 @@ Status DBImpl::MakeRoomForWrite(bool for
+       allow_delay = false;  // Do not delay a single write more than once
+       mutex_.Lock();
+     } else if (!force &&
+-               (mem_->ApproximateMemoryUsage() <= options_.write_buffer_size)) {
++               (mem_ && (mem_->ApproximateMemoryUsage() <= options_.write_buffer_size))) {
+       // There is room in current memtable
+       break;
+     } else if (imm_ != NULL) {
+diff -rupN 04_mutex/db/memtable.cc 05_fix_crash/db/memtable.cc
+--- 04_mutex/db/memtable.cc	2014-04-03 14:54:00.000000000 +0200
++++ 05_fix_crash/db/memtable.cc	2014-04-03 15:11:52.000000000 +0200
+@@ -12,7 +12,7 @@
+ namespace leveldb {
+ 
+ static Slice GetLengthPrefixedSlice(const char* data) {
+-  uint32_t len;
++  uint32_t len = 0;
+   const char* p = data;
+   p = GetVarint32Ptr(p, p + 5, &len);  // +5: we assume "p" is not corrupted
+   return Slice(p, len);
+@@ -21,14 +21,20 @@ static Slice GetLengthPrefixedSlice(cons
+ MemTable::MemTable(const InternalKeyComparator& cmp)
+     : comparator_(cmp),
+       refs_(0),
+-      table_(comparator_, &arena_) {
++      arena_(new Arena()),
++      table_(comparator_, arena_) {
+ }
+ 
+ MemTable::~MemTable() {
+   assert(refs_ == 0);
++  // protect destruction of arena
++  Arena* toDestroy = arena_.exchange(NULL);
++  if(toDestroy != NULL) {
++    toDestroy->destroy();
++  }
+ }
+ 
+-size_t MemTable::ApproximateMemoryUsage() { return arena_.MemoryUsage(); }
++size_t MemTable::ApproximateMemoryUsage() { return arena_.load()->MemoryUsage(); }
+ 
+ int MemTable::KeyComparator::operator()(const char* aptr, const char* bptr)
+     const {
+@@ -93,7 +99,7 @@ void MemTable::Add(SequenceNumber s, Val
+   const size_t encoded_len =
+       VarintLength(internal_key_size) + internal_key_size +
+       VarintLength(val_size) + val_size;
+-  char* buf = arena_.Allocate(encoded_len);
++  char* buf = arena_.load()->Allocate(encoded_len);
+   char* p = EncodeVarint32(buf, internal_key_size);
+   memcpy(p, key.data(), key_size);
+   p += key_size;
+diff -rupN 04_mutex/db/memtable.h 05_fix_crash/db/memtable.h
+--- 04_mutex/db/memtable.h	2014-04-03 14:53:11.000000000 +0200
++++ 05_fix_crash/db/memtable.h	2014-04-03 15:11:52.000000000 +0200
+@@ -6,6 +6,7 @@
+ #define STORAGE_LEVELDB_DB_MEMTABLE_H_
+ 
+ #include <string>
++#include <atomic>
+ #include "leveldb/db.h"
+ #include "db/dbformat.h"
+ #include "db/skiplist.h"
+@@ -84,7 +85,7 @@ class MemTable {
+ 
+   KeyComparator comparator_;
+   int refs_;
+-  Arena arena_;
++  std::atomic<Arena*> arena_;
+   Table table_;
+ 
+   // No copying allowed
+diff -rupN 04_mutex/Makefile 05_fix_crash/Makefile
+--- 04_mutex/Makefile	2014-04-03 15:03:49.000000000 +0200
++++ 05_fix_crash/Makefile	2014-04-03 15:13:13.000000000 +0200
+@@ -6,6 +6,7 @@
+ # Uncomment exactly one of the lines labelled (A), (B), and (C) below
+ # to switch between compilation modes.
+ 
++CXXFLAGS=-std=c++0x
+ OPT_INC ?= 
+ OPT ?= -g0 -O3 -DNDEBUG   # (A) Production use (optimized mode)
+ # OPT ?= -g2              # (B) Debug mode, w/ full line-level debugging symbols
+diff -rupN 04_mutex/table/block.cc 05_fix_crash/table/block.cc
+--- 04_mutex/table/block.cc	2013-12-10 20:15:01.000000000 +0100
++++ 05_fix_crash/table/block.cc	2014-04-03 15:17:22.000000000 +0200
+@@ -258,8 +258,12 @@ Iterator* Block::NewIterator(const Compa
+     return NewErrorIterator(Status::Corruption("bad block contents"));
+   }
+   const uint32_t num_restarts = NumRestarts();
++  size_t max_restarts_allowed = (size_-sizeof(uint32_t)) / sizeof(uint32_t);
+   if (num_restarts == 0) {
+     return NewEmptyIterator();
++  // add fix proposed in http://code.google.com/p/leveldb/issues/detail?id=217
++  } else if (num_restarts > max_restarts_allowed){ //check for crazy values by ceiling
++     return NewEmptyIterator();
+   } else {
+     return new Iter(cmp, data_, restart_offset_, num_restarts);
+   }
+diff -rupN 04_mutex/util/arena.cc 05_fix_crash/util/arena.cc
+--- 04_mutex/util/arena.cc	2013-12-10 20:15:01.000000000 +0100
++++ 05_fix_crash/util/arena.cc	2014-04-03 15:11:52.000000000 +0200
+@@ -13,6 +13,7 @@ Arena::Arena() {
+   blocks_memory_ = 0;
+   alloc_ptr_ = NULL;  // First allocation will allocate a block
+   alloc_bytes_remaining_ = 0;
++  destroying = false;
+ }
+ 
+ Arena::~Arena() {
+@@ -21,6 +22,14 @@ Arena::~Arena() {
+   }
+ }
+ 
++void Arena::destroy() noexcept {
++  if(destroying.exchange(true) == false) {
++    try {
++      delete this;
++    }catch(...){}
++  }
++}
++
+ char* Arena::AllocateFallback(size_t bytes) {
+   if (bytes > kBlockSize / 4) {
+     // Object is more than a quarter of our block size.  Allocate it separately
+diff -rupN 04_mutex/util/arena.h 05_fix_crash/util/arena.h
+--- 04_mutex/util/arena.h	2013-12-10 20:15:01.000000000 +0100
++++ 05_fix_crash/util/arena.h	2014-04-03 15:11:52.000000000 +0200
+@@ -9,14 +9,21 @@
+ #include <assert.h>
+ #include <stddef.h>
+ #include <stdint.h>
++#include <atomic>
+ 
+ namespace leveldb {
+ 
+ class Arena {
+  public:
+   Arena();
++
++ protected:
+   ~Arena();
+ 
++ public:
++
++  void destroy() noexcept;
++
+   // Return a pointer to a newly allocated memory block of "bytes" bytes.
+   char* Allocate(size_t bytes);
+ 
+@@ -44,6 +51,9 @@ class Arena {
+   // Bytes of memory in blocks allocated so far
+   size_t blocks_memory_;
+ 
++  // if destroy is pending
++  std::atomic<bool> destroying;
++
+   // No copying allowed
+   Arena(const Arena&);
+   void operator=(const Arena&);

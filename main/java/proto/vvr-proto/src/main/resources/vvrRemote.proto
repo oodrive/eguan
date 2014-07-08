@@ -1,0 +1,59 @@
+import "common.proto";
+import "nrsRemote.proto";
+package com.oodrive.nuage.proto.vvr;
+
+// Smaller classes
+option optimize_for = LITE_RUNTIME;
+option java_outer_classname = "VvrRemote";
+
+// Common attributes
+message Item {
+    optional string name = 1;
+    optional string description = 2;
+    repeated string setProp = 3; // properties to set: list of key/value pairs
+    repeated string delProp = 4; // properties to del: list of keys
+}
+
+// Device attributes
+message Device {
+    optional sint64 size = 1;
+}
+
+// IBS update
+message Ibs {
+    optional bytes key = 1; // key for the given block
+    optional bytes value = 2; // block to store or null to notify update
+    optional bytes keyOld = 3; // oldKey for replace
+}
+
+// Vold peer add/remove message
+message VoldPeerMsg {
+    enum Action {
+        ADD = 1; // Add peer
+        REM = 2; // Remove peer
+    }
+
+    required Action action = 1;
+    required Uuid node = 2;
+    optional string ip = 3;
+    optional int32 port = 4;
+}
+
+// Remote operation
+message RemoteOperation {
+    required ProtocolVersion version = 1; // add protocol version
+    required Type type = 2;
+    required OpCode op = 3;
+    optional Uuid source = 4; // Node source
+    optional Uuid vvr = 5; // VVR for type DEVICE or SNAPSHOT
+    optional Uuid snapshot = 6; // VVR: root snapshot; DEVICE: parent snapshot/parent device (clone); SNAPSHOT: itself
+    optional Uuid uuid = 7; // UUID of object (VVR, DEVICE, SNAPSHOT (todo!!), NRS)
+    optional Item item = 8;
+    optional Device device = 9; // (DEVICE) Maybe not be set if the header is set
+    repeated Ibs ibs = 10; // IBS
+    repeated com.oodrive.nuage.proto.nrs.NrsFileHeaderMsg nrsFileHeader = 11;
+    repeated com.oodrive.nuage.proto.nrs.NrsVersion nrsVersions = 12; // message LIST
+    optional com.oodrive.nuage.proto.nrs.NrsFileUpdate nrsFileUpdate = 13; // message SET
+    optional com.oodrive.nuage.proto.nrs.NrsFileMapping nrsFileMapping = 14; // message UPDATE
+    optional VoldPeerMsg peer = 15; // VOLD: add/remove a peer
+}

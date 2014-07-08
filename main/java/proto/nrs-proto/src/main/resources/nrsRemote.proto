@@ -1,0 +1,86 @@
+import "common.proto";
+package com.oodrive.nuage.proto.nrs;
+
+// Smaller classes
+option optimize_for = LITE_RUNTIME;
+option java_outer_classname = "NrsRemote";
+
+// NRS file version
+message NrsVersion {
+    required Uuid uuid = 1; // UUID of NRS file
+    required Uuid source = 2; // Node source
+    required sint64 version = 3;
+    required bool writable = 4;
+}
+
+// NRS file mapping
+message NrsFileMapping {
+    // Hash of a cluster
+    message NrsClusterHash {
+        required sint64 index = 1; // Index of the cluster
+        required bytes hash = 2; // Value of the hash
+    }
+
+    required sint32 clusterSize = 1; // Size of a cluster
+    required sint64 version = 2; // Version of the file
+    repeated NrsClusterHash clusters = 3;
+}
+
+// NRS file contents synchronization
+message NrsFileUpdate {
+    // Set or unset a key
+    message NrsKey {
+        enum NrsKeyHeader {
+            NOT_ALLOCATED = 1;
+            ALLOCATED = 2;
+            TRIMMED = 3;
+        }
+
+        required sint64 version = 1; // Version of the file
+        required sint64 blockIndex = 2;
+        required NrsKeyHeader header = 3;
+        optional bytes key = 4; // key for the given block
+    }
+
+    // Contents of a cluster
+    message NrsCluster {
+        required sint64 index = 1; // Index of the cluster
+        required bytes contents = 2; // Contents of the cluster
+    }
+
+    // Contents of the H1 header
+    message NrsH1Header {
+        required bytes header = 1; // L1Table (full contents)
+    }
+
+    // Update
+    message NrsUpdate {
+        optional NrsKey keyUpdate = 1; // Update one key
+        optional NrsCluster clusterUpdate = 2; // Contents of the cluster
+        optional NrsH1Header h1HeaderUpdate = 3; // H1 header
+    }
+
+    repeated NrsUpdate updates = 1;
+    required bool broadcast = 2; // True for broadcast messages
+    optional bool eos = 3; // True for the end-of-sync (last message)
+    optional bool aborted = 4; // True if the sync have been aborted
+}
+
+// NrsFileHeader
+message NrsFileHeaderMsg {
+    enum Flags {
+        ROOT = 1;
+        PARTIAL = 2;
+    }
+
+    required Uuid parent = 1;
+    required Uuid device = 2;
+    required Uuid node = 3;
+    required Uuid id = 4;
+    required sint64 size = 5;
+    required int32 blockSize = 6;
+    required int32 clusterSize = 7;
+    required int32 hashSize = 8;
+    required sint64 timestamp = 9;
+    repeated Flags flags = 10 [packed = true];
+}

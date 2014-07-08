@@ -1,0 +1,175 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+    xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>java</artifactId>
+        <groupId>io.eguan</groupId>
+        <version>0.6-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>nuage-full</artifactId>
+    <name>nuage full</name>
+    <description>Builds the Java source of nuage and runs all the units tests within a single artifact</description>
+    <packaging>nar</packaging>
+
+    <properties>
+        <!-- Tests: can not run JNI unit tests during the nar-test goal -->
+        <skipTests>true</skipTests>
+    </properties>
+
+    <build>
+        <defaultGoal>install</defaultGoal>
+        <plugins>
+            <plugin>
+                <artifactId>maven-nar-plugin</artifactId>
+                <configuration>
+                    <!-- Tests: do not rerun JNI unit tests during the nar-integration-test goal -->
+                    <skipNarTests>true</skipNarTests>
+
+                    <!-- Do NOT ignore 'long' NAR tests -->
+                    <excludes>
+                        <exclude>**/*$*</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <!-- Do NOT ignore 'long' JAR tests -->
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>**/*$*</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <!-- Clean source and tests -->
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>src/main</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>src/test</directory>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+        </plugins>
+
+        <!-- Copy source and tests from other artifacts -->
+        <resources>
+            <resource>
+                <directory>../dtx/src</directory>
+                <targetPath>${basedir}/src</targetPath>
+            </resource>
+            <resource>
+                <directory>../iscsisrv/src</directory>
+                <targetPath>${basedir}/src</targetPath>
+            </resource>
+            <resource>
+                <directory>../jni/hash/src</directory>
+                <targetPath>${basedir}/src</targetPath>
+            </resource>
+            <resource>
+                <directory>../jni/ibs-java/src</directory>
+                <targetPath>${basedir}/src</targetPath>
+            </resource>
+            <resource>
+                <directory>../nbdsrv/src</directory>
+                <targetPath>${basedir}/src</targetPath>
+            </resource>
+            <resource>
+                <directory>../net/src</directory>
+                <targetPath>${basedir}/src</targetPath>
+            </resource>
+            <resource>
+                <directory>../nrs/src</directory>
+                <targetPath>${basedir}/src</targetPath>
+            </resource>
+            <resource>
+                <directory>../rest/rest-it/src</directory>
+                <targetPath>${basedir}/src</targetPath>
+            </resource>
+            <resource>
+                <directory>../rest/rest-launcher/src</directory>
+                <targetPath>${basedir}/src</targetPath>
+            </resource>
+            <resource>
+                <directory>../rest/servlet-container/src</directory>
+                <targetPath>${basedir}/src</targetPath>
+            </resource>
+            <resource>
+                <directory>../rest/vold-adm-rest/src</directory>
+                <targetPath>${basedir}/src</targetPath>
+            </resource>
+            <resource>
+                <directory>../utils/src</directory>
+                <targetPath>${basedir}/src</targetPath>
+            </resource>
+            <resource>
+                <directory>../vold/src</directory>
+                <targetPath>${basedir}/src</targetPath>
+            </resource>
+            <resource>
+                <directory>../vvr/core/src</directory>
+                <targetPath>${basedir}/src</targetPath>
+            </resource>
+            <resource>
+                <directory>../vvr/vvr-it/src</directory>
+                <targetPath>${basedir}/src</targetPath>
+            </resource>
+        </resources>
+    </build>
+
+    <dependencies>
+        <!-- Add rest-it to inherit all the compile/runtime/nar dependencies -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>rest-it</artifactId>
+            <version>${project.version}</version>
+            <type>nar</type>
+        </dependency>
+        <!-- Add native dependencies -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>hash-java</artifactId>
+            <version>${project.version}</version>
+            <type>nar</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>ibs-java</artifactId>
+            <version>${project.version}</version>
+            <type>nar</type>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protobufVersion}</version>
+        </dependency>
+        <!-- Need to add all the test dependencies -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>${mockitoVersion}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>${bcprovVersion}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jscsi</groupId>
+            <artifactId>initiator</artifactId>
+            <version>${jscsiVersion}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
