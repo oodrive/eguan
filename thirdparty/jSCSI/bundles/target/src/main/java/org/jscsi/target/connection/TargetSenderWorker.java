@@ -1,0 +1,303 @@
+package org.jscsi.target.connection;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.SocketChannel;
+import java.security.DigestException;
+
+import org.jscsi.exception.InternetSCSIException;
+import org.jscsi.parser.BasicHeaderSegment;
+import org.jscsi.parser.InitiatorMessageParser;
+import org.jscsi.parser.OperationCode;
+import org.jscsi.parser.ProtocolDataUnit;
+import org.jscsi.parser.ProtocolDataUnitFactory;
+import org.jscsi.parser.TargetMessageParser;
+import org.jscsi.parser.scsi.SCSICommandParser;
+import org.jscsi.target.scsi.cdb.ScsiOperationCode;
+import org.jscsi.target.settings.Settings;
+import org.jscsi.target.settings.SettingsException;
+import org.jscsi.target.settings.TextKeyword;
+import org.jscsi.target.util.Debug;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Instances of this class are used by {@link Connection} objects for
+ * sending and receiving {@link ProtocolDataUnit} objects.
+ * 
+ * @author Andreas Ergenzinger, University of Konstanz
+ */
+public class TargetSenderWorker {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TargetSenderWorker.class);
+
+    /**
+     * The connection which uses this object for sending and receiving PDUs.
+     */
+    final private Connection connection;
+
+    /**
+     * The session to which {@link #connection} belongs to.
+     */
+    private TargetSession session;
+
+    /**
+     * Used for writing serialized PDUs to and reading serialized PDUs from.
+     */
+    final private SocketChannel socketChannel;
+
+    /**
+     * Will be used to create {@link ProtocolDataUnit} objects from the byte
+     * stream read from the {@link #socketChannel}.
+     */
+    final private ProtocolDataUnitFactory protocolDataUnitFactory;
+
+    /**
+     * If this is <code>true</code>, then the next PDU read from the {@link #socketChannel} will be the first
+     * PDU received in the {@link #session}.
+     * <p>
+     * Will be initializes to <code>true</code> if and only if the {@link #connection} is the leading
+     * connection of its session.
+     * <p>
+     * PDUs identified by this variable as the first PDU in a session will not have their counters (i.e. CmdSN
+     * and ExpStatSN) checked. Instead the values of these counters will be used to initialize the targets
+     * local copies of these counters that will be used to ensure that no PDUs have been lost in transit.
+     */
+    private boolean initialPdu;
+    
+    /**
+     * The local address the client reached. Address only, do not include the port. Null if the initialization of the
+     * value failed.
+     */
+    private final String localAddr;
+
+    /**
+     * Creates a new {@link TargetSenderWorker} object.
+     * 
+     * @param connection
+     *            the connection that will use this object for sending and
+     *            receiving PDUs
+     * @param socketChannel
+     *            used for sending and receiving serialized PDU to and from the
+     *            target
+     */
+    public TargetSenderWorker(final Connection connection, final SocketChannel socketChannel) {
+        this.connection = connection;
+        this.socketChannel = socketChannel;
+        protocolDataUnitFactory = new ProtocolDataUnitFactory();
+        initialPdu = connection.isLeadingConnection();
+        
+        // Init local address reached, null if not found or on error
+        String localAddrTmp = null;
+        try {
+            final SocketAddress localAddrSocket = socketChannel.getLocalAddress();
+            if (localAddrSocket instanceof InetSocketAddress) {
+                final InetAddress localAddrInet = ((InetSocketAddress) localAddrSocket).getAddress();
+                if (localAddrInet != null) {
+                    localAddrTmp = localAddrInet.getHostAddress();
+                }
+            }
+        }
+        catch (Throwable t) {
+            // ignored
+            LOGGER.debug("Failed to get local address", t);
+        }
+        localAddr = localAddrTmp;
+    }
+
+    /**
+     * Sets the {@link #session} variable.
+     * <p>
+     * During the time this object is initialized, the {@link Connection#getSession()} method will return
+     * <code>null</code>. Therefore {@link #session} must be set manually once the {@link TargetSession}
+     * object has been created.
+     * 
+     * @param session
+     *            the session of the {@link #connection}
+     */
+    void setSession(final TargetSession session) {
+        this.session = session;
+    }
+
+    /**
+     * This method does all the necessary steps, which are needed when a
+     * connection should be closed.
+     * 
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    public final void close() throws IOException {
+        socketChannel.close();
+    }
+    
+    // OODRIVE
+    final String getPeerInfo() {
+        try {
+            return socketChannel.getRemoteAddress().toString();
+        }
+        catch (Throwable e) {
+            return "<unknown>";
+        }
+    }
+    
+    // OODRIVE
+    final SocketChannel getSocketChannel() {
+            return socketChannel ;
+    }
+
+    /**
+     * Gets the local address the client reached.
+     * 
+     * @return the local address or <code>null</code> if the address can not be determined
+     */
+    final String getLocalAddress() {
+        return localAddr;
+    }
+
+    /**
+     * Receives a <code>ProtocolDataUnit</code> from the socket and appends it
+     * to the end of the receiving queue of this connection.
+     * 
+     * @return Queue with the resulting units
+     * @throws IOException
+     *             if an I/O error occurs.
+     * @throws InternetSCSIException
+     *             if any violation of the iSCSI-Standard emerge.
+     * @throws DigestException
+     *             if a mismatch of the digest exists.
+     * @throws SettingsException
+     */
+    ProtocolDataUnit receiveFromWire(int emptyReadAttemptCount) throws DigestException, InternetSCSIException, IOException,
+        SettingsException {
+
+        ProtocolDataUnit pdu;
+        if (initialPdu) {
+            /*
+             * The connection's ConnectionSettingsNegotiator has not been
+             * initialized, hence getSettings() would throw a
+             * NullPointerException.
+             * 
+             * Initialize PDU with default values, i.e. no digests.
+             */
+            pdu = protocolDataUnitFactory.create(TextKeyword.NONE,// header
+                                                                  // digest
+                TextKeyword.NONE);// data digest
+        } else {
+            // use negotiated or (now available) default settings
+            final Settings settings = connection.getSettings();
+            pdu = protocolDataUnitFactory.create(settings.getHeaderDigest(), settings.getDataDigest());
+        }
+
+        try {
+            if (pdu.read(socketChannel, emptyReadAttemptCount) == 0) {
+                return null;
+            }
+        } catch (ClosedChannelException e) {
+            throw new InternetSCSIException(e);
+        }
+
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("Receiving this PDU:\n" + pdu);
+
+        // parse sequence counters
+        final BasicHeaderSegment bhs = pdu.getBasicHeaderSegment();
+        final InitiatorMessageParser parser = (InitiatorMessageParser)bhs.getParser();
+        // final int commandSequenceNumber = parser.getCommandSequenceNumber();
+        // final int expectedStatusSequenceNumber = parser.getExpectedStatusSequenceNumber();
+
+        if (LOGGER.isDebugEnabled()) {
+            // sharrajesh
+            // Needed to debug, out of order receiving of StatusSN and ExpStatSN
+            if (bhs.getOpCode() == OperationCode.SCSI_COMMAND) {
+                final SCSICommandParser scsiParser = (SCSICommandParser)bhs.getParser();
+                ScsiOperationCode scsiOpCode = ScsiOperationCode.valueOf(scsiParser.getCDB().get(0));
+                LOGGER.debug("scsiOpCode = " + scsiOpCode);
+                LOGGER.debug("CDB bytes: \n" + Debug.byteBufferToString(scsiParser.getCDB()));
+            }
+            // LOGGER.debug("parser.expectedStatusSequenceNumber: " + expectedStatusSequenceNumber);
+            if (connection == null)
+                LOGGER.debug("connection: null");
+            else if (connection.getStatusSequenceNumber() == null)
+                LOGGER.debug("connection.getStatusSequenceNumber: null");
+            else
+                LOGGER.debug("connection.getStatusSequenceNumber: "
+                    + connection.getStatusSequenceNumber().getValue());
+        }
+
+        // if this is the first PDU in the leading connection, then
+        // initialize the session's ExpectedCommandSequenceNumber
+        if (initialPdu) {
+            initialPdu = false;
+            // PDU is immediate Login PDU, checked in Target.main(),
+            // ExpCmdSN of this PDU will be used to initialize the
+            // respective session and connection parameters (sequence numbers)
+            // see TargetSession and TargetConnection initialization in
+            // Target.main()
+        } else {
+            // check sequence counters
+            // if (session.getMaximumCommandSequenceNumber().lessThan(commandSequenceNumber))
+            // throw new InternetSCSIException("received CmdSN (" + commandSequenceNumber + " > local MaxCmdSN (" + session.getMaximumCommandSequenceNumber().getValue() + ")");
+            
+            // verified, is working with Windows 8 initiator
+            // if (!connection.getStatusSequenceNumber().equals(expectedStatusSequenceNumber)
+            // && expectedStatusSequenceNumber != 0)// required by MS iSCSI
+            // // initiator DATA-OUT
+            // // PDU sequence
+            // throw new InternetSCSIException("received ExpStatusSN ("+ expectedStatusSequenceNumber + ") != local StatusSN + 1 ("+connection.getStatusSequenceNumber().getValue() + ")");
+        }
+
+        // increment CmdSN if not immediate PDU (or Data-Out PDU)
+        try {
+            if (parser.incrementSequenceNumber())
+                session.getExpectedCommandSequenceNumber().increment();
+        } catch (NullPointerException exc) {
+
+        }
+
+        return pdu;
+    }
+
+    /**
+     * Sends the given <code>ProtocolDataUnit</code> instance over the socket to
+     * the connected iSCSI Target.
+     * 
+     * @param pdu
+     *            The <code>ProtocolDataUnit</code> instances to send.
+     * @throws InternetSCSIException
+     *             if any violation of the iSCSI-Standard emerge.
+     * @throws IOException
+     *             if an I/O error occurs.
+     * @throws InterruptedException
+     *             if another caller interrupted the current caller before or
+     *             while the current caller was waiting for a notification. The
+     *             interrupted status of the current caller is cleared when this
+     *             exception is thrown.
+     */
+
+    final void sendOverWire(final ProtocolDataUnit pdu) throws InternetSCSIException, IOException,
+        InterruptedException {
+
+        // set sequence counters
+        final TargetMessageParser parser = (TargetMessageParser)pdu.getBasicHeaderSegment().getParser();
+        parser.setExpectedCommandSequenceNumber(session.getExpectedCommandSequenceNumber().getValue());
+        parser.setMaximumCommandSequenceNumber(session.getMaximumCommandSequenceNumber().getValue());
+        final boolean incrementSequenceNumber = parser.incrementSequenceNumber();
+        if (incrementSequenceNumber)// set StatSN only if field is not reserved
+            parser.setStatusSequenceNumber(connection.getStatusSequenceNumber().getValue());
+
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("Sending this PDU:\n" + pdu);
+
+        // send pdu
+        pdu.write(socketChannel);
+
+        // increment StatusSN if this was a Response PDU (with status)
+        // or if special cases apply
+        if (incrementSequenceNumber)
+            connection.getStatusSequenceNumber().increment();
+
+    }
+}
