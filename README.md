@@ -1,3 +1,6 @@
+This is a fork of eguan project, I was working on at Oodrive.
+The main purpose of this fork is to use boost C++ library in native part and rocksDB instead of levelDB.
+
 Eguan is a replicated storage system written in Java and C/C++.
 
 It was implemented by [Oodrive](http://www.oodrive.com/) as a storage prototype for the project [nu@ge](http://nuage-france.fr). Nu@ge is the project of a french consortium aimed at developing a green cloud platform based on open source software and small modular data centers.
