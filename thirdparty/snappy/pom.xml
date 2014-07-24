@@ -12,7 +12,7 @@
     <groupId>com.google</groupId>
     <artifactId>snappy</artifactId>
     <packaging>nar</packaging>
-    <version>1.1.0</version>
+    <version>1.1.2-r83</version>
 
     <name>Snappy</name>
 
