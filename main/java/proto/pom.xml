@@ -50,7 +50,7 @@
                         <!-- Must be done after expand of protoc -->
                         <phase>process-resources</phase>
                         <configuration>
-                            <protocExecutable>${project.build.directory}/nar/protoc-${protobufVersion}-amd64-Linux-gpp-bin/bin/protoc</protocExecutable>
+                            <protocExecutable>${project.build.directory}/nar/protoc-${protobufVersion}-${localAOL}-bin/bin/protoc</protocExecutable>
                             <protoSourceRoot>${basedir}/src/main/resources</protoSourceRoot>
                             <includes>
                                 <param>**/*.proto</param>
