@@ -21,6 +21,8 @@ Then the project can be built quickly (without unit tests execution) in the root
 
     mvn clean ; mvn -DskipTests -DskipNarTests -DskipNarJniTests -PskipNarTestsCompile install
 
+by default the project build on linux to build on osx add -Posx option
+
 For more information, see the build page.
 
 ## Configuration and installation
