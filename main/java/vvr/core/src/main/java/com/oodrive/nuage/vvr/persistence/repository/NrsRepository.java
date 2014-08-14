@@ -1678,7 +1678,10 @@ public final class NrsRepository extends AbstractRepositoryImpl {
             return VvrRemoteUtils.createDtxContext(getUuid(), payload);
         }
         catch (final InvalidProtocolBufferException e) {
-            throw new XAException(XAException.XAER_INVAL);
+            LOGGER.error("Exception on start", e);
+            final XAException xaException = new XAException(XAException.XAER_INVAL);
+            xaException.initCause(xaException);
+            throw xaException;
         }
     }
 
@@ -1692,7 +1695,10 @@ public final class NrsRepository extends AbstractRepositoryImpl {
         }
         catch (final IllegalStateException e) {
             // Most of the time, a pre-condition error
-            throw new XAException(XAException.XA_RBROLLBACK);
+            LOGGER.error("Exception on prepare", e);
+            final XAException xaException = new XAException(XAException.XA_RBROLLBACK);
+            xaException.initCause(e);
+            throw xaException;
         }
     }
 

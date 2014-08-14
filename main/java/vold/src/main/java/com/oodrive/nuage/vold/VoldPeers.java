@@ -111,18 +111,49 @@ final class VoldPeers {
             parseHandleOperation(dtxContext, DtxOperation.PREPARE);
             return Boolean.TRUE;
         }
-        catch (final IllegalStateException e) {
+        catch (final IllegalStateException | IllegalArgumentException e) {
             // Most of the time, a pre-condition error
-            throw new XAException(XAException.XA_RBROLLBACK);
+            LOGGER.error("Exception on prepare", e);
+            final XAException xaException = new XAException(XAException.XA_RBROLLBACK);
+            xaException.initCause(e);
+            throw xaException;
         }
     }
 
     final void commit(final VoldDtxRmContext dtxContext) throws XAException {
-        parseHandleOperation(dtxContext, DtxOperation.COMMIT);
+        try {
+            parseHandleOperation(dtxContext, DtxOperation.COMMIT);
+        }
+        catch (final IllegalStateException | IllegalArgumentException e) {
+            LOGGER.error("Exception on commit", e);
+            final XAException xaException;
+            if (e instanceof IllegalArgumentException) {
+                xaException = new XAException(XAException.XAER_INVAL);
+            }
+            else {
+                xaException = new XAException(XAException.XA_RBROLLBACK);
+            }
+            xaException.initCause(e);
+            throw xaException;
+        }
     }
 
     final void rollback(final VoldDtxRmContext dtxContext) throws XAException {
-        parseHandleOperation(dtxContext, DtxOperation.ROLLBACK);
+        try {
+            parseHandleOperation(dtxContext, DtxOperation.ROLLBACK);
+        }
+        catch (final IllegalStateException | IllegalArgumentException e) {
+            LOGGER.error("Exception on rollback", e);
+            final XAException xaException;
+            if (e instanceof IllegalArgumentException) {
+                xaException = new XAException(XAException.XAER_INVAL);
+            }
+            else {
+                xaException = new XAException(XAException.XA_RBROLLBACK);
+            }
+            xaException.initCause(e);
+            throw xaException;
+        }
     }
 
     private final void handlePrepareAddPeer(final VoldDtxRmContext dtxContext, final UUID node,
@@ -204,7 +235,8 @@ final class VoldPeers {
         restoreOldPeersList(dtxContext);
     }
 
-    private final void parseHandleOperation(final VoldDtxRmContext dtxContext, final DtxOperation dtxOperation) {
+    private final void parseHandleOperation(final VoldDtxRmContext dtxContext, final DtxOperation dtxOperation)
+            throws IllegalArgumentException {
         final RemoteOperation op = dtxContext.getOperation();
         final OpCode opCode = op.getOp();
 

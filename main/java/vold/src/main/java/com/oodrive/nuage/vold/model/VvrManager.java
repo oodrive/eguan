@@ -1270,7 +1270,10 @@ public final class VvrManager implements VvrManagerMXBean, MsgServerHandler {
         }
         catch (final IllegalStateException e) {
             // Most of the time, a pre-condition error
-            throw new XAException(XAException.XA_RBROLLBACK);
+            LOGGER.error("Exception on prepare", e);
+            final XAException xaException = new XAException(XAException.XA_RBROLLBACK);
+            xaException.initCause(e);
+            throw xaException;
         }
     }
 

@@ -77,7 +77,9 @@ public final class VoldDtxResourceManager implements DtxResourceManager {
         }
         catch (final InvalidProtocolBufferException e) {
             LOGGER.warn("Could not start VoldDtxResourceManager !", e);
-            throw new XAException(XAException.XAER_INVAL);
+            final XAException xaException = new XAException(XAException.XAER_INVAL);
+            xaException.initCause(e);
+            throw xaException;
         }
     }
 
