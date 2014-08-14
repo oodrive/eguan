@@ -1,4 +1,3 @@
 /target
-!target
+!/src/*/java/org/jscsi/target
 test-output
-
