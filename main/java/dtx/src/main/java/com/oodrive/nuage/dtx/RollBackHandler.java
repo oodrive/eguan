@@ -68,9 +68,11 @@ final class RollBackHandler extends AbstractDistOpHandler implements Callable<Di
             txMgr.rollback(txId, getParticipants());
         }
         catch (final XAException e) {
+            LOGGER.error("Rollback failed; nodeId=" + getNodeId(), e);
             return new DistOpResult(e.errorCode, "Transaction failure; error code=" + e.errorCode);
         }
         catch (final Throwable te) {
+            LOGGER.error("Rollback threw exception; nodeId=" + getNodeId(), te);
             return new DistOpResult(-1, te);
         }
         return DistOpResult.NO_ERROR;

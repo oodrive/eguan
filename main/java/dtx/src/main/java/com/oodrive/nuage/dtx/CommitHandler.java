@@ -67,9 +67,11 @@ final class CommitHandler extends AbstractDistOpHandler implements Callable<Dist
             getTransactionManager().commit(txId, getParticipants());
         }
         catch (final XAException e) {
+            LOGGER.error("Commit failed; nodeId=" + getNodeId(), e);
             return new DistOpResult(e.errorCode, "Transaction failure; error code=" + e.errorCode);
         }
         catch (final Throwable te) {
+            LOGGER.error("Commit threw exception; nodeId=" + getNodeId(), te);
             return new DistOpResult(-1, te);
         }
         return DistOpResult.NO_ERROR;

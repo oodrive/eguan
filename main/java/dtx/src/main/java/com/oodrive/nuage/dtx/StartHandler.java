@@ -73,9 +73,11 @@ final class StartHandler extends AbstractDistOpHandler implements Callable<DistO
             txMgr.start(transaction, getParticipants());
         }
         catch (final XAException e) {
+            LOGGER.error("Start failed; nodeId=" + getNodeId(), e);
             return new DistOpResult(e.errorCode, "Transaction failure; error code=" + e.errorCode);
         }
         catch (final Throwable te) {
+            LOGGER.error("Start threw exception; nodeId=" + getNodeId(), te);
             return new DistOpResult(-1, te);
         }
 

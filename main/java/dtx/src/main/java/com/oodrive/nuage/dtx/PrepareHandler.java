@@ -67,9 +67,11 @@ final class PrepareHandler extends AbstractDistOpHandler implements Callable<Dis
             result = txMgr.prepare(txId);
         }
         catch (final XAException e) {
+            LOGGER.error("Prepare failed; nodeId=" + getNodeId(), e);
             return new DistOpResult(e.errorCode, "Transaction failure; error code=" + e.errorCode);
         }
         catch (final Throwable te) {
+            LOGGER.error("Prepare threw exception; nodeId=" + getNodeId(), te);
             return new DistOpResult(-1, te);
         }
 

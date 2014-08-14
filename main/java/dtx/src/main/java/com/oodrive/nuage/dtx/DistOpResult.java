@@ -79,7 +79,7 @@ final class DistOpResult implements Serializable {
      *            the non-<code>null</code> {@link Throwable} instance causing the return of an error
      */
     DistOpResult(final int exitStatus, @Nonnull final Throwable error) {
-        this(exitStatus, error.getMessage() == null ? error.getClass().getName() : error.getMessage());
+        this(exitStatus, error.getClass().getName() + (error.getMessage() == null ? "" : ": " + error.getMessage()));
     }
 
     /**
