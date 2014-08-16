@@ -25,11 +25,14 @@ include Makefile.srclist.am
 libibs_la_LDFLAGS = 
 libibs_la_CPPFLAGS = -I$(top_srcdir)/include
 
+# This add the embedded libuuid
+include libuuid/Makefile.am
+
 if GCOV
 libibs_la_LIBADD = -lgcov
 endif
 
-# The files that are not needed in the library MUST have *.cxx extension                              
+# The files that are not needed in the library MUST have *.cxx extension
 if GCOV
 # do nothing                                                                                          
 else

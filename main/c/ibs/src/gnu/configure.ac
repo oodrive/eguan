@@ -60,12 +60,6 @@ AC_CHECK_HEADERS([pthread.h],,
 AC_CHECK_LIB(pthread, pthread_create, [LIBS="$LIBS -lpthread"],
     [AC_MSG_ERROR([[libpthread not found.]])])
 
-dnl libuuid required
-AC_CHECK_HEADERS([uuid/uuid.h],,
-    AC_MSG_ERROR([uuid.h not found.]))
-AC_CHECK_LIB(uuid, uuid_parse, [LIBS="$LIBS -luuid"],
-    [AC_MSG_ERROR([[libuuid not found.]])])
-
 dnl log4cplus required
 AC_CHECK_HEADERS([log4cplus/logger.h],,
     AC_MSG_ERROR([log4cplus/logger.h not found.]))
