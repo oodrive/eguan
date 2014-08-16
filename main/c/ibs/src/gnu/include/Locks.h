@@ -178,6 +178,7 @@ class PosixMutex: public Lock {
         pthread_mutex_t impl;
 };
 
+#ifdef pthread_spinlock_t
 /**
  * @brief This is an implementation of a Lock using Posix pthread_spinlock_t
  */
@@ -205,6 +206,12 @@ class PosixSpinLock: public Lock {
     private:
         pthread_spinlock_t impl;
 };
+#else
+ // on some systems like some version of OSX, 
+ // we won"t have pthread_spinlock_t
+ // so use mutex instead ...
+ typedef PosixMutex PosixSpinLock;
+#endif
 
 } /* namespace ibs */
 #endif /* LOCKS_H_ */
