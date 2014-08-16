@@ -30,7 +30,18 @@
 #include "StatusCode.h"
 #include "Logger.h"
 
-#include <sys/sysinfo.h>
+#ifdef __APPLE__
+ #ifdef __MACH__ 
+  #define USE_OSX_RAM_HACK
+ #endif
+#endif
+
+#ifdef USE_OSX_RAM_HACK
+ #include <sys/sysctl.h>
+#else
+ #include <sys/sysinfo.h>
+#endif
+
 #include <snappy.h>
 
 namespace ibs {
@@ -64,11 +75,23 @@ void IbpHandler::initCompressionOption() noexcept {
     }
 }
 
+#ifdef USE_OSX_RAM_HACK
+static uint64_t getTotalPhysicalMemory() {
+  const uint64_t def = 2048;// In case of error suppose we have 2GB of physical ram
+  const u_int n = 2;
+  int infos[n] = { CTL_HW, HW_MEMSIZE };
+  uint64_t value = 0;
+  size_t length = sizeof(value);
+  const int res = sysctl(& infos[0], n, &value, &length, NULL, 0);
+  return res < 0 ? def : value;
+}
+#else
 static uint64_t getTotalPhysicalMemory() {
     struct sysinfo info;
     sysinfo(&info);
     return static_cast<uint64_t>(info.totalram) * static_cast<uint64_t>(info.mem_unit);
 }
+#endif
 
 void IbpHandler::initEngineOptions() noexcept {
     uint64_t blockSize;
