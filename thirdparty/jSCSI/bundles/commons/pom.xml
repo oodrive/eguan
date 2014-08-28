@@ -14,6 +14,13 @@
         <developerConnection>scm:git:git@github.com:disy/jSCSI.git</developerConnection>
     </scm>
 
+    <distributionManagement>
+      <repository>
+	<id>sonatype-snapshots</id>
+	<url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+      </repository>
+    </distributionManagement>
+
     <artifactId>commons</artifactId>
     <name>jSCSI Libraries</name>
     <packaging>jar</packaging>
