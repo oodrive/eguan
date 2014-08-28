@@ -57,7 +57,7 @@
         <logbackVersion>1.1.1</logbackVersion>
         <mockitoVersion>1.9.5</mockitoVersion>
         <nettyVersion>3.8.0.Final</nettyVersion>
-        <perfidixVersion>3.6.8-SNAPSHOT</perfidixVersion>
+        <perfidixVersion>3.6.9</perfidixVersion>
         <protobufRpcProVersion>3.0.0</protobufRpcProVersion>
         <protobufVersion>2.4.1</protobufVersion>
         <snappyVersion>1.1.2-r83</snappyVersion>
