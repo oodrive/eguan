@@ -38,15 +38,15 @@
  */
 #define _SVID_SOURCE
 
+#include "c.h"
+#include "all-io.h"
+
 #ifdef _WIN32
 #define _WIN32_WINNT 0x0500
 #include <windows.h>
 #define UUID MYUUID
 #endif
 #include <stdio.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -87,11 +87,14 @@
 #include <sys/syscall.h>
 #endif
 
-#include "all-io.h"
+#if defined(__linux__)
+#include <sys/file.h>
+#endif
+
 #include "uuidP.h"
 #include "uuidd.h"
 #include "randutils.h"
-#include "c.h"
+
 
 #ifdef HAVE_TLS
 #define THREAD_LOCAL static __thread
@@ -207,9 +210,9 @@ static int get_node_id(unsigned char *node_id)
 	}
 	close(sd);
 #else
-	// just to use parameter
-	int sd = (int)node_id;
-	sd ^= sd;
+	/* just to use parameter */
+	int* sd = (int*) node_id;
+	sd += 1;
 #endif
 	return 0;
 }
@@ -397,8 +400,11 @@ fail:
 #else /* !defined(HAVE_UUIDD) && defined(HAVE_SYS_UN_H) */
 static int get_uuid_via_daemon(int op, uuid_t out, int* num)
 {
-        // to use parameters only
-        op = (int) out[0] ^ (int) num;
+        /* to use parameters only */
+        int* po = num;
+	po = &op;
+	*po = (int) out[0];
+	*po = op;
         
         return -1;
 }

@@ -1,6 +1,6 @@
-// Replacement for randutils that is distributed under LGPL
-// This file is released as is on public domain ...
-
+/* Replacement for randutils that is distributed under LGPL
+ * This file is released as is on public domain ...
+ */
 #ifndef __RANDUTILS_H__
 #define __RANDUTILS_H__
 
