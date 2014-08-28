@@ -34,7 +34,4 @@ Some errors that you can encounter and solutions :
     export PATH=/usr/local/bin:$PATH
     export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
-- problem with uuid: you may need to install e2fsprogs with homebrew
-    brew install e2fsprogs
-
 For more information, see the linux build page.

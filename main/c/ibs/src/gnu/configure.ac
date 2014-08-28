@@ -60,6 +60,28 @@ AC_CHECK_HEADERS([pthread.h],,
 AC_CHECK_LIB(pthread, pthread_create, [LIBS="$LIBS -lpthread"],
     [AC_MSG_ERROR([[libpthread not found.]])])
 
+AC_CANONICAL_HOST
+dnl Check for which host we are on and setup a few things
+dnl specifically based on the host
+case $host_os in
+  darwin* )
+dnl libuuid required
+AC_CHECK_HEADERS([uuid/uuid.h],,
+    AC_MSG_ERROR([uuid.h not found.]))
+dnl no need to add link option it's in the Kernel.framework
+        ;;
+  linux*)
+dnl libuuid required
+AC_CHECK_HEADERS([uuid/uuid.h],,
+    AC_MSG_ERROR([uuid.h not found.]))
+AC_CHECK_LIB(uuid, uuid_parse, [LIBS="$LIBS -luuid"],
+    [AC_MSG_ERROR([[libuuid not found.]])])
+        ;;
+    *)
+        AC_MSG_ERROR([Your platform is not currently supported])
+        ;;
+esac
+
 dnl log4cplus required
 AC_CHECK_HEADERS([log4cplus/logger.h],,
     AC_MSG_ERROR([log4cplus/logger.h not found.]))
