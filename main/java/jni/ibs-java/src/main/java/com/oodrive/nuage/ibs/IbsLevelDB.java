@@ -20,7 +20,6 @@ package com.oodrive.nuage.ibs;
  * #L%
  */
 
-import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
@@ -41,18 +40,7 @@ final class IbsLevelDB extends IbsDBAbstract {
 
     // Load native code
     static {
-        // Need to call NarSystem by reflection (eclipse can not find the class...)
-        final String NAR_CLASS = Ibs.class.getPackage().getName() + ".NarSystem";
-        try {
-            final Class<?> clazz = Class.forName(NAR_CLASS);
-            final Method loadLib = clazz.getMethod("loadLibrary", (Class<?>[]) null);
-            loadLib.invoke(null, (Object[]) null);
-        }
-        catch (final Exception e) {
-            final NoClassDefFoundError ncdf = new NoClassDefFoundError(NAR_CLASS);
-            ncdf.initCause(e);
-            throw ncdf;
-        }
+        NarSystem.loadLibrary();
     }
 
     /** Id of the IBS. For native access to the object */

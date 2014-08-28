@@ -253,6 +253,13 @@
                     <version>1.2.1</version>
                 </plugin>
 
+                <!-- Helper plugin. Add generated code into classpath -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>1.9.1</version>
+                </plugin>
+
                 <!-- Workaround the lack of m2eclipse plugin for NAR projects. See http://stackoverflow.com/questions/6352208/how-to-solve-plugin-execution-not-covered-by-lifecycle-configuration-for-sprin 
                     for details -->
                 <plugin>

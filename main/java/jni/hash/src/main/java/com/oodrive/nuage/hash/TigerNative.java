@@ -20,7 +20,6 @@ package com.oodrive.nuage.hash;
  * #L%
  */
 
-import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 
 import com.google.protobuf.ByteString;
@@ -38,18 +37,7 @@ public final class TigerNative {
 
     // Load native code
     static {
-        // Need to call NarSystem by reflection (eclipse can not find the class...)
-        final String NAR_CLASS = TigerNative.class.getPackage().getName() + ".NarSystem";
-        try {
-            final Class<?> clazz = Class.forName(NAR_CLASS);
-            final Method loadLib = clazz.getMethod("loadLibrary", (Class<?>[]) null);
-            loadLib.invoke(null, (Object[]) null);
-        }
-        catch (final Exception e) {
-            final NoClassDefFoundError ncdf = new NoClassDefFoundError(NAR_CLASS);
-            ncdf.initCause(e);
-            throw ncdf;
-        }
+        NarSystem.loadLibrary();
     }
 
     /** Hash length in bytes */
