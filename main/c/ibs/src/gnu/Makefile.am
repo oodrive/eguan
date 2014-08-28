@@ -25,9 +25,6 @@ include Makefile.srclist.am
 libibs_la_LDFLAGS = 
 libibs_la_CPPFLAGS = -I$(top_srcdir)/include
 
-# This add the embedded libuuid
-include libuuid/Makefile.am
-
 if GCOV
 libibs_la_LIBADD = -lgcov
 endif

@@ -15,7 +15,7 @@ Before trying to build, make sure homebrew installation is working and up to dat
 
 If everything is OK, launch the following homebrew command. It may take about 1h or more to compile:
    
-   brew install maven autoconf automake libtool pkg-config gcc48
+   brew install maven autoconf automake libtool pkg-config gcc48 
 
 
 Then build the tools for eguan, go in the directory 'tools' and do:
@@ -40,5 +40,8 @@ export LD_LIBRARY_PATH=$JAVA_HOME/lib:$LD_LIBRARY_PATH
 # for home brew tools before system one
 export PATH=/usr/local/bin:$PATH
 export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+
+- problem with uuid: you may need to install e2fsprogs with homebrew
+brew install e2fsprogs
 
 For more information, see the linux build page.
