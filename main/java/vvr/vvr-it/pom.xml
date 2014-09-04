@@ -61,10 +61,6 @@
                                     <directory>src/test/java/com/oodrive/nuage/vvr</directory>
                                     <excludes>
                                         <exclude>**/it/*.java</exclude>
-                                        <exclude>**/.svn/*</exclude>
-                                        <exclude>**/.svn/*/*</exclude>
-                                        <exclude>**/.svn/*/*/*</exclude>
-                                        <exclude>**/.svn/*/*/*/*</exclude>
                                     </excludes>
                                 </fileset>
                             </filesets>
