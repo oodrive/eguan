@@ -40,7 +40,6 @@
                 <!-- Create protobuf classes -->
                 <groupId>com.google.protobuf.tools</groupId>
                 <artifactId>maven-protoc-plugin</artifactId>
-                <version>0.1.11-oodrive</version>
                 <executions>
                     <execution>
                         <id>generate proto sources</id>

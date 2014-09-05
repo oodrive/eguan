@@ -230,6 +230,12 @@ public class TestVost {
         try {
             final String configRest = TestVost.class.getClassLoader().getResource("rest.cfg").getPath();
             final String cinderScript = TestVost.class.getClassLoader().getResource("sleepTest").getPath();
+            // The cinderScript may not be executable
+            {
+                final File cinderScriptFile = new File(cinderScript);
+                Assert.assertTrue(cinderScriptFile.exists());
+                cinderScriptFile.setExecutable(true);
+            }
             final String[] args = { helper.getVoldPath(), configRest, cinderScript };
             final RunningCmd vost = createVostCmd(args);
             vost.run();

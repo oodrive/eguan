@@ -240,9 +240,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
-                <!--
 				<version>1.7</version>
-                 -->
 				<configuration>
 					<target>
 						<delete dir="${project.build.directory}/site" />

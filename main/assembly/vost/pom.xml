@@ -12,10 +12,6 @@
     <packaging>jar</packaging>
     <name>Assembling vold+rest</name>
 
-    <scm>
-        <connection>scm:svn:http://192.168.1.6/nuage/sp2/trunk</connection>
-    </scm>
-
     <build>
         <plugins>
             <plugin>
@@ -32,7 +28,7 @@
                 </executions>
             </plugin>
 
-            <!-- Get the current SVN revision -->
+            <!-- Get the current git branch and commit -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>buildnumber-maven-plugin</artifactId>
@@ -47,6 +43,7 @@
                 <configuration>
                     <doCheck>false</doCheck>
                     <doUpdate>false</doUpdate>
+                    <shortRevisionLength>10</shortRevisionLength>
                 </configuration>
             </plugin>
 
@@ -67,31 +64,11 @@
                         <configuration>
                             <executable>src/main/assembly/version</executable>
                             <arguments>
-                                <argument>-v ${buildNumber}</argument>
                                 <argument>-b ${scmBranch}</argument>
+                                <argument>-c ${buildNumber}</argument>
                                 <argument>-p ${project.build.directory}/VERSION</argument>
                             </arguments>
                         </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Test purpose -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>process-test-classes</id>
-                        <phase>process-test-classes</phase>
-                        <configuration>
-                            <target>
-                                <chmod file="target/test-classes/sleepTest" perm="755" />
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
                     </execution>
                 </executions>
             </plugin>
@@ -144,7 +121,7 @@
             <version>${project.version}</version>
             <type>nar</type>
         </dependency>
-        <!-- As the vold dependencies have been reduced, we have to add some dependency to build a complete assembly (unpack 
+        <!-- As the vold dependencies have been reduced, we have to add some dependencies to build a complete assembly (unpack 
             of native libs) -->
         <dependency>
             <groupId>${project.groupId}</groupId>

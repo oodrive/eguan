@@ -1,21 +1,21 @@
-#!/bin/bash
+#!/bin/bash -f
+
+SED=`which sed`
 
 [ $# == 0 ] && echo $USAGE && exit 1
-while getopts "p:v:b:" OPTION
+while getopts "p:b:c:" OPTION
 do
     case $OPTION in
         p) PATH=$OPTARG;;
-        v) VERSION=$OPTARG;;
         b) BRANCH=$OPTARG;;
+        c) COMMIT=$OPTARG;;
     esac
 done
 
 [ -z $PATH ] && exit 1
 
-if [ -n $VERSION ]; then
-    echo "SVN revision = $VERSION" > $PATH
-
-    if [ -n $BRANCH ]; then
-        echo "SVN branch = $BRANCH" >> $PATH
-    fi
-fi
+# Remove heading and trailing spaces in branch and commit
+echo -n "branch " > $PATH
+echo "$BRANCH" | $SED -e 's/^ *//' -e 's/ *$//' >> $PATH
+echo -n "commit " >> $PATH
+echo "$COMMIT" | $SED -e 's/^ *//' -e 's/ *$//' >> $PATH
