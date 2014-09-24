@@ -572,7 +572,7 @@ public final class TestDeviceResourceL extends AbstractVvrResourceTest {
         final WebResource connectionResource = deviceResource.path(CONNECTION_PATH);
 
         final MultivaluedMapImpl getConnectParams = new MultivaluedMapImpl();
-        getConnectParams.add("ip", "to.the.unknown.host");
+        getConnectParams.add("ip", "to.the.unknown.h0$t");
         getConnectParams.add("clientProtocol", "iscsi");
 
         final ClientResponse connectResponse = prebuildRequest(connectionResource, getConnectParams).get(
