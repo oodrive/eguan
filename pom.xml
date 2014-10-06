@@ -52,7 +52,7 @@
         <jsr305Version>2.0.1</jsr305Version>
         <junitVersion>4.10</junitVersion>
         <jscsiVersion>2.5.1-oodrive</jscsiVersion>
-        <leveldbVersion>1.16.0-oodrive</leveldbVersion>
+        <leveldbVersion>1.18.0-oodrive</leveldbVersion>
         <log4cplusVersion>1.1.2-rc2-oodrive</log4cplusVersion>
         <logbackVersion>1.1.1</logbackVersion>
         <mockitoVersion>1.9.5</mockitoVersion>

@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include <deque>
-#include <set>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -17,16 +15,14 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#if defined(LEVELDB_PLATFORM_ANDROID)
-#include <sys/stat.h>
-#endif
+#include <deque>
+#include <set>
 #include "leveldb/env.h"
 #include "leveldb/slice.h"
 #include "port/port.h"
 #include "util/logging.h"
 #include "util/mutexlock.h"
 #include "util/posix_logger.h"
-#include <sys/statvfs.h>
 
 namespace leveldb {
 
@@ -195,15 +191,6 @@ class PosixWritableFile : public WritableFile {
   }
 
   virtual Status Append(const Slice& data) {
-    // check that the device is not full
-    // to avoid SIGBUS
-    size_t n = data.size();
-    struct statvfs buf;
-    int res = statvfs(filename_.c_str(), &buf);
-    if((res != 0) || (n > (buf.f_bsize * buf.f_bavail))){
-      // no space left
-      return Status::IOError("No space left for " + filename_);
-    }
     size_t r = fwrite_unlocked(data.data(), 1, data.size(), file_);
     if (r != data.size()) {
       return IOError(filename_, errno);
@@ -307,7 +294,8 @@ class PosixEnv : public Env {
  public:
   PosixEnv();
   virtual ~PosixEnv() {
-    fprintf(stderr, "Destroying Env::Default()\n");
+    char msg[] = "Destroying Env::Default()\n";
+    fwrite(msg, 1, sizeof(msg), stderr);
     abort();
   }
 
