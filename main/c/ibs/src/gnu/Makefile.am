@@ -29,7 +29,7 @@ if GCOV
 libibs_la_LIBADD = -lgcov
 endif
 
-# The files that are not needed in the library MUST have *.cxx extension                              
+# The files that are not needed in the library MUST have *.cxx extension
 if GCOV
 # do nothing                                                                                          
 else

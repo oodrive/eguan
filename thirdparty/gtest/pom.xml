@@ -28,6 +28,10 @@
                     <gnuConfigureArgs>
 		      <gnuConfigureArg>--disable-dependency-tracking</gnuConfigureArg>
 		      <gnuConfigureArg>--disable-static</gnuConfigureArg>
+		      <!-- for compilation on some systems 
+			   where <tr1/tuple> header is not present but gtest thinks it is
+			-->
+		      <gnuConfigureArg>CPPFLAGS="-DGTEST_USE_OWN_TR1_TUPLE"</gnuConfigureArg>
                     </gnuConfigureArgs>
                     <gnuMakeArgs>-j all</gnuMakeArgs>
                     <libraries>

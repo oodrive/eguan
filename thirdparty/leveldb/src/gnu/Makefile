@@ -217,4 +217,4 @@ endif
 
 install: 
 	mkdir -p $(PREFIX)/lib
-	cp -a libleveldb.so* $(PREFIX)/lib
+	if test -f libleveldb.dylib ; then cp -a libleveldb.dylib* $(PREFIX)/lib ; else cp -a libleveldb.so* $(PREFIX)/lib ; fi

@@ -34,7 +34,7 @@ Logger_t Transaction::logger = ibs::Logger::getLogger("Transaction");
 Transaction::uuidToId_t Transaction::uuidToId;
 Transaction::idToUuid_t Transaction::idToUuid;
 PosixRWLock Transaction::mapLock;
-long Transaction::global_counter = 1;
+int64_t Transaction::global_counter = 1;
 
 Transaction::Transaction(AtomicBlockStore& in) :
         AbstractTransaction(in), updates(), uuid(), id(), isIdBinded(false), compress(false) {

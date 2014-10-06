@@ -82,6 +82,7 @@ void PosixMutex::unlock() {
     pthread_mutex_unlock(&impl);
 }
 
+#ifdef pthread_spinlock_t
 PosixSpinLock::PosixSpinLock() :
         Lock() {
     pthread_spin_init(&impl, 0);
@@ -98,5 +99,6 @@ void PosixSpinLock::lock() {
 void PosixSpinLock::unlock() {
     pthread_spin_unlock(&impl);
 }
+#endif
 
 } /* namespace ibs */

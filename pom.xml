@@ -33,9 +33,6 @@
     <properties>
         <projectName>eguan</projectName>
 
-        <!-- NAR AOL supported by this project -->
-        <localAOL>amd64-Linux-gpp</localAOL>
-
         <!-- Default temporary file directory -->
         <tmpdir>/tmp</tmpdir>
 
@@ -57,10 +54,10 @@
         <logbackVersion>1.1.1</logbackVersion>
         <mockitoVersion>1.9.5</mockitoVersion>
         <nettyVersion>3.8.0.Final</nettyVersion>
-        <perfidixVersion>3.6.8-SNAPSHOT</perfidixVersion>
+        <perfidixVersion>3.6.9</perfidixVersion>
         <protobufRpcProVersion>3.0.0</protobufRpcProVersion>
         <protobufVersion>2.4.1</protobufVersion>
-        <snappyVersion>1.1.0</snappyVersion>
+        <snappyVersion>1.1.2-r83</snappyVersion>
         <testngVersion>6.8</testngVersion>
     </properties>
 
@@ -68,6 +65,26 @@
         <module>thirdparty</module>
         <module>main</module>
     </modules>
+
+    <!-- Defines NAR AOL supported by this project 
+	 add/change according to platform where you want to build -->
+    <profiles>
+        <profile>
+            <id>linux</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+	    <properties>
+	      <localAOL>amd64-Linux-gpp</localAOL>
+	    </properties>
+        </profile>
+        <profile>
+            <id>osx</id>
+	    <properties>
+	      <localAOL>x86_64-MacOSX-gpp</localAOL>
+	    </properties>
+        </profile>
+    </profiles>
 
     <build>
         <pluginManagement>

@@ -25,8 +25,6 @@
 
 #include "CombinedBlockStore.h"
 #include <assert.h>
-#include <sys/stat.h>
-#include <sys/sysinfo.h>
 #include "LevelDbFacade.h"
 
 namespace ibs {

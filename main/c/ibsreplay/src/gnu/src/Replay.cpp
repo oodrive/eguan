@@ -27,6 +27,8 @@
 #include "Controller.h"
 #include "Transaction.h"
 
+#include <random>
+
 std::string REPLAY_LOG_LEVEL = "debug";
 
 namespace ibs {
