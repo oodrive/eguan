@@ -250,23 +250,6 @@ public final class NrsFileJanitor {
         return result;
     }
 
-    public final NrsFile createNrsFile(final NrsFileHeader<NrsFile> nrsFileHeaderTemplate, final NrsFileFlag... flags)
-            throws NrsException {
-        final NrsFileHeader.Builder<NrsFile> headerBuilder = newNrsFileHeaderBuilder();
-        headerBuilder.parent(nrsFileHeaderTemplate.getParentId());
-        headerBuilder.device(nrsFileHeaderTemplate.getDeviceId());
-        headerBuilder.node(nrsFileHeaderTemplate.getNodeId());
-        headerBuilder.file(nrsFileHeaderTemplate.getFileId());
-        // Data format
-        headerBuilder.addFlags(flags).blockSize(nrsFileHeaderTemplate.getBlockSize())
-                .hashSize(nrsFileHeaderTemplate.getHashSize());
-        // Size and time stamp
-        headerBuilder.timestamp(nrsFileHeaderTemplate.getTimestamp());
-        headerBuilder.size(nrsFileHeaderTemplate.getSize());
-        final NrsFileHeader<NrsFile> nrsFileHeader = headerBuilder.build();
-        return createNrsFile(nrsFileHeader);
-    }
-
     /**
      * Loads an existing {@link NrsFile} from the provided file.
      * 

@@ -142,7 +142,7 @@ public abstract class AbstractUniqueVvrObject implements UniqueVvrObject {
         /**
          * The unique ID used to build object instances.
          */
-        protected UUID targetId = null;
+        private UUID targetId = null;
 
         /**
          * The optional name to assign the built instance.

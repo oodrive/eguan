@@ -23,7 +23,6 @@ package com.oodrive.nuage.vvr.repository.core.api;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nonnull;
 
@@ -31,8 +30,6 @@ import com.google.protobuf.MessageLite;
 import com.oodrive.nuage.configuration.AbstractConfigKey;
 import com.oodrive.nuage.configuration.MetaConfiguration;
 import com.oodrive.nuage.dtx.DtxResourceManager;
-import com.oodrive.nuage.dtx.DtxTaskApi;
-import com.oodrive.nuage.net.MsgClientStartpoint;
 import com.oodrive.nuage.proto.vvr.VvrRemote.RemoteOperation;
 
 /**
@@ -211,61 +208,6 @@ public interface VersionedVolumeRepository extends UniqueVvrObject, DtxResourceM
      * @return an optional reply or <code>null</code>
      */
     MessageLite handleMsg(RemoteOperation op);
-
-    /**
-     * Builder for a repository instance.
-     * 
-     * 
-     */
-    interface Builder extends UniqueVvrObject.Builder {
-
-        /**
-         * Sets the owner {@link UUID} for the repository to be built.
-         * 
-         * @param ownerId
-         *            the non-null unique ID of the repository owner
-         * @return the modified builder
-         */
-        Builder ownerId(@Nonnull UUID ownerId);
-
-        /**
-         * Sets the {@link UUID} of the current node.
-         * 
-         * @param nodeId
-         *            the non-null unique ID of the current node
-         * @return the modified builder
-         */
-        Builder nodeId(@Nonnull UUID nodeId);
-
-        /**
-         * Sets the optional remote messages destination.
-         * 
-         * @param syncClientRef
-         * @return this
-         */
-        Builder syncClientRef(AtomicReference<MsgClientStartpoint> syncClientRef);
-
-        /**
-         * Sets the distributed task manager.
-         * 
-         * @param dtxTaskApiRef
-         * @return this
-         */
-        Builder dtxTaskApiRef(AtomicReference<DtxTaskApi> dtxTaskApiRef);
-
-        /**
-         * Sets the {@link MetaConfiguration} instance on which to rely.
-         * <p>
-         * <i>REQUIRED.</i>
-         * <p>
-         * 
-         * @param configuration
-         *            a functional, successfully initialized {@link MetaConfiguration}
-         * @return the modified builder instance
-         */
-        Builder configuration(MetaConfiguration configuration);
-
-    }
 
     /**
      * Events on items.

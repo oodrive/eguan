@@ -1313,6 +1313,21 @@ abstract class NrsAbstractFile<T, U> extends HandledFile<UuidT<U>> {
      *             if <code>blockIndex</code> is out of the item scope.
      */
     public final T read(final long blockIndex) throws IndexOutOfBoundsException, IOException {
+        return read(blockIndex, null);
+    }
+
+    /**
+     * Reads the contents of the block and writes it in <code>dest</code> if the value is not <code>null</code>.
+     * 
+     * @param blockIndex
+     *            the index of the block to read
+     * @param dest
+     *            destination buffer of <code>null</code>
+     * @return <code>dest</code> or a new allocated element.
+     * @throws IndexOutOfBoundsException
+     *             if <code>blockIndex</code> is out of the item scope.
+     */
+    final T read(final long blockIndex, final T dest) throws IndexOutOfBoundsException, IOException {
         openLock.readLock().lock();
         try {
             // Opened?
@@ -1340,7 +1355,7 @@ abstract class NrsAbstractFile<T, U> extends HandledFile<UuidT<U>> {
 
             // Read from file
             final int elementSize = getElementSize();
-            final T result = newElement();
+            final T result = dest == null ? newElement() : dest;
             final long readOffset = l2Address + l2Index * (1 + elementSize);
 
             final byte hashValue;
@@ -1355,7 +1370,7 @@ abstract class NrsAbstractFile<T, U> extends HandledFile<UuidT<U>> {
                 if (LOGGER.isTraceEnabled()) {
                     final StringBuilder trace = new StringBuilder("R blockIndex=").append(blockIndex)
                             .append(" readOffset=").append(readOffset).append(" value=");
-                    appendDebugString(trace, result, 0);
+                    appendDebugString(trace, result);
                     LOGGER.trace(trace.toString());
                 }
                 return result;
@@ -1398,7 +1413,7 @@ abstract class NrsAbstractFile<T, U> extends HandledFile<UuidT<U>> {
             return header;
         }
         assert header == HASH_ALLOCATED_VALUE;
-        readFully(backendFileMappedBuffer, result, 0);
+        readFully(backendFileMappedBuffer, result);
         return header;
     }
 
@@ -1421,7 +1436,7 @@ abstract class NrsAbstractFile<T, U> extends HandledFile<UuidT<U>> {
             return header;
         }
         assert header == HASH_ALLOCATED_VALUE;
-        readFully(backendFileChannel, result, 0);
+        readFully(backendFileChannel, result);
         return header;
     }
 
@@ -1437,9 +1452,6 @@ abstract class NrsAbstractFile<T, U> extends HandledFile<UuidT<U>> {
      *             if <code>blockIndex</code> is out of the item scope.
      */
     public final void write(final long blockIndex, @Nonnull final T hashValue) throws IOException {
-        // Only for NrsFile without block or NrsFileBlock
-        assert !isNrsFileBlock();
-
         // Check hash length (and NPE if hashValue is null)
         checkValueLength(hashValue);
         writeHash(blockIndex, hashValue, true);
@@ -1455,9 +1467,6 @@ abstract class NrsAbstractFile<T, U> extends HandledFile<UuidT<U>> {
      *             if <code>blockIndex</code> is out of the item scope.
      */
     public final void reset(final long blockIndex) throws IOException {
-        // Only for NrsFile without block or NrsFileBlock
-        assert !isNrsFileBlock();
-
         writeHash(blockIndex, null, true);
     }
 
@@ -1471,9 +1480,6 @@ abstract class NrsAbstractFile<T, U> extends HandledFile<UuidT<U>> {
      *             if <code>blockIndex</code> is out of the item scope.
      */
     public final void trim(final long blockIndex) throws IOException {
-        // Only for NrsFile without block or NrsFileBlock
-        assert !isNrsFileBlock();
-
         writeHash(blockIndex, TRIMMED_VALUE, true);
     }
 
@@ -1538,7 +1544,7 @@ abstract class NrsAbstractFile<T, U> extends HandledFile<UuidT<U>> {
                 else {
                     final StringBuilder trace = new StringBuilder("W blockIndex=").append(blockIndex)
                             .append(" writeOffset=").append(writeOffset).append(" value=");
-                    appendDebugString(trace, hashValue, 0);
+                    appendDebugString(trace, hashValue);
                     LOGGER.trace(trace.toString());
                 }
             }
@@ -1589,7 +1595,7 @@ abstract class NrsAbstractFile<T, U> extends HandledFile<UuidT<U>> {
         else {
             ALLOCATED.rewind();
             backendFileChannel.write(ALLOCATED);
-            writeFully(backendFileChannel, hashValue, 0);
+            writeFully(backendFileChannel, hashValue);
         }
     }
 
@@ -1792,10 +1798,8 @@ abstract class NrsAbstractFile<T, U> extends HandledFile<UuidT<U>> {
      * @param dst
      *            destination buffer.
      * @param value
-     * @param offset
-     *            offset in value.
      */
-    abstract void appendDebugString(@Nonnull StringBuilder dst, @Nonnull T value, final int offset);
+    abstract void appendDebugString(@Nonnull StringBuilder dst, @Nonnull T value);
 
     /**
      * Read the value from a coded message.
@@ -1813,10 +1817,8 @@ abstract class NrsAbstractFile<T, U> extends HandledFile<UuidT<U>> {
      *            source buffer.
      * @param result
      *            area to fill.
-     * @param offset
-     *            offset in result.
      */
-    abstract void readFully(@Nonnull MappedByteBuffer src, @Nonnull T result, int offset);
+    abstract void readFully(@Nonnull MappedByteBuffer src, @Nonnull T result);
 
     /**
      * Fills result with some contents of the source channel.
@@ -1825,10 +1827,8 @@ abstract class NrsAbstractFile<T, U> extends HandledFile<UuidT<U>> {
      *            source channel.
      * @param result
      *            area to fill.
-     * @param offset
-     *            offset in result.
      */
-    abstract void readFully(@Nonnull FileChannel src, @Nonnull T result, int offset) throws IOException;
+    abstract void readFully(@Nonnull FileChannel src, @Nonnull T result) throws IOException;
 
     /**
      * Writes the value to the destination channel.
@@ -1837,11 +1837,9 @@ abstract class NrsAbstractFile<T, U> extends HandledFile<UuidT<U>> {
      *            destination channel.
      * @param value
      *            value to write.
-     * @param offset
-     *            offset in value.
      * @throws IOException
      */
-    abstract void writeFully(@Nonnull FileChannel dst, @Nonnull T value, int offset) throws IOException;
+    abstract void writeFully(@Nonnull FileChannel dst, @Nonnull T value) throws IOException;
 
     @Override
     public final String toString() {

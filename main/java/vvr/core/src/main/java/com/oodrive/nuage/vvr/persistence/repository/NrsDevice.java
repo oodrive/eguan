@@ -44,12 +44,12 @@ import com.google.common.base.Strings;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.oodrive.nuage.hash.ByteBufferDigest;
+import com.oodrive.nuage.hash.HashAlgorithm;
 import com.oodrive.nuage.ibs.Ibs;
 import com.oodrive.nuage.ibs.IbsIOException;
 import com.oodrive.nuage.net.MsgServerRemoteStatus;
 import com.oodrive.nuage.net.MsgServerTimeoutException;
 import com.oodrive.nuage.nrs.NrsFile;
-import com.oodrive.nuage.nrs.NrsFileFlag;
 import com.oodrive.nuage.nrs.NrsFileHeader;
 import com.oodrive.nuage.proto.Common.OpCode;
 import com.oodrive.nuage.proto.Common.Type;
@@ -60,6 +60,7 @@ import com.oodrive.nuage.utils.SimpleIdentifierProvider;
 import com.oodrive.nuage.utils.UuidT;
 import com.oodrive.nuage.vvr.remote.VvrRemoteUtils;
 import com.oodrive.nuage.vvr.repository.core.api.AbstractDeviceImplHelper;
+import com.oodrive.nuage.vvr.repository.core.api.BlockKeyLookupEx;
 import com.oodrive.nuage.vvr.repository.core.api.Device;
 import com.oodrive.nuage.vvr.repository.core.api.FutureSnapshot;
 import com.oodrive.nuage.vvr.repository.core.api.FutureVoid;
@@ -84,6 +85,20 @@ public final class NrsDevice extends NrsVvrItem implements Device {
 
         NrsDeviceImplHelper() {
             super();
+        }
+
+        /**
+         * Create a new {@link ReadWriteHandle} for the device.
+         */
+        @Override
+        public final ReadWriteHandle newReadWriteHandle(final Ibs ibs, final HashAlgorithm hashAlgorithm,
+                final boolean readOnly, final int blockSize) {
+            // Enable NrsFileBlock device RW handler
+            if (NRS_BLOCK_FILE_ENABLED) {
+                return new NrsBlkDeviceReadWriteHandleImpl(this, hashAlgorithm, readOnly, blockSize);
+            }
+            // Default implementation
+            return super.newReadWriteHandle(ibs, hashAlgorithm, readOnly, blockSize);
         }
 
         @Override
@@ -257,7 +272,21 @@ public final class NrsDevice extends NrsVvrItem implements Device {
             }
             return false;
         }
+
+        /**
+         * Gets the current {@link NrsFile}.
+         *
+         * @return the current {@link NrsFile}.
+         */
+        final NrsFile getCurrentNrsFile() {
+            return getNrsFilePath();
+        }
+
     }
+
+    /** Enable NrsFileBlock proof of concept (temporary) */
+    private static final String NRS_BLOCK_FILE_ENABLED_PROP = "com.oodrive.nuage.nrsblockfile.enable";
+    static boolean NRS_BLOCK_FILE_ENABLED = Boolean.getBoolean(NRS_BLOCK_FILE_ENABLED_PROP);
 
     /**
      * The device's active status.
@@ -312,7 +341,7 @@ public final class NrsDevice extends NrsVvrItem implements Device {
         final UuidT<NrsFile> parentFileUuid = getNrsFileId();
         final UUID deviceUuid = getUuid();
         final UuidT<NrsFile> futureSnapshotUuid = SimpleIdentifierProvider.newId();
-        final NrsFileHeader<NrsFile> deviceNrsFileHeader = repository.doCreateNrsFileHeader(parentFileUuid, size,
+        final NrsFileHeader<NrsFile> deviceNrsFileHeader = repository.doCreateFutureNrsFileHeader(parentFileUuid, size,
                 deviceUuid, futureSnapshotUuid);
 
         // Create and launch transaction
@@ -480,8 +509,8 @@ public final class NrsDevice extends NrsVvrItem implements Device {
         final UuidT<NrsFile> futureFileUuid = SimpleIdentifierProvider.newId();
         // Note: the parent fileId set is the current ID, but if there is another transaction pending
         // or in progress on this device, the parent may have changed when the transaction will be run
-        final NrsFileHeader<NrsFile> deviceNrsFileHeader = repository.doCreateNrsFileHeader(getNrsFileId(), getSize(),
-                getUuid(), futureFileUuid);
+        final NrsFileHeader<NrsFile> deviceNrsFileHeader = repository.doCreateFutureNrsFileHeader(getNrsFileId(),
+                getSize(), getUuid(), futureFileUuid);
 
         // Create and launch transaction
         final RemoteOperation.Builder opBuilder = RemoteOperation.newBuilder();
@@ -518,12 +547,12 @@ public final class NrsDevice extends NrsVvrItem implements Device {
 
             final NrsRepository repository = getVvr();
             // Take snapshot
-            final NrsSnapshot.Builder builder = new NrsSnapshot.Builder();
+            final NrsSnapshot.BuilderCreate builder = new NrsSnapshot.BuilderCreate();
             builder.uuid(uuid).name(name).description(description);
             builder.device(this);
             builder.vvr(repository);
-            builder.directory(repository.getSnapshotDir());
-            builder.nrsFileHeader(nrsFileHeader);
+            builder.metadataDirectory(repository.getSnapshotDir());
+            builder.deviceFutureNrsFileHeader(nrsFileHeader);
             final Snapshot snapshot = builder.create();
             LOGGER.debug("Snapshot " + snapshot.getUuid() + " created");
 
@@ -573,13 +602,13 @@ public final class NrsDevice extends NrsVvrItem implements Device {
 
         // Future device (clone)
         final UuidT<NrsFile> futureDeviceNrsUuid = SimpleIdentifierProvider.newId();
-        final NrsFileHeader<NrsFile> futureDeviceNrsFileHeader = repository.doCreateNrsFileHeader(getNrsFileId(),
+        final NrsFileHeader<NrsFile> futureDeviceNrsFileHeader = repository.doCreateFutureNrsFileHeader(getNrsFileId(),
                 getSize(), createdDeviceUuid, futureDeviceNrsUuid);
         NrsRemoteUtils.addNrsDevice(opBuilder, futureDeviceNrsFileHeader, getUuid(), name, description);
 
         // Create NrsFileHeader for original device (gets a new NrsFile)
         final UuidT<NrsFile> futureSnapshotUuid = SimpleIdentifierProvider.newId();
-        final NrsFileHeader<NrsFile> origDeviceNrsFileHeader = repository.doCreateNrsFileHeader(getNrsFileId(),
+        final NrsFileHeader<NrsFile> origDeviceNrsFileHeader = repository.doCreateFutureNrsFileHeader(getNrsFileId(),
                 getSize(), getUuid(), futureSnapshotUuid);
         NrsRemoteUtils.addNrsFileHeaderMsg(opBuilder, origDeviceNrsFileHeader);
 
@@ -591,7 +620,7 @@ public final class NrsDevice extends NrsVvrItem implements Device {
     }
 
     final Device doCloneDevice(final UUID uuid, final String name, final String description,
-            final NrsFileHeader<NrsFile> nrsFileHeader) {
+            final @Nonnull NrsFileHeader<NrsFile> nrsFileHeader) {
 
         // Freeze IOs while cloning the device (and changing the NrsFile)
         ioLock.writeLock().lock();
@@ -605,8 +634,7 @@ public final class NrsDevice extends NrsVvrItem implements Device {
             final NrsRepository repository = getVvr();
             final NrsDevice.Builder builder = repository.newDeviceBuilder(nrsFileHeader.getParentId(), name,
                     description, getSize(), uuid);
-            builder.nrsFileHeader(Objects.requireNonNull(nrsFileHeader));
-            final NrsDevice device = (NrsDevice) builder.create();
+            final NrsDevice device = builder.create(nrsFileHeader);
 
             // Need to open new file?
             // Note: must not re-open the previous file on error (is read-only)
@@ -664,7 +692,7 @@ public final class NrsDevice extends NrsVvrItem implements Device {
      * 
      * 
      */
-    public static final class Builder extends NrsVvrItem.Builder implements Device.Builder {
+    public static final class Builder extends NrsVvrItem.Builder {
 
         @Override
         protected final UUID deviceID() {
@@ -708,15 +736,16 @@ public final class NrsDevice extends NrsVvrItem implements Device {
             return this;
         }
 
-        @Override
-        public final Device build() {
+        public final NrsDevice build() {
             uuid(header.getDeviceId());
             parentFile(header.getParentId());
             futureFileId(header.getFileId());
+            size(header.getSize());
+            flags(header.getFlags());
             return new NrsDevice(this);
         }
 
-        public final Device create() {
+        public final NrsDevice create(final @Nonnull NrsFileHeader<NrsFile> nrsFileHeader) {
             // Check UUID conflict
             final NrsRepository repository = getVvr();
             {
@@ -730,7 +759,7 @@ public final class NrsDevice extends NrsVvrItem implements Device {
             }
 
             // Create and set NrsFile
-            final NrsFile nrsFile = createNrsFile(NrsFileFlag.PARTIAL);
+            final NrsFile nrsFile = createNrsFile(Objects.requireNonNull(nrsFileHeader));
             sourceFile(nrsFile);
             final NrsDevice device = new NrsDevice(this);
             try {

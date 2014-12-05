@@ -1,4 +1,4 @@
-package com.oodrive.nuage.vvr.it;
+package com.oodrive.nuage.vvr.persistence.repository;
 
 /*
  * #%L
@@ -20,17 +20,32 @@ package com.oodrive.nuage.vvr.it;
  * #L%
  */
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+
+import com.oodrive.nuage.nrs.NrsFile;
 import com.oodrive.nuage.vvr.repository.core.api.TestDeviceIoAbstract;
 
 /**
- * Unit tests of IOs on a VVR device.
+ * Unit tests to read and write in {@link NrsFile} with NrsFileBlock.
  *
  * @author oodrive
  * @author llambert
+ *
  */
-public class TestDeviceIoL extends TestDeviceIoAbstract {
+public final class TestDeviceIoBlocks extends TestDeviceIoAbstract {
 
-    public TestDeviceIoL() {
-        super(false);
+    public TestDeviceIoBlocks() {
+        super(true);
+    }
+
+    @BeforeClass
+    public static final void enableNrsFileBlock() {
+        NrsDevice.NRS_BLOCK_FILE_ENABLED = true;
+    }
+
+    @AfterClass
+    public static final void disableNrsFileBlock() {
+        NrsDevice.NRS_BLOCK_FILE_ENABLED = false;
     }
 }

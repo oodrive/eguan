@@ -9,9 +9,9 @@ package com.oodrive.nuage.nrs;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,21 +52,21 @@ import com.oodrive.nuage.utils.mapper.FileMapper;
 
 /**
  * Test class for {@link NrsAbstractFile}.
- * 
+ *
  * @author oodrive
  * @author llambert
- * 
+ *
  */
 public abstract class TestNrsAbstractFiles<T, U> extends AbstractNrsTestFixture {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestNrsAbstractFiles.class);
 
     /** Base dir */
     private File tempBaseDir;
-    private FileMapper fileMapper;
+    protected FileMapper fileMapper;
 
     /**
      * Factory of {@link NrsAbstractFile}.
-     * 
+     *
      * @return a new {@link NrsAbstractFile}.
      */
     abstract NrsAbstractFile<T, U> newNrsAbstractFile(final FileMapper fileMapper, final NrsFileHeader<U> header,
@@ -96,7 +96,7 @@ public abstract class TestNrsAbstractFiles<T, U> extends AbstractNrsTestFixture 
 
     /**
      * Create and delete a NrsAbstractFile.
-     * 
+     *
      * @throws IOException
      */
     @Test
@@ -121,7 +121,7 @@ public abstract class TestNrsAbstractFiles<T, U> extends AbstractNrsTestFixture 
 
     /**
      * Creating of an empty {@link NrsAbstractFile}.
-     * 
+     *
      * @throws IOException
      */
     @Test
@@ -252,8 +252,9 @@ public abstract class TestNrsAbstractFiles<T, U> extends AbstractNrsTestFixture 
         Assert.assertTrue(nrsFile.isWriteable());
         Assert.assertTrue(nrsFile.getFile().toFile().isFile());
         Assert.assertEquals(0L, nrsFile.getVersion());
-        if (empty)
+        if (empty) {
             Assert.assertEquals(NrsFileHeader.HEADER_LENGTH, nrsFile.getFile().toFile().length());
+        }
         else if (smallCluster) {
             Assert.assertEquals(0, nrsFile.getDescriptor().getH1Address() % clusterSize);
             Assert.assertEquals(0, nrsFile.getFile().toFile().length() % clusterSize);
@@ -579,8 +580,9 @@ public abstract class TestNrsAbstractFiles<T, U> extends AbstractNrsTestFixture 
             Assert.assertEquals(now, headerRead.getTimestamp());
             Assert.assertTrue(root == headerRead.isRoot());
             Assert.assertTrue(partial == headerRead.isPartial());
-            if (empty)
+            if (empty) {
                 Assert.assertEquals(NrsFileHeader.HEADER_LENGTH, nrsFile.getFile().toFile().length());
+            }
 
             // New NrsAbstractFile instance
             {
@@ -599,8 +601,9 @@ public abstract class TestNrsAbstractFiles<T, U> extends AbstractNrsTestFixture 
                 Assert.assertTrue(partial == nrsFileNew.getDescriptor().isPartial());
                 Assert.assertFalse(nrsFileNew.isOpened());
                 Assert.assertFalse(nrsFileNew.isWriteable());
-                if (empty)
+                if (empty) {
                     Assert.assertEquals(NrsFileHeader.HEADER_LENGTH, nrsFileNew.getFile().toFile().length());
+                }
                 Assert.assertTrue(nrsFileNew.getFile().toFile().exists());
                 Assert.assertEquals(version, nrsFileNew.getVersion());
             }
@@ -631,7 +634,7 @@ public abstract class TestNrsAbstractFiles<T, U> extends AbstractNrsTestFixture 
 
     /**
      * Test access to the file from 2 instances.
-     * 
+     *
      * @throws IOException
      */
     @Test
@@ -640,25 +643,9 @@ public abstract class TestNrsAbstractFiles<T, U> extends AbstractNrsTestFixture 
         final int size = 56370 * blockSize;
         final int hashSize = 664;
         final int clusterSize = (int) (getWriteSize(hashSize, blockSize) * 2.33);
-        final NrsFileHeader.Builder<U> headerBuilder = new NrsFileHeader.Builder<>();
-        final UuidT<U> parent = SimpleIdentifierProvider.newId();
-        headerBuilder.parent(parent);
-        final UUID device = UUID.randomUUID();
-        headerBuilder.device(device);
-        final UUID node = UUID.randomUUID();
-        headerBuilder.node(node);
-        final UuidT<U> fileId = SimpleIdentifierProvider.newId();
-        headerBuilder.file(fileId);
-        headerBuilder.size(size);
-        headerBuilder.blockSize(blockSize);
-        headerBuilder.hashSize(hashSize);
-        headerBuilder.clusterSize(clusterSize);
-        final long now = System.currentTimeMillis();
-        headerBuilder.timestamp(now);
         final Set<NrsFileFlag> flags = EnumSet.noneOf(NrsFileFlag.class);
         flags.add(NrsFileFlag.ROOT);
-        headerBuilder.flags(flags);
-
+        final NrsFileHeader.Builder<U> headerBuilder = newHeaderBuilder(size, blockSize, hashSize, clusterSize, flags);
         final NrsFileHeader<U> header = headerBuilder.build();
         Assert.assertTrue(header.isRoot());
         Assert.assertFalse(header.isPartial());
@@ -725,8 +712,7 @@ public abstract class TestNrsAbstractFiles<T, U> extends AbstractNrsTestFixture 
 
     /**
      * Read, write and reset some elements in a NrsAbstractFile.
-     * 
-     * 
+     *
      */
     final class NrsAbstractFilePartReadWrite implements Callable<Void> {
         private final NrsAbstractFile<T, U> file;
@@ -776,7 +762,7 @@ public abstract class TestNrsAbstractFiles<T, U> extends AbstractNrsTestFixture 
 
     /**
      * Multi threaded read/write access to a {@link NrsAbstractFile}.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -788,26 +774,10 @@ public abstract class TestNrsAbstractFiles<T, U> extends AbstractNrsTestFixture 
         final int hashSize = 20;
         final int writeSize = getWriteSize(hashSize, blockSize);
         final int clusterSize = writeSize * 11;
+        final Set<NrsFileFlag> flags = EnumSet.noneOf(NrsFileFlag.class);
 
         // Create NrsAbstractFile
-        final NrsFileHeader.Builder<U> headerBuilder = new NrsFileHeader.Builder<>();
-        final UuidT<U> parent = SimpleIdentifierProvider.newId();
-        headerBuilder.parent(parent);
-        final UUID device = UUID.randomUUID();
-        headerBuilder.device(device);
-        final UUID node = UUID.randomUUID();
-        headerBuilder.node(node);
-        final UuidT<U> fileId = SimpleIdentifierProvider.newId();
-        headerBuilder.file(fileId);
-        headerBuilder.size(size);
-        headerBuilder.blockSize(blockSize);
-        headerBuilder.hashSize(hashSize);
-        headerBuilder.clusterSize(clusterSize);
-        final long now = System.currentTimeMillis();
-        headerBuilder.timestamp(now);
-        final Set<NrsFileFlag> flags = EnumSet.noneOf(NrsFileFlag.class);
-        headerBuilder.flags(flags);
-
+        final NrsFileHeader.Builder<U> headerBuilder = newHeaderBuilder(size, blockSize, hashSize, clusterSize, flags);
         final NrsFileHeader<U> header = headerBuilder.build();
         final NrsAbstractFile<T, U> nrsFile = newNrsAbstractFile(fileMapper, header, null);
         nrsFile.create();
@@ -851,4 +821,24 @@ public abstract class TestNrsAbstractFiles<T, U> extends AbstractNrsTestFixture 
         }
     }
 
+    protected final NrsFileHeader.Builder<U> newHeaderBuilder(final long size, final int blockSize, final int hashSize,
+            final int clusterSize, final Set<NrsFileFlag> flags) {
+        final NrsFileHeader.Builder<U> headerBuilder = new NrsFileHeader.Builder<>();
+        final UuidT<U> parent = SimpleIdentifierProvider.newId();
+        headerBuilder.parent(parent);
+        final UUID device = UUID.randomUUID();
+        headerBuilder.device(device);
+        final UUID node = UUID.randomUUID();
+        headerBuilder.node(node);
+        final UuidT<U> fileId = SimpleIdentifierProvider.newId();
+        headerBuilder.file(fileId);
+        headerBuilder.size(size);
+        headerBuilder.blockSize(blockSize);
+        headerBuilder.hashSize(hashSize);
+        headerBuilder.clusterSize(clusterSize);
+        final long now = System.currentTimeMillis();
+        headerBuilder.timestamp(now);
+        headerBuilder.flags(flags);
+        return headerBuilder;
+    }
 }

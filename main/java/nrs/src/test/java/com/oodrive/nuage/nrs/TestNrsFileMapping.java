@@ -46,7 +46,7 @@ public final class TestNrsFileMapping extends TestNrsFileJanitorAbstract {
 
         janitor.init();
         try {
-            final NrsFile nrsFile = createTestNrsFile(janitor, config, true, false, false, false);
+            final NrsFile nrsFile = createTestNrsFile(janitor, config, false, false, false);
             nrsFile.getFileMapping(HashAlgorithm.MD5);
         }
         finally {
@@ -61,7 +61,7 @@ public final class TestNrsFileMapping extends TestNrsFileJanitorAbstract {
 
         janitor.init();
         try {
-            final NrsFile nrsFile = createTestNrsFile(janitor, config, true, false, true, false);
+            final NrsFile nrsFile = createTestNrsFile(janitor, config, false, true, false);
             final NrsFile nrsFileOpened = janitor.openNrsFile(nrsFile.getDescriptor().getFileId(), true);
             try {
                 nrsFileOpened.getFileMapping(HashAlgorithm.MD5);
@@ -82,7 +82,7 @@ public final class TestNrsFileMapping extends TestNrsFileJanitorAbstract {
 
         janitor.init();
         try {
-            final NrsFile nrsFile = createTestNrsFile(janitor, config, true, false, false, false);
+            final NrsFile nrsFile = createTestNrsFile(janitor, config, false, false, false);
             final NrsFile nrsFileOpened = janitor.openNrsFile(nrsFile.getDescriptor().getFileId(), false);
 
             try {

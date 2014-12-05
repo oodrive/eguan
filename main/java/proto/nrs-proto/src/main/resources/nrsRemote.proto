@@ -71,6 +71,7 @@ message NrsFileHeaderMsg {
     enum Flags {
         ROOT = 1;
         PARTIAL = 2;
+        BLOCKS = 3;
     }
 
     required Uuid parent = 1;

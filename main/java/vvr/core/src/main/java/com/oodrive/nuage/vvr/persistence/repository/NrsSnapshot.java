@@ -23,10 +23,13 @@ package com.oodrive.nuage.vvr.persistence.repository;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
 import javax.naming.OperationNotSupportedException;
 
 import org.slf4j.Logger;
@@ -42,7 +45,6 @@ import com.oodrive.nuage.proto.vvr.VvrRemote;
 import com.oodrive.nuage.utils.SimpleIdentifierProvider;
 import com.oodrive.nuage.utils.UuidT;
 import com.oodrive.nuage.vvr.remote.VvrRemoteUtils;
-import com.oodrive.nuage.vvr.repository.core.api.Device;
 import com.oodrive.nuage.vvr.repository.core.api.FutureDevice;
 import com.oodrive.nuage.vvr.repository.core.api.FutureVoid;
 import com.oodrive.nuage.vvr.repository.core.api.Snapshot;
@@ -81,10 +83,23 @@ public final class NrsSnapshot extends NrsVvrItem implements Snapshot {
      * @param builder
      *            the configured builder
      */
-    private NrsSnapshot(final NrsSnapshot.Builder builder) {
+    private NrsSnapshot(final NrsSnapshot.BuilderLoad builder) {
         super(builder);
-        LOGGER.trace("building new {} instance with uuid {}", NrsSnapshot.class.getSimpleName(), this.getUuid());
+        LOGGER.trace("Load new {} instance with uuid {}", NrsSnapshot.class.getSimpleName(), this.getUuid());
         this.deleted = builder.deleted();
+        this.root = getNrsFilePath().getDescriptor().isRoot();
+    }
+
+    /**
+     * Builder constructor called by {@link NrsSnapshot.Builder}s.
+     * 
+     * @param builder
+     *            the configured builder
+     */
+    private NrsSnapshot(final NrsSnapshot.BuilderCreate builder) {
+        super(builder);
+        LOGGER.trace("Create new {} instance with uuid {}", NrsSnapshot.class.getSimpleName(), this.getUuid());
+        this.deleted = false;
         this.root = getNrsFilePath().getDescriptor().isRoot();
     }
 
@@ -95,7 +110,7 @@ public final class NrsSnapshot extends NrsVvrItem implements Snapshot {
      */
     private NrsSnapshot(final NrsSnapshot.BuilderRoot builder) {
         super(builder);
-        LOGGER.trace("building root with uuid {}", this.getUuid());
+        LOGGER.trace("Create root with uuid {}", this.getUuid());
         this.root = getNrsFilePath().getDescriptor().isRoot();
         assert root == true;
     }
@@ -158,7 +173,7 @@ public final class NrsSnapshot extends NrsVvrItem implements Snapshot {
         final NrsRepository repository = getVvr();
         final UUID deviceUuid = Objects.requireNonNull(uuid);
         final UuidT<NrsFile> futureSnapshotUuid = SimpleIdentifierProvider.newId();
-        final NrsFileHeader<NrsFile> deviceNrsFileHeader = repository.doCreateNrsFileHeader(getNrsFileId(), size,
+        final NrsFileHeader<NrsFile> deviceNrsFileHeader = repository.doCreateFutureNrsFileHeader(getNrsFileId(), size,
                 deviceUuid, futureSnapshotUuid);
 
         // Create and launch transaction
@@ -231,26 +246,13 @@ public final class NrsSnapshot extends NrsVvrItem implements Snapshot {
     }
 
     /**
-     * Member builder for snapshot instances.
-     * 
-     * 
+     * Load a snapshot from the persistence.
      */
-    public static final class Builder extends NrsVvrItem.Builder implements Snapshot.Builder {
-        /**
-         * Source device of which the snapshot is to be taken.
-         */
-        private NrsDevice sourceDevice;
-
-        @Override
-        public final Snapshot.Builder device(final Device device) {
-            this.sourceDevice = (NrsDevice) device;
-            return this;
-        }
-
+    public static final class BuilderLoad extends NrsVvrItem.Builder {
         private NrsFileHeader<NrsFile> header;
 
-        public final Snapshot.Builder header(final NrsFileHeader<NrsFile> header) {
-            this.header = header;
+        public final Snapshot.Builder header(final @Nonnull NrsFileHeader<NrsFile> header) {
+            this.header = Objects.requireNonNull(header);
             return this;
         }
 
@@ -267,26 +269,72 @@ public final class NrsSnapshot extends NrsVvrItem implements Snapshot {
 
         @Override
         protected final UUID deviceID() {
-            return sourceDevice == null ? header.getDeviceId() : sourceDevice.getUuid();
+            return header.getDeviceId();
         }
 
         @Override
         protected final UUID nodeID() {
-            return sourceDevice == null ? header.getNodeId() : sourceDevice.getNodeId();
+            return header.getNodeId();
         }
 
         @Override
         protected final UuidT<NrsFile> futureID() {
-            if (sourceDevice == null)
-                return header.getFileId();
-            else
-                return sourceDevice.getNrsFileId();
+            return header.getFileId();
+        }
+
+        public final NrsSnapshot build() {
+            size(header.getSize());
+            flags(header.getFlags());
+            return new NrsSnapshot(this);
+        }
+    }
+
+    /**
+     * Take a new snapshot of a device.
+     */
+    public static final class BuilderCreate extends NrsVvrItem.Builder {
+        private NrsDevice sourceDevice;
+
+        /**
+         * Source device of which the snapshot will be taken.
+         * <p>
+         * Mandatory.
+         */
+        public final Snapshot.Builder device(final @Nonnull NrsDevice device) {
+            this.sourceDevice = Objects.requireNonNull(device);
+
+            // Inherit size and flags from the device
+            size(device.getSize());
+            flags(device.getNrsFilePath().getDescriptor().getFlags());
+            return this;
+        }
+
+        private NrsFileHeader<NrsFile> deviceFutureNrsFileHeader;
+
+        /**
+         * Sets the header of the future {@link NrsFile} of the device.
+         * 
+         * @param nrsFileHeader
+         * @return this
+         */
+        protected final NrsVvrItem.Builder deviceFutureNrsFileHeader(final @Nonnull NrsFileHeader<NrsFile> nrsFileHeader) {
+            this.deviceFutureNrsFileHeader = Objects.requireNonNull(nrsFileHeader);
+            return this;
         }
 
         @Override
-        public final Snapshot build() {
-            size(header.getSize());
-            return new NrsSnapshot(this);
+        protected final UUID deviceID() {
+            return sourceDevice.getUuid();
+        }
+
+        @Override
+        protected final UUID nodeID() {
+            return sourceDevice.getNodeId();
+        }
+
+        @Override
+        protected final UuidT<NrsFile> futureID() {
+            return sourceDevice.getNrsFileId();
         }
 
         /**
@@ -294,7 +342,7 @@ public final class NrsSnapshot extends NrsVvrItem implements Snapshot {
          * 
          * @return the created snapshot.
          */
-        public final Snapshot create() {
+        public final NrsSnapshot create() {
             // Check UUID conflict
             final NrsRepository repository = getVvr();
             {
@@ -310,7 +358,7 @@ public final class NrsSnapshot extends NrsVvrItem implements Snapshot {
             // Set NrsFile
             sourceFile(sourceDevice.getNrsFilePath());
 
-            // Set owner ID as device ID (in deviceID())
+            // Creates the snapshot
             final NrsSnapshot result = new NrsSnapshot(this);
             try {
                 result.create();
@@ -320,8 +368,8 @@ public final class NrsSnapshot extends NrsVvrItem implements Snapshot {
             }
             repository.preRegisterSnapshot(result);
 
-            // New NrsFile for the source device: create from NRS template or create a new one, keeping the same size
-            sourceDevice.createNewNrsFile(getNrsFileHeaderTemplate());
+            // New NrsFile for the source device: create from NRS template
+            sourceDevice.createNewNrsFile(deviceFutureNrsFileHeader);
 
             repository.postRegisterSnapshot(result);
             return result;
@@ -334,14 +382,7 @@ public final class NrsSnapshot extends NrsVvrItem implements Snapshot {
      * 
      * 
      */
-    public static final class BuilderRoot extends NrsVvrItem.Builder implements Snapshot.Builder {
-
-        @Override
-        @Deprecated
-        public final Snapshot.Builder device(final Device device) {
-            // Must not be called: no device for the root snapshot
-            throw new AssertionError();
-        }
+    public static final class BuilderRoot extends NrsVvrItem.Builder {
 
         @Override
         protected final UUID deviceID() {
@@ -357,14 +398,8 @@ public final class NrsSnapshot extends NrsVvrItem implements Snapshot {
 
         @Override
         protected final UuidT<NrsFile> futureID() {
-            // Same uuid has target
+            // Same uuid has the root snapshot
             return SimpleIdentifierProvider.fromUUID(uuid());
-        }
-
-        @Override
-        @Deprecated
-        public final Snapshot build() {
-            throw new AssertionError();
         }
 
         /**
@@ -372,16 +407,19 @@ public final class NrsSnapshot extends NrsVvrItem implements Snapshot {
          * 
          * @return the created snapshot.
          */
-        public final Snapshot create() {
+        public final NrsSnapshot create() {
             name(""); // Root has no name (yet)
             description(""); // Root has no description (yet)
 
-            // Set id=parentId
+            // Set id=parentId and force size to 0
             parentFile(futureID());
             size(0);
+            final Set<NrsFileFlag> flags = EnumSet.noneOf(NrsFileFlag.class);
+            flags.add(NrsFileFlag.ROOT);
+            flags(flags);
 
             // Create and set NrsFile
-            final NrsFile nrsFile = createNrsFile(NrsFileFlag.ROOT);
+            final NrsFile nrsFile = createNrsFile(null);
             sourceFile(nrsFile);
             // Can not write the file of the root snapshot
             getVvr().getNrsFileJanitor().setNrsFileNoWritable(nrsFile);
@@ -393,7 +431,7 @@ public final class NrsSnapshot extends NrsVvrItem implements Snapshot {
             }
             catch (final IOException e) {
                 // TODO remove NrsFile
-                throw new IllegalStateException("Failed to create snapshot", e);
+                throw new IllegalStateException("Failed to create root snapshot", e);
             }
             return result;
         }

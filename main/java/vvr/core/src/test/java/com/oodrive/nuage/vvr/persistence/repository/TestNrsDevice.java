@@ -31,7 +31,7 @@ import com.oodrive.nuage.nrs.NrsFile;
 import com.oodrive.nuage.utils.ByteArrays;
 import com.oodrive.nuage.utils.SimpleIdentifierProvider;
 import com.oodrive.nuage.utils.UuidT;
-import com.oodrive.nuage.vvr.repository.core.api.AbstractDeviceImplHelper.BlockKeyLookupEx;
+import com.oodrive.nuage.vvr.repository.core.api.BlockKeyLookupEx;
 import com.oodrive.nuage.vvr.repository.core.api.TestDeviceAbstract;
 
 /**

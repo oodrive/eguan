@@ -9,9 +9,9 @@ package com.oodrive.nuage.vvr.repository.core.api;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,6 @@ package com.oodrive.nuage.vvr.repository.core.api;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Objects;
-import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
@@ -40,10 +39,10 @@ import com.oodrive.nuage.vvr.repository.core.api.Device.ReadWriteHandle;
 
 /**
  * Implementation of a {@link ReadWriteHandle} writing directly blocks in the {@link Ibs}.
- * 
+ *
  * @author oodrive
  * @author llambert
- * 
+ *
  */
 final class IbsDeviceReadWriteHandleImpl extends DeviceReadWriteHandleImpl {
 
@@ -60,41 +59,44 @@ final class IbsDeviceReadWriteHandleImpl extends DeviceReadWriteHandleImpl {
     }
 
     @Override
-    final int createBlockTransaction() throws IbsException, IllegalArgumentException, IbsIOException {
+    protected final int createBlockTransaction() throws IbsException, IllegalArgumentException, IbsIOException {
         return ibs.createTransaction();
     }
 
     @Override
-    final void commitBlockTransaction(final int txId) throws IbsException, IllegalArgumentException, IbsIOException {
+    protected final void commitBlockTransaction(final int txId) throws IbsException, IllegalArgumentException,
+    IbsIOException {
         ibs.commit(txId);
     }
 
     @Override
-    final void rollbackBlockTransaction(final int txId) throws IbsException, IllegalArgumentException, IbsIOException {
+    protected final void rollbackBlockTransaction(final int txId) throws IbsException, IllegalArgumentException,
+    IbsIOException {
         ibs.rollback(txId);
     }
 
     @Override
-    final boolean canReplaceOldKey() {
+    protected final boolean canReplaceOldKey() {
         return ibsHotDataEnabled;
     }
 
     @Override
-    final boolean needsBlockOpBuilder() {
+    protected final boolean needsBlockOpBuilder() {
         return true;
     }
 
     @Override
-    final void notifyBlockIO(@Nonnull final Builder blockOpBuilder) {
+    protected final void notifyBlockIO(@Nonnull final Builder blockOpBuilder) {
         if (blockOpBuilder.getIbsCount() > 0) {
             deviceImplHelper.notifyIO(blockOpBuilder);
         }
     }
 
     @Override
-    final void storeNewBlock(final ByteBuffer block, final int offset, final long blockIndex, final byte[] newKey,
-            final byte[] oldKey, final int ibsTxId, final VvrRemote.RemoteOperation.Builder opBuilder) throws IbsException,
-            IllegalArgumentException, IndexOutOfBoundsException, NullPointerException, IOException {
+    protected final void storeNewBlock(final ByteBuffer block, final int offset, final long blockIndex,
+            final byte[] newKey, final byte[] oldKey, final int ibsTxId,
+            final VvrRemote.RemoteOperation.Builder opBuilder) throws IbsException, IllegalArgumentException,
+            IndexOutOfBoundsException, NullPointerException, IOException {
 
         // Store in IBS: replace when possible
         final boolean newBlock;
@@ -137,17 +139,23 @@ final class IbsDeviceReadWriteHandleImpl extends DeviceReadWriteHandleImpl {
     }
 
     @Override
-    final ByteBuffer getBlock(final byte[] key, final UUID srcNode, final boolean readOnly) throws IbsException,
-            IbsIOException, InterruptedException {
+    protected final ByteBuffer getBlock(final long blockIndex, final byte[] key,
+            final BlockKeyLookupEx blockKeyLookupEx, final boolean readOnly) throws IOException, InterruptedException {
         try {
             final ByteBuffer block = allocateBlock(false);
-            ibs.get(key, block);
+            try {
+                ibs.get(key, block);
+            }
+            catch (IbsIOException | RuntimeException | Error e) {
+                releaseBlock(block);
+                throw e;
+            }
             return block;
         }
         catch (final IbsIOException e) {
             if (e.getErrorCode() == IbsErrorCode.NOT_FOUND) {
                 // Look for the block on remote nodes
-                final ByteString byteString = deviceImplHelper.getRemoteBuffer(key, srcNode);
+                final ByteString byteString = deviceImplHelper.getRemoteBuffer(key, blockKeyLookupEx.getSourceNode());
                 if (byteString != null) {
                     // Block found
                     final ByteBuffer result;
@@ -167,8 +175,8 @@ final class IbsDeviceReadWriteHandleImpl extends DeviceReadWriteHandleImpl {
     }
 
     @Override
-    final void fillBlock(final byte[] key, final ByteBuffer data, final int dataOffset, final UUID srcNode)
-            throws IOException, IbsException, IbsIOException, InterruptedException {
+    protected final void fillBlock(final long blockIndex, final byte[] key, final ByteBuffer data,
+            final int dataOffset, final BlockKeyLookupEx blockKeyLookupEx) throws IOException, InterruptedException {
         int readLen = 0;
         try {
             readLen = ibs.get(key, data, dataOffset, blockSize);
@@ -176,7 +184,7 @@ final class IbsDeviceReadWriteHandleImpl extends DeviceReadWriteHandleImpl {
         catch (final IbsIOException e) {
             if (e.getErrorCode() == IbsErrorCode.NOT_FOUND) {
                 // Look for the block on remote nodes
-                final ByteString byteString = deviceImplHelper.getRemoteBuffer(key, srcNode);
+                final ByteString byteString = deviceImplHelper.getRemoteBuffer(key, blockKeyLookupEx.getSourceNode());
                 if (byteString != null) {
                     // Found: copy block to data
                     data.rewind().position(dataOffset);

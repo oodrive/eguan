@@ -1206,7 +1206,7 @@ public final class NrsRepository extends AbstractRepositoryImpl {
                         // Create the root snapshot
                         final NrsSnapshot.BuilderRoot rootSnapshotBuilder = new NrsSnapshot.BuilderRoot();
                         rootSnapshotBuilder.vvr(result);
-                        rootSnapshotBuilder.directory(result.getSnapshotDir());
+                        rootSnapshotBuilder.metadataDirectory(result.getSnapshotDir());
                         rootSnapshotBuilder.uuid(rootUuid);
                         rootSnapshotBuilder.create();
                     }
@@ -1542,14 +1542,14 @@ public final class NrsRepository extends AbstractRepositoryImpl {
         // Load NrsFile
         final NrsFile nrsFile = loadNrsFile(nrsFilePath);
 
-        final NrsSnapshot.Builder builder = new NrsSnapshot.Builder();
+        final NrsSnapshot.BuilderLoad builder = new NrsSnapshot.BuilderLoad();
         builder.deleted(Boolean.valueOf(persistence.getProperty(NrsSnapshot.DELETED_KEY)).booleanValue())
                 .name(persistence.getProperty(NrsVvrItem.NAME_KEY))
                 .description(persistence.getProperty(NrsVvrItem.DESC_KEY))
                 .uuid(UUID.fromString(persistence.getProperty(NrsVvrItem.UUID_KEY)));
         builder.header(header);
         builder.sourceFile(nrsFile).vvr(this);
-        builder.directory(getSnapshotDir());
+        builder.metadataDirectory(getSnapshotDir());
         return (NrsSnapshot) builder.build();
     }
 
@@ -1569,7 +1569,7 @@ public final class NrsRepository extends AbstractRepositoryImpl {
                 persistence.getProperty(NrsVvrItem.DESC_KEY));
         builder.header(header);
         builder.sourceFile(nrsFile).vvr(this);
-        builder.directory(getDeviceDir());
+        builder.metadataDirectory(getDeviceDir());
         return (NrsDevice) builder.build();
     }
 
@@ -1629,8 +1629,8 @@ public final class NrsRepository extends AbstractRepositoryImpl {
      * @param futureFileUuid
      * @return the device file header
      */
-    final NrsFileHeader<NrsFile> doCreateNrsFileHeader(@Nonnull final UuidT<NrsFile> parentFileId, final long size,
-            @Nonnull final UUID deviceUuid, @Nonnull final UuidT<NrsFile> futureFileUuid) {
+    final NrsFileHeader<NrsFile> doCreateFutureNrsFileHeader(@Nonnull final UuidT<NrsFile> parentFileId,
+            final long size, @Nonnull final UUID deviceUuid, @Nonnull final UuidT<NrsFile> futureFileUuid) {
         final NrsDevice.Builder builder = newDeviceBuilder(parentFileId, null, null, size, deviceUuid);
         builder.futureFileId(futureFileUuid);
         return builder.createDefaultNrsFileHeader();
@@ -1652,8 +1652,7 @@ public final class NrsRepository extends AbstractRepositoryImpl {
     final NrsDevice doCreateDevice(@Nonnull final NrsSnapshot parent, final String name, final String description,
             final long size, @Nonnull final UUID uuid, @Nonnull final NrsFileHeader<NrsFile> nrsFileHeader) {
         final NrsDevice.Builder builder = newDeviceBuilder(parent.getNrsFileId(), name, description, size, uuid);
-        builder.nrsFileHeader(Objects.requireNonNull(nrsFileHeader));
-        return (NrsDevice) builder.create();
+        return builder.create(nrsFileHeader);
     }
 
     final NrsDevice.Builder newDeviceBuilder(@Nonnull final UuidT<NrsFile> parentFileId, final String name,
@@ -1661,7 +1660,7 @@ public final class NrsRepository extends AbstractRepositoryImpl {
         final NrsDevice.Builder builder = new NrsDevice.Builder();
         builder.size(size).name(name).description(description);
         builder.vvr(this).parentFile(Objects.requireNonNull(parentFileId));
-        builder.directory(getDeviceDir());
+        builder.metadataDirectory(getDeviceDir());
         builder.nodeID(getNodeId());
         builder.uuid(Objects.requireNonNull(uuid));
         return builder;

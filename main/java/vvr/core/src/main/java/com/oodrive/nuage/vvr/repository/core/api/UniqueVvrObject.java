@@ -107,14 +107,8 @@ public interface UniqueVvrObject {
          * Sets the unique ID.
          * <p>
          * 
-         * <i>OPTIONAL.</i>
+         * <i>MANDATORY.</i>
          * <p>
-         * 
-         * Implementing classes must:
-         * <ul>
-         * <li>provide a default (random) UUID in case this method is not called before build,</li>
-         * <li>make sure the UUID cannot be set to null.</li>
-         * </ul>
          * 
          * @param uuid
          *            the non-null {@link UUID} object to be the immutable identifier of the object.

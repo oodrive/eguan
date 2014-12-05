@@ -81,6 +81,9 @@ final class NrsRemoteUtils {
         if (fileHeader.isPartial()) {
             builder.addFlags(Flags.PARTIAL);
         }
+        if (fileHeader.isBlocks()) {
+            builder.addFlags(Flags.BLOCKS);
+        }
 
         // Set value
         opBuilder.addNrsFileHeader(builder);
@@ -125,6 +128,9 @@ final class NrsRemoteUtils {
             }
             else if (flag == Flags.PARTIAL) {
                 builder.addFlags(NrsFileFlag.PARTIAL);
+            }
+            else if (flag == Flags.BLOCKS) {
+                builder.addFlags(NrsFileFlag.BLOCKS);
             }
             else {
                 throw new AssertionError("flag=" + flag);

@@ -30,7 +30,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -55,7 +54,6 @@ import com.oodrive.nuage.ibs.IbsException;
 import com.oodrive.nuage.nrs.NrsFile;
 import com.oodrive.nuage.proto.vvr.VvrRemote;
 import com.oodrive.nuage.utils.ByteBufferCache;
-import com.oodrive.nuage.vvr.repository.core.api.AbstractDeviceImplHelper.BlockKeyLookupEx;
 import com.oodrive.nuage.vvr.repository.core.api.Device.ReadWriteHandle;
 
 /**
@@ -66,7 +64,7 @@ import com.oodrive.nuage.vvr.repository.core.api.Device.ReadWriteHandle;
  * @author ebredzinski
  * @author jmcaba
  */
-abstract class DeviceReadWriteHandleImpl implements ReadWriteHandle {
+public abstract class DeviceReadWriteHandleImpl implements ReadWriteHandle {
 
     /** Operation performed by the IoTask */
     enum IoTaskOpe {
@@ -207,10 +205,10 @@ abstract class DeviceReadWriteHandleImpl implements ReadWriteHandle {
                     // underlying byte array)
                     if (singleTask || data.isDirect()) {
                         // Can safely write into data
-                        fillBlock(oldKey, data, dataOffset, blockKeyLookupEx.getSourceNode());
+                        fillBlock(blockIndex, oldKey, data, dataOffset, blockKeyLookupEx);
                     }
                     else {
-                        final ByteBuffer source = getBlock(oldKey, blockKeyLookupEx.getSourceNode(), true);
+                        final ByteBuffer source = getBlock(blockIndex, oldKey, blockKeyLookupEx, true);
                         try {
                             source.rewind();
                             writeToData(source);
@@ -295,7 +293,7 @@ abstract class DeviceReadWriteHandleImpl implements ReadWriteHandle {
                 prevBlock = allocateBlock(true);
             }
             else {
-                prevBlock = getBlock(oldKey, blockKeyLookupEx.getSourceNode(), read);
+                prevBlock = getBlock(blockIndex, oldKey, blockKeyLookupEx, read);
             }
 
             try {
@@ -572,8 +570,8 @@ abstract class DeviceReadWriteHandleImpl implements ReadWriteHandle {
     private final List<IoRequest> pendingIoRequests = new ArrayList<>();
     private final ReadWriteLock pendingIoRequestsLock = new ReentrantReadWriteLock();
 
-    DeviceReadWriteHandleImpl(final AbstractDeviceImplHelper deviceImplHelper, final HashAlgorithm hashAlgorithm,
-            final boolean readOnly, final int blockSize) {
+    protected DeviceReadWriteHandleImpl(final AbstractDeviceImplHelper deviceImplHelper,
+            final HashAlgorithm hashAlgorithm, final boolean readOnly, final int blockSize) {
         this.deviceImplHelper = deviceImplHelper;
         this.hashAlgorithm = hashAlgorithm;
         this.readOnly = readOnly;
@@ -747,7 +745,7 @@ abstract class DeviceReadWriteHandleImpl implements ReadWriteHandle {
      * 
      * @return the transaction ID, strictly positive.
      */
-    abstract int createBlockTransaction() throws IOException;
+    protected abstract int createBlockTransaction() throws IOException;
 
     /**
      * Commits the transaction on blocks.
@@ -755,7 +753,7 @@ abstract class DeviceReadWriteHandleImpl implements ReadWriteHandle {
      * @param txId
      *            the id of the transaction
      */
-    abstract void commitBlockTransaction(int txId) throws IOException;
+    protected abstract void commitBlockTransaction(int txId) throws IOException;
 
     /**
      * Rolls back the transaction on blocks.
@@ -763,28 +761,28 @@ abstract class DeviceReadWriteHandleImpl implements ReadWriteHandle {
      * @param txId
      *            the id of the transaction
      */
-    abstract void rollbackBlockTransaction(int txId) throws IOException;
+    protected abstract void rollbackBlockTransaction(int txId) throws IOException;
 
     /**
      * Tells if the backing store needs the lookup of the previous key to optimize storage.
      * 
      * @return <code>true</code> if the previous key should be looked-up.
      */
-    abstract boolean canReplaceOldKey();
+    protected abstract boolean canReplaceOldKey();
 
     /**
      * True if the op builder must be created to notify remote nodes.
      * 
      * @return <code>true</code> if an opBuilder must be created to notify remote nodes.
      */
-    abstract boolean needsBlockOpBuilder();
+    protected abstract boolean needsBlockOpBuilder();
 
     /**
      * Notify peers for the update of blocks.
      * 
      * @param blockOpBuilder
      */
-    abstract void notifyBlockIO(VvrRemote.RemoteOperation.Builder blockOpBuilder);
+    protected abstract void notifyBlockIO(VvrRemote.RemoteOperation.Builder blockOpBuilder);
 
     final void storeBlock(final ByteBuffer block, final int offset, final long blockIndex, final byte[] oldKey,
             final int ibsTxId, final VvrRemote.RemoteOperation.Builder opBuilder) throws IbsException,
@@ -820,8 +818,8 @@ abstract class DeviceReadWriteHandleImpl implements ReadWriteHandle {
      * @throws NullPointerException
      * @throws IOException
      */
-    abstract void storeNewBlock(final ByteBuffer block, final int offset, final long blockIndex, final byte[] newKey,
-            final byte[] oldKey, final int txId, final VvrRemote.RemoteOperation.Builder opBuilder)
+    protected abstract void storeNewBlock(final ByteBuffer block, final int offset, final long blockIndex,
+            final byte[] newKey, final byte[] oldKey, final int txId, final VvrRemote.RemoteOperation.Builder opBuilder)
             throws IllegalArgumentException, IndexOutOfBoundsException, NullPointerException, IOException;
 
     /**
@@ -862,30 +860,34 @@ abstract class DeviceReadWriteHandleImpl implements ReadWriteHandle {
     /**
      * Gets a {@link ByteBuffer} filled with the data associated to <code>key</code>.
      * 
+     * @param blockIndex
      * @param key
-     * @param srcNode
+     * @param blockKeyLookupEx
+     *            source of the key
      * @param readOnly
      *            <code>true</code> if the buffer will be only read
      * @return a new {@link ByteBuffer} filled with the data associated to <code>key</code>. The block may be released
      *         if it's not read-only.
      * @throws InterruptedException
      */
-    abstract ByteBuffer getBlock(final byte[] key, final UUID srcNode, final boolean readOnly) throws IOException,
-            InterruptedException;
+    protected abstract ByteBuffer getBlock(final long blockIndex, final byte[] key,
+            final BlockKeyLookupEx blockKeyLookupEx, final boolean readOnly) throws IOException, InterruptedException;
 
     /**
      * Fills <code>data</code> with the contents of the block associated to <code>key</code>.
      * 
+     * @param blockIndex
      * @param key
      * @param data
      * @param dataOffset
-     * @param srcNode
+     * @param blockKeyLookupEx
+     *            source of the key
      * @return the <code>data</code> length written in data
      * @throws IOException
      * @throws InterruptedException
      */
-    abstract void fillBlock(final byte[] key, final ByteBuffer data, final int dataOffset, final UUID srcNode)
-            throws IOException, InterruptedException;
+    protected abstract void fillBlock(final long blockIndex, final byte[] key, final ByteBuffer data,
+            final int dataOffset, final BlockKeyLookupEx blockKeyLookupEx) throws IOException, InterruptedException;
 
     /**
      * Allocate a (potentially) used block.
@@ -894,7 +896,7 @@ abstract class DeviceReadWriteHandleImpl implements ReadWriteHandle {
      *            if <code>true</code>, the block is set to 0 before being returned.
      * @return the allocated block.
      */
-    final ByteBuffer allocateBlock(final boolean clear) {
+    protected final ByteBuffer allocateBlock(final boolean clear) {
         final ByteBuffer block = BYTE_BUFFER_CACHE.allocate(blockSize);
         if (clear) {
             final ByteBuffer source = blockZero.duplicate();
@@ -918,7 +920,7 @@ abstract class DeviceReadWriteHandleImpl implements ReadWriteHandle {
      * @param block
      *            block to release.
      */
-    final void releaseBlock(final ByteBuffer block) {
+    protected final void releaseBlock(final ByteBuffer block) {
         // Do not release read-only views of ByteString
         if (!block.isReadOnly()) {
             BYTE_BUFFER_CACHE.release(block);

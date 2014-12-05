@@ -9,9 +9,9 @@ package com.oodrive.nuage.vvr.persistence.repository;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,10 +27,13 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -50,7 +53,6 @@ import com.oodrive.nuage.proto.vvr.VvrRemote.RemoteOperation;
 import com.oodrive.nuage.utils.Files;
 import com.oodrive.nuage.utils.UuidT;
 import com.oodrive.nuage.vvr.remote.VvrRemoteUtils;
-import com.oodrive.nuage.vvr.repository.core.api.AbstractDeviceImplHelper;
 import com.oodrive.nuage.vvr.repository.core.api.AbstractUniqueVvrObject;
 import com.oodrive.nuage.vvr.repository.core.api.Device;
 import com.oodrive.nuage.vvr.repository.core.api.FutureVoid;
@@ -92,7 +94,7 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
 
     /**
      * Internal builder constructor to be invoked by subclass builders.
-     * 
+     *
      * @param builder
      *            the builder to build this instance from
      */
@@ -101,10 +103,10 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
         LOGGER.trace("building new {} instance with uuid {}", NrsVvrItem.class.getSimpleName(), this.getUuid());
 
         this.vvr = Objects.requireNonNull(builder.vvr);
-        this.persistenceFile = newPersistenceFile(builder.directory, getUuid());
+        this.persistenceFile = newPersistenceFile(builder.metadataDirectory, getUuid());
 
-        this.nrsFile = builder.persistentFile;
-        final NrsFileHeader<NrsFile> header = this.nrsFile.getDescriptor();
+        this.nrsFile = builder.nrsFile;
+        final NrsFileHeader<NrsFile> header = nrsFile.getDescriptor();
 
         final UuidT<NrsFile> parent = header.getParentId();
         final long size = checkSize(vvr, header.getSize());
@@ -127,8 +129,8 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
                     + vvr.getHashLength());
         }
 
-        if (builder.initialSize != 0 && builder.initialSize != size) {
-            throw new IllegalStateException("Wrong size=" + size + ", expected=" + builder.initialSize);
+        if (builder.size != 0 && builder.size != size) {
+            throw new IllegalStateException("Wrong size=" + size + ", expected=" + builder.size);
         }
 
         // Type in remote messages
@@ -145,7 +147,7 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
 
     /**
      * Allocate and set field to save.
-     * 
+     *
      * @return values to save.
      */
     protected Properties getPersistenceProperties() {
@@ -184,7 +186,7 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
 
     /**
      * Create the Java File containing the persistence of an item.
-     * 
+     *
      * @param persistenceDirectory
      * @param uuid
      * @return the file containing the persistence of the item
@@ -195,7 +197,7 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
 
     /**
      * Load the persistence for an item.
-     * 
+     *
      * @param persistenceDirectory
      * @param uuid
      * @return the persistence for the given UUID or null if there is no persistence.
@@ -220,18 +222,18 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
     }
 
     /**
-     * Create a new {@link NrsFile} from a NrsFileHeader template.
-     * 
-     * @param nrsFileHeaderTemplate
+     * Create a new {@link NrsFile} for this item, based on the given NrsFileHeader.
+     *
+     * @param nrsFileHeader
      */
-    final void createNewNrsFile(final NrsFileHeader<NrsFile> nrsFileHeaderTemplate) {
+    final void createNewNrsFile(final NrsFileHeader<NrsFile> nrsFileHeader) {
         try {
             // Seal the local NrsFile
             final NrsFileJanitor nrsFileJanitor = vvr.getNrsFileJanitor();
             nrsFileJanitor.sealNrsFile(nrsFile);
 
             final UuidT<NrsFile> prevNrsFileUuid = nrsFile.getDescriptor().getFileId();
-            final NrsFile nrsFileTmp = nrsFileJanitor.createNrsFile(nrsFileHeaderTemplate, NrsFileFlag.PARTIAL);
+            final NrsFile nrsFileTmp = nrsFileJanitor.createNrsFile(nrsFileHeader);
 
             // Clear 'old' parentUuid
             resetParent();
@@ -245,7 +247,7 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
 
     /**
      * Open the NrsFile read/write. To be called from a device only.
-     * 
+     *
      * @throws IOException
      * @throws IllegalStateException
      */
@@ -257,7 +259,7 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
 
     /**
      * Open the NrsFile read-only. <b>To be called from unit tests only.</b>
-     * 
+     *
      * @throws IOException
      * @throws IllegalStateException
      */
@@ -295,7 +297,7 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
 
     /**
      * Tells if the {@link NrsFile} of the item is locked.
-     * 
+     *
      * @return <code>true</code> if the file is locked
      */
     final boolean isNrsFileLocked() {
@@ -341,7 +343,7 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
 
     /**
      * Set a user-defined property. Executes a transaction.
-     * 
+     *
      * @param name
      * @param value
      */
@@ -358,7 +360,7 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
 
     /**
      * Unset a user-defined property. Executes a transaction.
-     * 
+     *
      * @param name
      */
     final void unsetUserPropertiesLocal(final String name) {
@@ -445,21 +447,22 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
     @Override
     public final long getDataSize() {
         // TODO: add corresponding method to NrsFile and base computation on that
-        return this.nrsFile.getAllocatedNumberOfRecords() * getBlockSize();
+        return nrsFile.getAllocatedNumberOfRecords() * getBlockSize();
     }
 
     final Object readHash(final long blockIndex, final boolean recursive, final boolean ex) throws IOException {
-        byte[] result = this.nrsFile.read(blockIndex);
+        byte[] result = nrsFile.read(blockIndex);
         if (result != null) {
             if (ex) {
-                return new AbstractDeviceImplHelper.BlockKeyLookupEx(result);
+                return new NrsBlockKeyLookupEx(result, nrsFile);
             }
             else {
                 return result;
             }
         }
 
-        UUID node = null;
+        UUID nodeSrc = null;
+        NrsFile fileSrc = null;
         if (result == null && recursive && isPartial()) {
             final NrsFileJanitor nrsFileJanitor = getVvr().getNrsFileJanitor();
             UuidT<NrsFile> parentUuid = getParentFile();
@@ -486,7 +489,8 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
 
                     // Key found: keep the node on which the file was filled
                     if (result != null) {
-                        node = parentOpened.getDescriptor().getNodeId();
+                        fileSrc = parentOpened;
+                        nodeSrc = parentOpened.getDescriptor().getNodeId();
                         break;
                     }
                 }
@@ -509,7 +513,7 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
 
         // Found, recursive only
         if (ex) {
-            return new AbstractDeviceImplHelper.BlockKeyLookupEx(result, node);
+            return new NrsBlockKeyLookupEx(result, fileSrc, nodeSrc);
         }
         else {
             return result;
@@ -518,7 +522,7 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
 
     /**
      * Writes a block hash to the internal block mapping.
-     * 
+     *
      * @param blockIndex
      *            index of the block to write
      * @param blockHash
@@ -526,32 +530,32 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
      * @throws IOException
      */
     final void writeBlockHash(final long blockIndex, final byte[] blockHash) throws IOException {
-        this.nrsFile.write(blockIndex, blockHash);
+        nrsFile.write(blockIndex, blockHash);
     }
 
     /**
      * Release the block written at the given index. Does nothing if the block is not allocated.
-     * 
+     *
      * @param blockIndex
      * @throws IOException
      */
     final void resetBlockHash(final long blockIndex) throws IOException {
-        this.nrsFile.reset(blockIndex);
+        nrsFile.reset(blockIndex);
     }
 
     /**
      * Trim the block written at the given index. Does nothing if the block is not allocated.
-     * 
+     *
      * @param blockIndex
      * @throws IOException
      */
     final void trimBlockHash(final long blockIndex) throws IOException {
-        this.nrsFile.trim(blockIndex);
+        nrsFile.trim(blockIndex);
     }
 
     /**
      * Gets the parent {@link NrsFile}.
-     * 
+     *
      * @return the direct parent in Nrs hierarchy
      */
     public final UuidT<NrsFile> getParentFile() {
@@ -560,7 +564,7 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
 
     /**
      * Validates and sets a new value for the size of this item.
-     * 
+     *
      * @param newSize
      *            the new size in bytes, must be a multiple of the configured block size
      */
@@ -578,7 +582,7 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
 
     /**
      * Gets the current frontend ID.
-     * 
+     *
      * @return the frontend ID or null if not defined
      */
     public final UUID getDeviceId() {
@@ -587,7 +591,7 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
 
     /**
      * Gets the originating node of the item.
-     * 
+     *
      * @return the ID of the originating node or null if not defined
      */
     public final UUID getNodeId() {
@@ -596,7 +600,7 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
 
     /**
      * File ID.
-     * 
+     *
      * @return the <code>UUID</code> of the {@link NrsFile}
      */
     final UuidT<NrsFile> getNrsFileId() {
@@ -614,10 +618,18 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
         return new NrsFutureVoid(targetVvr, targetVvr.submitTransaction(opBuilder, msgObjectType, opCode), getUuid());
     }
 
+    @Override
+    public final String toString() {
+        return com.google.common.base.Objects.toStringHelper(this).add("id", this.getUuid())
+                .add("name", this.getName()).add("vvrId", this.getVvr()).add("parent", this.getParent())
+                .add("parentItem", this.getParentFile()).add("partial", this.isPartial()).add("size", this.getSize())
+                .add("data size", this.getDataSize()).toString();
+    }
+
     /**
-     * 
+     * Parent builder to create or to load {@link NrsVvrItem}s.
      */
-    abstract static class Builder extends AbstractUniqueVvrObject.Builder implements VvrItem.Builder {
+    abstract static class Builder extends AbstractUniqueVvrObject.Builder {
 
         /**
          * VVR instance of the new item belongs to.
@@ -626,7 +638,7 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
 
         /**
          * Gets the configured VVR ID.
-         * 
+         *
          * @return the configured VVR ID
          */
         protected final NrsRepository getVvr() {
@@ -634,109 +646,87 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
         }
 
         /**
-         * The id of the parent item for the item to be built.
-         */
-        private UuidT<NrsFile> parentFileId;
-
-        /**
-         * The initial size of the item in bytes.
-         */
-        private long initialSize;
-
-        /**
-         * Valid {@link NrsFile}.
-         */
-        private NrsFile persistentFile;
-
-        /**
-         * The directory in which the item will be saved.
-         */
-        private File directory;
-
-        /**
-         * Optional template to create a new NrsFile.
-         */
-        private NrsFileHeader<NrsFile> nrsFileHeaderTemplate;
-
-        @Override
-        public final VvrItem.Builder parentFile(final UuidT<NrsFile> parentFile) {
-            this.parentFileId = parentFile;
-            return this;
-        }
-
-        @Override
-        public final VvrItem.Builder partial(final boolean partial) {
-            // TODO unsupported yet; set NrsFile flags instead
-            throw new AssertionError();
-        }
-
-        @Override
-        public final VvrItem.Builder size(final long size) {
-            this.initialSize = size;
-            return this;
-        }
-
-        /**
          * Sets the VVR owning the future item.
          * <p>
-         * 
+         *
          * <i>REQUIRED.</i>
          * <p>
-         * 
+         *
          * @param vvr
          *            the non-<code>null</code> existing VVR
          * @return the modified builder
          */
-        protected final NrsVvrItem.Builder vvr(final NrsRepository vvr) {
-            this.vvr = vvr;
+        protected final NrsVvrItem.Builder vvr(final @Nonnull NrsRepository vvr) {
+            this.vvr = Objects.requireNonNull(vvr);
             return this;
         }
 
         /**
-         * Sets the directory in which the future item will be saved.
-         * <p>
-         * 
-         * <i>REQUIRED.</i>
-         * <p>
-         * 
-         * @param directory
-         *            a {@link File} pointing to an absolute path that might not exist
+         * The id of the parent item for the item to be built.
+         */
+        private UuidT<NrsFile> parentFileId;
+
+        protected final VvrItem.Builder parentFile(final UuidT<NrsFile> parentFile) {
+            this.parentFileId = parentFile;
+            return this;
+        }
+
+        /**
+         * Valid {@link NrsFile}.
+         */
+        private NrsFile nrsFile;
+
+        /**
+         * Sets the {@link NrsFile} associated to the item. Must be set after load of the persistence (before build())
+         * or before the creation.
+         *
+         * @param file
+         *            the {@link NrsFile}
          * @return the modified builder
          */
-        protected final NrsVvrItem.Builder directory(final File directory) {
-            this.directory = directory;
+        protected final NrsVvrItem.Builder sourceFile(@Nonnull final NrsFile nrsFile) {
+            this.nrsFile = Objects.requireNonNull(nrsFile);
             return this;
         }
 
         /**
-         * Set a template for the creation of a {@link NrsFile}.
-         * 
-         * @param nrsFileHeader
-         * @return this
+         * The size of the item in bytes.
          */
-        protected final NrsVvrItem.Builder nrsFileHeader(final NrsFileHeader<NrsFile> nrsFileHeader) {
-            this.nrsFileHeaderTemplate = nrsFileHeader;
+        private long size = -1L;
+
+        protected final VvrItem.Builder size(final long size) {
+            assert size >= 0;
+            this.size = size;
             return this;
         }
 
-        protected final boolean hasNrsFileHeaderTemplate() {
-            return nrsFileHeaderTemplate != null;
+        private Set<NrsFileFlag> flags;
+
+        protected final VvrItem.Builder flags(final Set<NrsFileFlag> flags) {
+            this.flags = Collections.unmodifiableSet(flags);
+            return this;
         }
 
-        protected final NrsFileHeader<NrsFile> getNrsFileHeaderTemplate() {
-            return nrsFileHeaderTemplate;
+        /**
+         * The directory in which the metadata of the item will be saved.
+         */
+        private File metadataDirectory;
+
+        protected final NrsVvrItem.Builder metadataDirectory(final File metadataDirectory) {
+            assert metadataDirectory.isDirectory();
+            this.metadataDirectory = metadataDirectory;
+            return this;
         }
 
-        protected final NrsFile createNrsFile(final NrsFileFlag... flags) {
+        protected final NrsFile createNrsFile(final NrsFileHeader<NrsFile> nrsFileHeader) {
             try {
                 final NrsFileJanitor nrsFileJanitor = vvr.getNrsFileJanitor();
-                // Template from a peer?
-                if (hasNrsFileHeaderTemplate()) {
-                    return nrsFileJanitor.createNrsFile(nrsFileHeaderTemplate, flags);
+                if (nrsFileHeader == null) {
+                    return nrsFileJanitor.createNrsFile(createNrsFileHeader());
                 }
-
-                final NrsFileHeader<NrsFile> nrsFileHeader = createNrsFileHeader(flags);
-                return nrsFileJanitor.createNrsFile(nrsFileHeader);
+                else {
+                    return nrsFileJanitor.createNrsFile(nrsFileHeader);
+                }
             }
             catch (final NrsException e) {
                 throw new IllegalStateException(e);
@@ -744,10 +734,19 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
         }
 
         protected final NrsFileHeader<NrsFile> createDefaultNrsFileHeader() {
-            return createNrsFileHeader(NrsFileFlag.PARTIAL);
+            final Set<NrsFileFlag> flags = EnumSet.noneOf(NrsFileFlag.class);
+            flags.add(NrsFileFlag.PARTIAL);
+            if (NrsDevice.NRS_BLOCK_FILE_ENABLED) {
+                flags.add(NrsFileFlag.BLOCKS);
+            }
+            return createNrsFileHeader(flags);
         }
 
-        protected final NrsFileHeader<NrsFile> createNrsFileHeader(final NrsFileFlag... flags) {
+        protected final NrsFileHeader<NrsFile> createNrsFileHeader() {
+            return createNrsFileHeader(flags);
+        }
+
+        private final NrsFileHeader<NrsFile> createNrsFileHeader(final Set<NrsFileFlag> flags) {
             final NrsFileJanitor nrsFileJanitor = vvr.getNrsFileJanitor();
             final NrsFileHeader.Builder<NrsFile> headerBuilder = nrsFileJanitor.newNrsFileHeaderBuilder();
             // Ids
@@ -756,54 +755,34 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
             headerBuilder.node(nodeID());
             headerBuilder.file(futureID());
             // Data format
-            headerBuilder.addFlags(flags).blockSize(vvr.getBlockSize()).hashSize(vvr.getHashLength());
+            headerBuilder.setFlags(flags).blockSize(vvr.getBlockSize()).hashSize(vvr.getHashLength());
             // Size and time stamp
             headerBuilder.timestamp(System.currentTimeMillis());
-            headerBuilder.size(initialSize);
+            headerBuilder.size(size);
             return headerBuilder.build();
         }
 
         /**
          * Gets the device ID to create the NrsFile.
-         * 
+         *
          * @return the device ID
          */
         protected abstract UUID deviceID();
 
         /**
          * Gets the id of the originating node.
-         * 
+         *
          * @return ID of the originating node of the item
          */
         protected abstract UUID nodeID();
 
         /**
          * Gets the ID of the NrsFile to create.
-         * 
+         *
          * @return the file ID
          */
         protected abstract UuidT<NrsFile> futureID();
 
-        /**
-         * Sets the {@link NrsFile} associated to the item.
-         * 
-         * @param file
-         *            the {@link NrsFile}
-         * @return the modified builder
-         */
-        protected final NrsVvrItem.Builder sourceFile(@Nonnull final NrsFile file) {
-            this.persistentFile = Objects.requireNonNull(file);
-            return this;
-        }
-
-    }
-
-    @Override
-    public final String toString() {
-        return com.google.common.base.Objects.toStringHelper(this).add("id", this.getUuid())
-                .add("name", this.getName()).add("vvrId", this.getVvr()).add("parent", this.getParent())
-                .add("parentItem", this.getParentFile()).add("partial", this.isPartial()).add("size", this.getSize())
-                .add("data size", this.getDataSize()).toString();
     }
 
 }

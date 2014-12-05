@@ -331,15 +331,13 @@ public abstract class AbstractRepositoryImpl extends AbstractUniqueVvrObject imp
         }
     }
 
-    public static abstract class Builder extends AbstractUniqueVvrObject.Builder implements
-            VersionedVolumeRepository.Builder {
+    public static abstract class Builder extends AbstractUniqueVvrObject.Builder {
         /**
          * this repository's owner (mandatory).
          * <p>
          */
         private UUID owner;
 
-        @Override
         public final Builder ownerId(final UUID ownerId) {
             this.owner = ownerId;
             return this;
@@ -351,7 +349,6 @@ public abstract class AbstractRepositoryImpl extends AbstractUniqueVvrObject imp
          */
         private UUID node;
 
-        @Override
         public final Builder nodeId(final UUID nodeId) {
             this.node = nodeId;
             return this;
@@ -363,7 +360,6 @@ public abstract class AbstractRepositoryImpl extends AbstractUniqueVvrObject imp
          */
         private AtomicReference<MsgClientStartpoint> syncClientRef = new AtomicReference<>();
 
-        @Override
         public final Builder syncClientRef(final AtomicReference<MsgClientStartpoint> syncClientRef) {
             this.syncClientRef = syncClientRef;
             return this;
@@ -374,7 +370,6 @@ public abstract class AbstractRepositoryImpl extends AbstractUniqueVvrObject imp
          */
         private AtomicReference<DtxTaskApi> dtxTaskApiRef = null;
 
-        @Override
         public final Builder dtxTaskApiRef(final AtomicReference<DtxTaskApi> dtxTaskApiRef) {
             this.dtxTaskApiRef = dtxTaskApiRef;
             return this;
@@ -394,7 +389,6 @@ public abstract class AbstractRepositoryImpl extends AbstractUniqueVvrObject imp
             return this.configuration;
         }
 
-        @Override
         public final Builder configuration(final MetaConfiguration configuration) {
             this.configuration = configuration;
             return this;

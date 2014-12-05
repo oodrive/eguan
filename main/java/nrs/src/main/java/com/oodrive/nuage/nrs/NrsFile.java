@@ -9,9 +9,9 @@ package com.oodrive.nuage.nrs;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,12 +31,12 @@ import com.oodrive.nuage.utils.mapper.FileMapper;
 /**
  * A NrsFile stores a key associated to a block of data corresponding to the contents of a <i>large</i> file. It is
  * optimized for sparse files.
- * 
+ *
  * @author oodrive
  * @author llambert
  * @author pwehrle
  * @author ebredzinski
- * 
+ *
  */
 public final class NrsFile extends NrsAbstractFile<byte[], NrsFile> {
 
@@ -45,7 +45,7 @@ public final class NrsFile extends NrsAbstractFile<byte[], NrsFile> {
 
     /**
      * Constructs an instance from the given builder.
-     * 
+     *
      * @param fileMapper
      *            file mapper handling that file
      * @param header
@@ -55,6 +55,35 @@ public final class NrsFile extends NrsAbstractFile<byte[], NrsFile> {
      */
     NrsFile(final FileMapper fileMapper, final NrsFileHeader<NrsFile> header, final NrsMsgPostOffice postOffice) {
         super(header.getHashSize(), fileMapper, header, postOffice, HASH_TRIMMED);
+    }
+
+    /**
+     * Writes the given block in the {@link NrsFileBlock} associated to this {@link NrsFile}.
+     *
+     * @param blockIndex
+     *            index of the block
+     * @param block
+     *            block to write
+     * @throws IOException
+     *             if the write fails
+     */
+    public final void writeBlock(final long blockIndex, final ByteBuffer block) throws IOException {
+        final NrsFileBlock nrsFileBlock = getFileBlock();
+        nrsFileBlock.write(blockIndex, block);
+    }
+
+    /**
+     * Fills block with the contents of the block.
+     * 
+     * @param blockIndex
+     * @param block
+     *            block to fill with the block found in the associated {@link NrsFileBlock}.
+     * @throws IOException 
+     * @throws IndexOutOfBoundsException 
+     */
+    public final void readBlock(long blockIndex, ByteBuffer block) throws IndexOutOfBoundsException, IOException {
+        final NrsFileBlock nrsFileBlock = getFileBlock();
+        nrsFileBlock.read(blockIndex, block);
     }
 
     @Override
@@ -71,8 +100,8 @@ public final class NrsFile extends NrsAbstractFile<byte[], NrsFile> {
     }
 
     @Override
-    final void appendDebugString(final StringBuilder dst, final byte[] value, final int offset) {
-        dst.append(value[offset]).append(value[offset + 1]).append(value[offset + 2]).append(value[offset + 3]);
+    final void appendDebugString(final StringBuilder dst, final byte[] value) {
+        dst.append(value[0]).append(value[1]).append(value[2]).append(value[3]);
     }
 
     @Override
@@ -81,20 +110,15 @@ public final class NrsFile extends NrsAbstractFile<byte[], NrsFile> {
     }
 
     @Override
-    final void readFully(final MappedByteBuffer src, final byte[] result, final int offset) {
-        // offset should always be 0 for hash
-        assert offset == 0;
+    final void readFully(final MappedByteBuffer src, final byte[] result) {
         assert result.length == getElementSize();
 
         src.get(result);
     }
 
     @Override
-    final void readFully(final FileChannel src, final byte[] result, final int offset) throws IOException {
+    final void readFully(final FileChannel src, final byte[] result) throws IOException {
         final int elementSize = getElementSize();
-
-        // offset should always be 0 for hash
-        assert offset == 0;
         assert result.length == elementSize;
 
         final ByteBuffer dst = ByteBuffer.wrap(result);
@@ -109,10 +133,8 @@ public final class NrsFile extends NrsAbstractFile<byte[], NrsFile> {
     }
 
     @Override
-    final void writeFully(final FileChannel dst, final byte[] value, final int offset) throws IOException {
+    final void writeFully(final FileChannel dst, final byte[] value) throws IOException {
         final int elementSize = getElementSize();
-
-        assert offset == 0;
         assert value.length == elementSize;
 
         final ByteBuffer src = ByteBuffer.wrap(value);

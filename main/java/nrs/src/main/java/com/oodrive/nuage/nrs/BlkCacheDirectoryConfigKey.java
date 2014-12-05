@@ -51,7 +51,6 @@ import com.oodrive.nuage.configuration.FileConfigKey;
  * </table>
  * 
  * @author oodrive
- * @author pwehrle
  * @author llambert
  * 
  */

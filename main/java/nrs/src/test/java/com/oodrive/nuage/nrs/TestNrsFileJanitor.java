@@ -63,7 +63,7 @@ public final class TestNrsFileJanitor extends TestNrsFileJanitorAbstract {
         janitor.init();
         try {
 
-            final NrsFile nrsFile = createTestNrsFile(janitor, config, blocks, blocks);
+            final NrsFile nrsFile = createTestNrsFile(janitor, config, blocks);
             final int clusterSize = janitor.newNrsFileHeaderBuilder().clusterSize();
 
             // Check file
@@ -287,7 +287,7 @@ public final class TestNrsFileJanitor extends TestNrsFileJanitorAbstract {
 
         janitor.init();
         try {
-            final NrsFile nrsFile = createTestNrsFile(janitor, config, true, blocks);
+            final NrsFile nrsFile = createTestNrsFile(janitor, config, blocks);
             janitor.clearCache();
 
             // Reduce file size (less than the header length): NrsFile or blocks file
@@ -311,7 +311,7 @@ public final class TestNrsFileJanitor extends TestNrsFileJanitorAbstract {
 
         janitor.init();
         try {
-            final NrsFile nrsFile = createTestNrsFile(janitor, config, true, blocks);
+            final NrsFile nrsFile = createTestNrsFile(janitor, config, blocks);
             janitor.clearCache();
 
             // Reduce file size (less than the header length): NrsFile or blocks file
@@ -335,7 +335,7 @@ public final class TestNrsFileJanitor extends TestNrsFileJanitorAbstract {
 
         janitor.init();
         try {
-            final NrsFile nrsFile = createTestNrsFile(janitor, config, true, blocks);
+            final NrsFile nrsFile = createTestNrsFile(janitor, config, blocks);
             janitor.clearCache();
 
             // Delete file: NrsFile or blocks file
@@ -359,7 +359,7 @@ public final class TestNrsFileJanitor extends TestNrsFileJanitorAbstract {
         try {
             initDone = true;
 
-            final NrsFile nrsFile = createTestNrsFile(janitor, config, true, blocks);
+            final NrsFile nrsFile = createTestNrsFile(janitor, config, blocks);
 
             // Open the file RO
             {
@@ -683,7 +683,7 @@ public final class TestNrsFileJanitor extends TestNrsFileJanitorAbstract {
 
         janitor.init();
         try {
-            final NrsFile nrsFile = createTestNrsFile(janitor, config, true, blocks);
+            final NrsFile nrsFile = createTestNrsFile(janitor, config, blocks);
             Assert.assertFalse(janitor.isSealed(nrsFile));
             janitor.sealNrsFile(nrsFile);
             Assert.assertTrue(janitor.isSealed(nrsFile));

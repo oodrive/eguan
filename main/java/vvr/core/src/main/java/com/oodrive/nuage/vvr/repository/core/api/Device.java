@@ -294,23 +294,4 @@ public interface Device extends VvrItem {
 
     }
 
-    /**
-     * Builder for a device instance, essentially implements the {@link #build()} method.
-     * 
-     * 
-     */
-    interface Builder extends VvrItem.Builder {
-
-        /**
-         * Builds the device instance.
-         * <p>
-         * 
-         * Implementing classes must throw exceptions should the build fail for some reason rather than return a faulty
-         * instance or null.
-         * 
-         * @return the fully functional object instance
-         */
-        Device build();
-    }
-
 }
