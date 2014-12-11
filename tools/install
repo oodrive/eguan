@@ -1,5 +1,6 @@
 #!/bin/sh
-cd cpptasks-parallel
+PARENT_DIR=`dirname $0`
+cd "$PARENT_DIR"/cpptasks-parallel
 mvn clean install clean
 cd ../maven-nar-plugin
 mvn clean install clean
@@ -7,4 +8,3 @@ cd ../com.google-protoc
 mvn clean install clean
 cd ../maven-protoc-plugin
 mvn clean install clean
-cd ..
