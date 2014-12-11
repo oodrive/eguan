@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Same as {@link UUID}, but can be typed.
@@ -34,6 +35,7 @@ import javax.annotation.Nonnull;
  * @param <F>
  *            class of object identified by this UUID.
  */
+@Immutable
 public final class UuidT<F> {
 
     private final UUID uuid;
