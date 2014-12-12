@@ -35,7 +35,6 @@ import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ShutdownThread;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
@@ -236,10 +235,6 @@ public final class ServletServer {
             server = new Server(new InetSocketAddress(serverAddress, serverPort));
             server.setHandler(contexts);
             server.setStopAtShutdown(stopAtShutdown);
-
-            // sets a default thread pool or join() will throw a NullPointerException
-            // TODO: add config options and replace by a parameterized ExecutorThreadPool instance
-            server.setThreadPool(new QueuedThreadPool());
 
             initialized = true;
         }

@@ -29,10 +29,9 @@ import java.util.UUID;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import junit.framework.Assert;
-
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

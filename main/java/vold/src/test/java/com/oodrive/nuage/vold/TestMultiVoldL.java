@@ -27,9 +27,9 @@ import java.util.UUID;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import junit.framework.Assert;
 import junit.framework.AssertionFailedError;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;

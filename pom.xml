@@ -49,21 +49,21 @@
         <!-- Version of dependencies -->
         <apacheCxfVersion>2.7.0</apacheCxfVersion>
         <aspectjrtVersion>1.7.2</aspectjrtVersion>
-        <bcprovVersion>1.47</bcprovVersion>
+        <bcprovVersion>1.51</bcprovVersion>
         <GgleTestVersion>1.6.0</GgleTestVersion>
-        <guavaVersion>15.0</guavaVersion>
+        <guavaVersion>18.0</guavaVersion>
         <hazelcastVersion>2.5</hazelcastVersion>
-        <hppcVersion>0.5.3</hppcVersion>
-        <jettyVersion>8.1.5.v20120716</jettyVersion>
-        <jerseyVersion>1.13</jerseyVersion>
-        <jsr305Version>2.0.1</jsr305Version>
-        <junitVersion>4.10</junitVersion>
+        <hppcVersion>0.6.0</hppcVersion>
+        <jettyVersion>9.2.6.v20141205</jettyVersion>
+        <jerseyVersion>1.18.3</jerseyVersion>
+        <jsr305Version>3.0.0</jsr305Version>
+        <junitVersion>4.12</junitVersion>
         <jscsiVersion>2.5.1-oodrive</jscsiVersion>
         <leveldbVersion>1.16.0-oodrive</leveldbVersion>
         <log4cplusVersion>1.1.2-rc2-oodrive</log4cplusVersion>
-        <logbackVersion>1.1.1</logbackVersion>
-        <mockitoVersion>1.9.5</mockitoVersion>
-        <nettyVersion>3.8.0.Final</nettyVersion>
+        <logbackVersion>1.1.2</logbackVersion>
+        <mockitoVersion>1.10.17</mockitoVersion>
+        <nettyVersion>4.0.24.Final</nettyVersion>
         <perfidixVersion>3.6.8-SNAPSHOT</perfidixVersion>
         <protobufRpcProVersion>3.0.0</protobufRpcProVersion>
         <protobufVersion>2.4.1</protobufVersion>
@@ -84,15 +84,17 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>license-maven-plugin</artifactId>
-                    <version>1.7</version>
+                    <version>1.8</version>
                     <configuration>
+                        <projectName>Project eguan</projectName>
                         <licenseName>apache_v2</licenseName>
                         <canUpdateCopyright>true</canUpdateCopyright>
                         <canUpdateDescription>true</canUpdateDescription>
                         <canUpdateLicense>true</canUpdateLicense>
-                        <verbose>true</verbose>
                         <roots>
-                            <root>main</root>
+                            <root>src</root>
+                            <root>target/generated-sources</root>
+                            <root>target/nar/nar-generated</root>
                         </roots>
                         <excludes>
                             <exclude>**/*.xml</exclude>
@@ -115,7 +117,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.1</version>
+                    <version>3.2</version>
                     <configuration>
                         <source>1.7</source>
                         <target>1.7</target>
@@ -126,7 +128,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.17</version>
+                    <version>2.18</version>
                     <configuration>
                         <!-- Raise max memory for unit tests -->
                         <!-- Added to fix run of emma with Java 7. See http://stackoverflow.com/questions/7010665/testng-emma-cobertura-coverage-and-jdk-7-result-in-classformaterror-and-verif -->
@@ -175,7 +177,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>2.16</version>
+                    <version>2.18</version>
                     <executions>
                         <execution>
                             <goals>
@@ -197,42 +199,42 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
-                    <version>2.2</version>
+                    <version>2.3</version>
                 </plugin>
 
                 <!-- Assembly plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
-                    <version>2.4</version>
+                    <version>2.5.2</version>
                 </plugin>
 
                 <!-- Clean plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-clean-plugin</artifactId>
-                    <version>2.5</version>
+                    <version>2.6.1</version>
                 </plugin>
 
                 <!-- Jar plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>2.4</version>
+                    <version>2.5</version>
                 </plugin>
 
                 <!-- War plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-war-plugin</artifactId>
-                    <version>2.4</version>
+                    <version>2.5</version>
                 </plugin>
 
                 <!-- Source plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
-                    <version>2.2.1</version>
+                    <version>2.4</version>
                 </plugin>
 
                 <!-- Apache CXF wadl2java plugin -->

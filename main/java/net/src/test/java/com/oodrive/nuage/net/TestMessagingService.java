@@ -31,9 +31,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import junit.framework.Assert;
 import junit.framework.AssertionFailedError;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,9 +41,9 @@ import org.slf4j.LoggerFactory;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageLite;
 import com.oodrive.nuage.net.MsgClientSpareChannels.PeerChannel;
+import com.oodrive.nuage.proto.Common.ProtocolVersion;
 import com.oodrive.nuage.proto.net.MsgWrapper;
 import com.oodrive.nuage.proto.net.MsgWrapper.MsgRequest;
-import com.oodrive.nuage.proto.Common.ProtocolVersion;
 
 public class TestMessagingService {
     public static final Logger LOGGER = LoggerFactory.getLogger(TestMessagingService.class.getSimpleName());

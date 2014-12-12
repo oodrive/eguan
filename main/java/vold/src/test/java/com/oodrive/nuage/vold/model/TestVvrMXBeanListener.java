@@ -25,8 +25,7 @@ import java.net.UnknownHostException;
 import javax.management.InstanceNotFoundException;
 import javax.management.ListenerNotFoundException;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 

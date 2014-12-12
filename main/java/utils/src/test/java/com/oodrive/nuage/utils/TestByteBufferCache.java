@@ -23,8 +23,7 @@ package com.oodrive.nuage.utils;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 /**

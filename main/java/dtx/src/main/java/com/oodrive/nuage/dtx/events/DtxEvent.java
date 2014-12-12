@@ -22,7 +22,8 @@ package com.oodrive.nuage.dtx.events;
 
 import javax.annotation.concurrent.Immutable;
 
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 
 /**
  * Superclass for all DTX related events.
@@ -77,7 +78,7 @@ public abstract class DtxEvent<T> {
      * @return a pre-configured {@link ToStringHelper}
      */
     protected final ToStringHelper toStringHelper() {
-        return com.google.common.base.Objects.toStringHelper(this).omitNullValues().add("source", source)
+        return MoreObjects.toStringHelper(this).omitNullValues().add("source", source)
                 .add("timestamp", timestamp);
     }
 }

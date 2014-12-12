@@ -31,6 +31,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.Immutable;
 
+import com.google.common.base.MoreObjects;
 import com.oodrive.nuage.configuration.MetaConfiguration;
 import com.oodrive.nuage.dtx.DtxTaskApiAbstract.TaskKeeperParameters;
 import com.oodrive.nuage.dtx.config.DtxJournalFileDirConfigKey;
@@ -194,7 +195,7 @@ public final class DtxManagerConfig {
 
     @Override
     public final String toString() {
-        return com.google.common.base.Objects.toStringHelper(this).add("clusterName", clusterName)
+        return MoreObjects.toStringHelper(this).add("clusterName", clusterName)
                 .add("clusterPassword", clusterPassword).add("localPeer", localPeer).add("peers", peers)
                 .add("journalDir", journalDir).add("taskKeeperParameters", parameters).toString();
     }

@@ -50,9 +50,9 @@ import javax.management.NotificationListener;
 import javax.management.ObjectName;
 import javax.management.relation.MBeanServerNotificationFilter;
 
-import junit.framework.Assert;
 import junit.framework.AssertionFailedError;
 
+import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

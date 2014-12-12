@@ -33,9 +33,8 @@ import javax.management.JMException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import junit.framework.Assert;
-
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;

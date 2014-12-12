@@ -21,8 +21,8 @@ package com.oodrive.nuage.vold;
  */
 
 import static org.junit.Assert.assertEquals;
-import junit.framework.Assert;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.oodrive.nuage.vold.model.VvrManagerMXBean;

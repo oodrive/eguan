@@ -36,8 +36,7 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.slf4j.LoggerFactory;
 
 /**

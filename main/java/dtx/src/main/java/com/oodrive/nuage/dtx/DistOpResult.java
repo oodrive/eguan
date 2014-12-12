@@ -25,7 +25,7 @@ import java.io.Serializable;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 /**
  * Result container for distributed operations.
@@ -102,7 +102,7 @@ final class DistOpResult implements Serializable {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(DistOpResult.class).add("exitStatus", this.exitStatus)
+        return MoreObjects.toStringHelper(DistOpResult.class).add("exitStatus", this.exitStatus)
                 .add("message", this.message).toString();
     }
 }

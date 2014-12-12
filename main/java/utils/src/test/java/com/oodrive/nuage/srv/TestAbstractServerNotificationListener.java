@@ -30,8 +30,7 @@ import javax.management.ListenerNotFoundException;
 import javax.management.Notification;
 import javax.management.NotificationListener;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 public abstract class TestAbstractServerNotificationListener<S extends Callable<Void>, T extends DeviceTarget, K extends AbstractServerConfig> {

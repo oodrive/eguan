@@ -25,8 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.UUID;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;

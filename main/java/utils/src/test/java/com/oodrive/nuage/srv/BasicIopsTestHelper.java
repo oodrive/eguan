@@ -30,7 +30,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 public class BasicIopsTestHelper extends AbstractIopsTestHelper {
 

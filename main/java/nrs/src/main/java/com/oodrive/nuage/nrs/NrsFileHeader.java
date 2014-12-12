@@ -32,6 +32,7 @@ import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
+import com.google.common.base.MoreObjects;
 import com.oodrive.nuage.utils.SimpleIdentifierProvider;
 import com.oodrive.nuage.utils.UuidT;
 
@@ -322,7 +323,7 @@ public final class NrsFileHeader<U> {
 
     @Override
     public final String toString() {
-        return com.google.common.base.Objects.toStringHelper(this).add("parentID", this.getParentId())
+        return MoreObjects.toStringHelper(this).add("parentID", this.getParentId())
                 .add("deviceID", this.getDeviceId()).add("nodeID", this.getNodeId()).add("fileID", this.getFileId())
                 .add("size", this.getSize()).add("blockSize", this.getBlockSize())
                 .add("clusterSize", this.getClusterSize()).add("hashSize", this.getHashSize())

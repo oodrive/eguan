@@ -22,7 +22,7 @@ package com.oodrive.nuage.nrs;
 
 import java.util.UUID;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import com.oodrive.nuage.configuration.MetaConfiguration;
 import com.oodrive.nuage.utils.SimpleIdentifierProvider;

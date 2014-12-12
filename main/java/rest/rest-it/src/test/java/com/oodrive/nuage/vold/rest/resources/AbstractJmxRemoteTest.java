@@ -22,9 +22,8 @@ package com.oodrive.nuage.vold.rest.resources;
 
 import java.io.IOException;
 
-import junit.framework.Assert;
-
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.runners.model.InitializationError;
 import org.slf4j.Logger;

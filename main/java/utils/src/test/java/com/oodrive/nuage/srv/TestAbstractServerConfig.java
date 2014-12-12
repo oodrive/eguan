@@ -26,8 +26,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.Callable;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.oodrive.nuage.configuration.AbstractConfigurationContext;

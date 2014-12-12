@@ -22,8 +22,7 @@ package com.oodrive.nuage.vold.model;
 
 import java.util.UUID;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 /**

@@ -53,6 +53,7 @@ import javax.annotation.concurrent.GuardedBy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
 import com.oodrive.nuage.dtx.journal.JournalRotationManager.RotationEvent;
@@ -754,7 +755,7 @@ public final class WritableTxJournal implements Iterable<JournalRecord> {
 
     @Override
     public final String toString() {
-        return com.google.common.base.Objects.toStringHelper(WritableTxJournal.class).add("journalFile", journalFile)
+        return MoreObjects.toStringHelper(WritableTxJournal.class).add("journalFile", journalFile)
                 .add("started", started).add("rotationThreshold", rotationThreshold).toString();
     }
 

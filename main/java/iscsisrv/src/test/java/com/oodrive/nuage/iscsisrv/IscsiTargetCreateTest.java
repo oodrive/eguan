@@ -23,8 +23,7 @@ package com.oodrive.nuage.iscsisrv;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 /**

@@ -27,10 +27,10 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 
-import junit.framework.Assert;
 import junit.framework.AssertionFailedError;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

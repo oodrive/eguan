@@ -27,8 +27,7 @@ import java.util.EnumSet;
 import java.util.Random;
 import java.util.Set;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.oodrive.nuage.utils.ByteBuffers;

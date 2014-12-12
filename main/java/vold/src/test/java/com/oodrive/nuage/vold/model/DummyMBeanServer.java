@@ -48,7 +48,7 @@ import javax.management.QueryExp;
 import javax.management.ReflectionException;
 import javax.management.loading.ClassLoaderRepository;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import com.oodrive.nuage.dtx.DtxManager;
 import com.oodrive.nuage.dtx.DtxManager.DtxLocalNode;

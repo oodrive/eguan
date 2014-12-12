@@ -65,7 +65,9 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 import org.junit.runners.model.InitializationError;
 import org.mockito.InOrder;
 import org.mockito.invocation.InvocationOnMock;
@@ -87,6 +89,7 @@ import com.oodrive.nuage.dtx.DtxEventListeners.SeparateStateCountListener;
  * @author ebredzinski
  * 
  */
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public final class TestTransactionInitiator {
 
     private static final class BadUnserializableException extends Exception {
@@ -677,8 +680,9 @@ public final class TestTransactionInitiator {
      * @throws XAException
      *             if mock setup fails, not part of this test
      */
+    // FIXME: may fail, according to test order (add 01 to run it earlier)
     @Test
-    public final void testSubmitOneTxWithOneNodeFailingOnStart() throws XAException {
+    public final void test01SubmitOneTxWithOneNodeFailingOnStart() throws XAException {
         LOGGER.info("Executing");
 
         final DtxResourceManager dtxResourceManager1 = newResMgrThatDoesEverythingRight(resUuid);
@@ -736,8 +740,9 @@ public final class TestTransactionInitiator {
      * @throws XAException
      *             if mock setup fails, not part of this test
      */
+    // FIXME: may fail, according to test order (add 02 to run it earlier)
     @Test
-    public final void testSubmitOneTxWithTwoNodesFailingOnStart() throws XAException {
+    public final void test02SubmitOneTxWithTwoNodesFailingOnStart() throws XAException {
         LOGGER.info("Executing");
 
         registerResMgrsWithDtxMgrs(dtxManagers, newResMgrThatDoesEverythingRight(resUuid),

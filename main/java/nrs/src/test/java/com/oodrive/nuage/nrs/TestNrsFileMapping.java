@@ -23,8 +23,7 @@ package com.oodrive.nuage.nrs;
 import java.io.IOException;
 import java.util.List;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.oodrive.nuage.configuration.MetaConfiguration;

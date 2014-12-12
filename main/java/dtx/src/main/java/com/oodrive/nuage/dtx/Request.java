@@ -20,7 +20,7 @@ package com.oodrive.nuage.dtx;
  * #L%
  */
 
-import static com.google.common.base.Objects.toStringHelper;
+import static com.google.common.base.MoreObjects.toStringHelper;
 
 import java.util.Arrays;
 import java.util.Objects;

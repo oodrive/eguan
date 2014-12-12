@@ -41,6 +41,7 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.MoreObjects;
 import com.oodrive.nuage.nrs.NrsException;
 import com.oodrive.nuage.nrs.NrsFile;
 import com.oodrive.nuage.nrs.NrsFileFlag;
@@ -620,7 +621,7 @@ abstract class NrsVvrItem extends AbstractUniqueVvrObject implements VvrItem {
 
     @Override
     public final String toString() {
-        return com.google.common.base.Objects.toStringHelper(this).add("id", this.getUuid())
+        return MoreObjects.toStringHelper(this).add("id", this.getUuid())
                 .add("name", this.getName()).add("vvrId", this.getVvr()).add("parent", this.getParent())
                 .add("parentItem", this.getParentFile()).add("partial", this.isPartial()).add("size", this.getSize())
                 .add("data size", this.getDataSize()).toString();

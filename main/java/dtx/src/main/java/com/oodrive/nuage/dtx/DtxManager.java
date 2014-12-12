@@ -62,6 +62,7 @@ import javax.annotation.concurrent.GuardedBy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
@@ -1224,7 +1225,7 @@ public final class DtxManager implements DtxTaskApi, DtxTaskInternal, DtxManager
 
     @Override
     public final String toString() {
-        return com.google.common.base.Objects.toStringHelper(this).add("nodeId", this.getNodeId())
+        return MoreObjects.toStringHelper(this).add("nodeId", this.getNodeId())
                 .add("status", status).toString();
     }
 

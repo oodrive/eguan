@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import com.oodrive.nuage.configuration.MetaConfiguration;
 import com.oodrive.nuage.net.MsgClientStartpoint;
