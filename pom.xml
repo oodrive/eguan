@@ -46,6 +46,9 @@
         <!-- Default temporary file directory -->
         <tmpdir>/tmp</tmpdir>
 
+        <!-- Memory for unit tests -->
+        <unitests.mem>-Xmx1536m</unitests.mem>
+
         <!-- Version of dependencies -->
         <apacheCxfVersion>2.7.0</apacheCxfVersion>
         <aspectjrtVersion>1.7.2</aspectjrtVersion>
@@ -80,39 +83,6 @@
         <pluginManagement>
             <plugins>
 
-                <!-- Add license to sources -->
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>license-maven-plugin</artifactId>
-                    <version>1.8</version>
-                    <configuration>
-                        <projectName>Project eguan</projectName>
-                        <licenseName>apache_v2</licenseName>
-                        <canUpdateCopyright>true</canUpdateCopyright>
-                        <canUpdateDescription>true</canUpdateDescription>
-                        <canUpdateLicense>true</canUpdateLicense>
-                        <roots>
-                            <root>src</root>
-                            <root>target/generated-sources</root>
-                            <root>target/nar/nar-generated</root>
-                        </roots>
-                        <excludes>
-                            <exclude>**/*.xml</exclude>
-                            <exclude>**/*.sh</exclude>
-                            <exclude>**/*.css</exclude>
-                        </excludes>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>first</id>
-                            <goals>
-                                <goal>update-file-header</goal>
-                            </goals>
-                            <phase>process-sources</phase>
-                        </execution>
-                    </executions>
-                </plugin>
-
                 <!-- Set default version of Java -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -131,8 +101,7 @@
                     <version>2.18</version>
                     <configuration>
                         <!-- Raise max memory for unit tests -->
-                        <!-- Added to fix run of emma with Java 7. See http://stackoverflow.com/questions/7010665/testng-emma-cobertura-coverage-and-jdk-7-result-in-classformaterror-and-verif -->
-                        <argLine>-Xmx1536m -XX:-UseSplitVerifier</argLine>
+                        <argLine>${unitests.mem}</argLine>
                         <!-- Ignore 'long' JAR tests by default -->
                         <excludes>
                             <exclude>**/*L.java</exclude>
@@ -141,35 +110,6 @@
                         <systemPropertyVariables>
                             <java.io.tmpdir>${tmpdir}</java.io.tmpdir>
                         </systemPropertyVariables>
-                    </configuration>
-                </plugin>
-
-                <!-- Unit test coverage plugin -->
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>emma-maven-plugin</artifactId>
-                    <version>1.0-alpha-3</version>
-                </plugin>
-
-                <!-- Needs the oodrive version of the NAR plugin -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-nar-plugin</artifactId>
-                    <version>2.1-oodrive</version>
-                    <extensions>true</extensions>
-                    <configuration>
-                        <!-- Ignore 'long' NAR tests by default -->
-                        <excludes>
-                            <exclude>**/*L.java</exclude>
-                            <exclude>**/*$*</exclude>
-                        </excludes>
-                        <!-- Set temporary file directory -->
-                        <systemProperties>
-                            <property>
-                                <name>java.io.tmpdir</name>
-                                <value>${tmpdir}</value>
-                            </property>
-                        </systemProperties>
                     </configuration>
                 </plugin>
 
@@ -184,8 +124,69 @@
                                 <goal>integration-test</goal>
                                 <goal>verify</goal>
                             </goals>
+                            <configuration>
+                                <!-- Raise max memory for integration tests -->
+                                <argLine>${unitests.mem}</argLine>
+                            </configuration>
                         </execution>
                     </executions>
+                </plugin>
+
+                <!-- Unit test coverage plugin. Enabled with profile 'coverage' -->
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.7.2.201409121644</version>
+                    <executions>
+                        <!-- Prepare agent before running tests with surefire -->
+                        <execution>
+                            <id>pre-unit-test</id>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                            <configuration>
+                                <destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
+                                <propertyName>surefireArgLine</propertyName>
+                            </configuration>
+                        </execution>
+                        <!-- Create report if the tests are successful -->
+                        <execution>
+                            <id>post-unit-test</id>
+                            <phase>test</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                            <configuration>
+                                <!-- Data file: same as prepare-agent -->
+                                <dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
+                                <outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <!-- Needs the oodrive version of the NAR plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-nar-plugin</artifactId>
+                    <version>2.1-oodrive</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <!-- Raise max memory for unit tests -->
+                        <argLine>${unitests.mem}</argLine>
+                        <!-- Ignore 'long' NAR tests by default -->
+                        <excludes>
+                            <exclude>**/*L.java</exclude>
+                            <exclude>**/*$*</exclude>
+                        </excludes>
+                        <!-- Set temporary file directory -->
+                        <systemProperties>
+                            <property>
+                                <name>java.io.tmpdir</name>
+                                <value>${tmpdir}</value>
+                            </property>
+                        </systemProperties>
+                    </configuration>
                 </plugin>
 
                 <!-- Create protobuf classes -->
@@ -263,6 +264,39 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
                     <version>1.9.1</version>
+                </plugin>
+
+                <!-- Add license to sources -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>license-maven-plugin</artifactId>
+                    <version>1.8</version>
+                    <configuration>
+                        <projectName>Project eguan</projectName>
+                        <licenseName>apache_v2</licenseName>
+                        <canUpdateCopyright>true</canUpdateCopyright>
+                        <canUpdateDescription>true</canUpdateDescription>
+                        <canUpdateLicense>true</canUpdateLicense>
+                        <roots>
+                            <root>src</root>
+                            <root>target/generated-sources</root>
+                            <root>target/nar/nar-generated</root>
+                        </roots>
+                        <excludes>
+                            <exclude>**/*.xml</exclude>
+                            <exclude>**/*.sh</exclude>
+                            <exclude>**/*.css</exclude>
+                        </excludes>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>first</id>
+                            <goals>
+                                <goal>update-file-header</goal>
+                            </goals>
+                            <phase>process-sources</phase>
+                        </execution>
+                    </executions>
                 </plugin>
 
                 <!-- Workaround the lack of m2eclipse plugin for NAR projects. See http://stackoverflow.com/questions/6352208/how-to-solve-plugin-execution-not-covered-by-lifecycle-configuration-for-sprin 

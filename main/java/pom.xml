@@ -44,6 +44,36 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <!-- Coverage: unable jacoco plugin, update surefire argLine (jar and nar modules) -->
+            <id>coverage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                    </plugin>
+
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <!-- Sets memory and the VM argument line used when unit tests are run. -->
+                            <argLine>${unitests.mem} ${surefireArgLine}</argLine>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-nar-plugin</artifactId>
+                        <configuration>
+                            <!-- Sets memory and the VM argument line used when unit tests are run. -->
+                            <argLine>${unitests.mem} ${surefireArgLine}</argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <dependencies>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>

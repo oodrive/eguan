@@ -126,7 +126,7 @@ public final class TestJournalRotation {
 
         // redirect temporary file directory to ramdisk, if possible
         // TODO: this should be factorized as a custom runner or abstract superclass, but those solutions don't work
-        // with maven and/or emma
+        // with maven and/or coverage tools
         tmpToRamActive = Files.exists(RAMDISK_PATH);
 
         try {

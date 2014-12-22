@@ -122,7 +122,7 @@ public class TestReadOnlyTxJournal {
 
         // redirect temporary file directory to ramdisk, if possible
         // TODO: this should be factorized as a custom runner or abstract superclass, but those solutions don't work
-        // with maven and/or emma
+        // with maven and/or coverage tools
         try {
             if (Files.exists(RAMDISK_PATH)) {
                 this.tmpJournalDir = Files.createTempDirectory(RAMDISK_PATH, TestJournalRotation.class.getSimpleName());

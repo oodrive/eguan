@@ -56,9 +56,7 @@ public class TestVost {
     private RunningCmd createVostCmd(final String[] javaArgs) {
         final String classpath = System.getProperty("java.class.path");
         final String main = Vost.class.getName();
-        // Add -XX:-UseSplitVerifier for emma (see root pom.xml) and disable emma in launched JVM (fails)
-        String[] args = new String[] { "java", "-XX:-UseSplitVerifier", "-Demma.rt.control=false", "-cp", classpath,
-                main };
+        String[] args = new String[] { "java", "-cp", classpath, main };
         if (javaArgs != null) {
             args = ObjectArrays.concat(args, javaArgs, String.class);
         }
