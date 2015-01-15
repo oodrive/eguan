@@ -38,7 +38,7 @@ testing both together.</description>
 		    <plugin>
 		        <groupId>org.codehaus.mojo</groupId>
 		        <artifactId>aspectj-maven-plugin</artifactId>
-		        <version>1.4</version>
+		        <version>1.7</version>
 		        <configuration>
 					<aspectLibraries>
 					  <aspectLibrary>
@@ -49,7 +49,7 @@ testing both together.</description>
 					<source>1.7</source>
 					<target>1.7</target>
 					<encoding>utf-8</encoding>
-					<complianceLevel>1.7</complianceLevel>
+					<complianceLevel>1.8</complianceLevel>
 					<verbose>true</verbose>
 					<showWeaveInfo>true</showWeaveInfo>
 		        </configuration>
