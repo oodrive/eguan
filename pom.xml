@@ -51,7 +51,7 @@
 
         <!-- Version of dependencies -->
         <apacheCxfVersion>2.7.0</apacheCxfVersion>
-        <aspectjrtVersion>1.7.2</aspectjrtVersion>
+        <aspectjrtVersion>1.8.0</aspectjrtVersion>
         <bcprovVersion>1.51</bcprovVersion>
         <GgleTestVersion>1.6.0</GgleTestVersion>
         <guavaVersion>18.0</guavaVersion>
