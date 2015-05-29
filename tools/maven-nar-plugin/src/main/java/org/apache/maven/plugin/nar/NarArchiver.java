@@ -27,4 +27,9 @@ import org.codehaus.plexus.archiver.tar.TarArchiver;
 public class NarArchiver
     extends TarArchiver
 {
+    public NarArchiver()
+    {
+        super();
+        setCompression(TarCompressionMethod.bzip2);
+    }
 }

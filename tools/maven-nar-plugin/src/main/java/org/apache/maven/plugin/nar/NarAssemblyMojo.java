@@ -19,8 +19,13 @@ package org.apache.maven.plugin.nar;
  * under the License.
  */
 
+import static java.lang.Integer.MAX_VALUE;
+
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -84,7 +89,9 @@ public class NarAssemblyMojo
                 getLog().debug( "SrcDir: " + srcDir );
                 if ( srcDir.exists() )
                 {
-                    FileUtils.copyDirectoryStructure( srcDir, dstDir );
+                    EnumSet<FileVisitOption> opts = EnumSet.noneOf( FileVisitOption.class );
+                    NarUtil.TreeCopier tc = new NarUtil.TreeCopier( srcDir.toPath(), dstDir.toPath(), getLog() );
+                    Files.walkFileTree( srcDir.toPath(), opts, MAX_VALUE, tc );
                 }
             }
             catch ( IOException ioe )

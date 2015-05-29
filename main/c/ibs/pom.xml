@@ -25,17 +25,11 @@
                 <configuration>
                     <gnuConfigureArgs>
                         <gnuConfigureArg>--disable-static</gnuConfigureArg>
-                        <gnuConfigureArg>CFLAGS=""</gnuConfigureArg>
-                        <gnuConfigureArg>CXXFLAGS="-std=c++0x"</gnuConfigureArg>
-                        <gnuConfigureArg>LDFLAGS="-L${basedir}/target/nar/log4cplus-${log4cplusVersion}-${localAOL}-bin/lib</gnuConfigureArg>
-                        <gnuConfigureArg>-L${basedir}/target/nar/snappy-${snappyVersion}-${localAOL}-bin/lib</gnuConfigureArg>
-                        <gnuConfigureArg>-L${basedir}/target/nar/leveldb-${leveldbVersion}-${localAOL}-bin/lib"</gnuConfigureArg>
-                        <gnuConfigureArg>CPPFLAGS="-I${basedir}/target/nar/log4cplus-${log4cplusVersion}-noarch/include</gnuConfigureArg>
-                        <gnuConfigureArg>-I${basedir}/target/nar/leveldb-${leveldbVersion}-noarch/include</gnuConfigureArg>
-                        <gnuConfigureArg>-I${basedir}/target/nar/snappy-${snappyVersion}-noarch/include</gnuConfigureArg>
-			<!--before GCC 4.8 some systems may need this for example centos 6.5 when using devtoolset-1.1 -->
-                        <gnuConfigureArg>-D_GLIBCXX_USE_NANOSLEEP</gnuConfigureArg>
-                        <gnuConfigureArg>-D_GLIBCXX_USE_SCHED_YIELD"</gnuConfigureArg>
+                        <gnuConfigureArg>CFLAGS=</gnuConfigureArg>
+                        <gnuConfigureArg>CXXFLAGS=-std=c++0x</gnuConfigureArg>
+                        <gnuConfigureArg>LDFLAGS=-L${basedir}/target/nar/log4cplus-${log4cplusVersion}-${localAOL}-bin/lib -L${basedir}/target/nar/snappy-${snappyVersion}-${localAOL}-bin/lib -L${basedir}/target/nar/leveldb-${leveldbVersion}-${localAOL}-bin/lib</gnuConfigureArg>
+						<!-- Before GCC 4.8, some systems need -D_GLIBCXX_USE_NANOSLEEP -D_GLIBCXX_USE_SCHED_YIELD, for example CentOS 6.5 when using devtoolset-1.1 -->
+                        <gnuConfigureArg>CPPFLAGS=-I${basedir}/target/nar/log4cplus-${log4cplusVersion}-noarch/include -I${basedir}/target/nar/leveldb-${leveldbVersion}-noarch/include -I${basedir}/target/nar/snappy-${snappyVersion}-noarch/include -D_GLIBCXX_USE_NANOSLEEP -D_GLIBCXX_USE_SCHED_YIELD</gnuConfigureArg>
                     </gnuConfigureArgs>
                     <libraries>
                         <library>

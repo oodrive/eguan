@@ -34,6 +34,9 @@ import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
+import org.codehaus.plexus.archiver.util.DefaultFileSet;
+import org.codehaus.plexus.components.io.fileselectors.AllFilesFileSelector;
+import org.codehaus.plexus.components.io.fileselectors.FileSelector;
 
 /**
  * @author Mark Donszelmann (Mark.Donszelmann@gmail.com)
@@ -67,8 +70,12 @@ public abstract class AbstractNarLayout
         }
         try
         {
+            DefaultFileSet fileSet = DefaultFileSet.fileSet( dir );
+            fileSet.setIncludes( new String[] { include } );
+            fileSet.setFileSelectors( new FileSelector[] { new AllFilesFileSelector()} );
+
             Archiver archiver = archiverManager.getArchiver( NarConstants.NAR_ROLE_HINT );
-            archiver.addDirectory( dir, new String[] { include }, null );
+            archiver.addFileSet( fileSet );
             archiver.setDestFile( narFile );
             archiver.createArchive();
         }

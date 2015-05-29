@@ -26,12 +26,12 @@
                 <artifactId>maven-nar-plugin</artifactId>
                 <configuration>
                     <gnuConfigureArgs>
-                      <gnuConfigureArg>CFLAGS=""</gnuConfigureArg>
-                      <gnuConfigureArg>CXXFLAGS="-std=c++0x"</gnuConfigureArg>
-		      <gnuConfigureArg>--disable-dependency-tracking</gnuConfigureArg>
-		      <gnuConfigureArg>--disable-static</gnuConfigureArg>
-		      <gnuConfigureArg>--enable-threads=yes</gnuConfigureArg>
-		      <gnuConfigureArg>--without-qt</gnuConfigureArg>
+                        <gnuConfigureArg>CFLAGS=</gnuConfigureArg>
+                        <gnuConfigureArg>CXXFLAGS=-std=c++0x</gnuConfigureArg>
+                        <gnuConfigureArg>--disable-dependency-tracking</gnuConfigureArg>
+                        <gnuConfigureArg>--disable-static</gnuConfigureArg>
+                        <gnuConfigureArg>--enable-threads=yes</gnuConfigureArg>
+                        <gnuConfigureArg>--without-qt</gnuConfigureArg>
                     </gnuConfigureArgs>
                     <libraries>
                         <library>

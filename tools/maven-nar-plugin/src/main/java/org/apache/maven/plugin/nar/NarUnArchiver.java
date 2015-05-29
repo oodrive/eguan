@@ -19,12 +19,12 @@ package org.apache.maven.plugin.nar;
  * under the License.
  */
 
-import org.codehaus.plexus.archiver.tar.TarUnArchiver;
+import org.codehaus.plexus.archiver.tar.TarBZip2UnArchiver;
 
 /**
  * @author Mark Donszelmann
  */
 public class NarUnArchiver
-    extends TarUnArchiver
+    extends TarBZip2UnArchiver
 {
 }

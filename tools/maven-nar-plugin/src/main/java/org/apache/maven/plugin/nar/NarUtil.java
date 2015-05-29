@@ -19,6 +19,12 @@ package org.apache.maven.plugin.nar;
  * under the License.
  */
 
+import static java.nio.file.FileVisitResult.CONTINUE;
+import static java.nio.file.FileVisitResult.TERMINATE;
+import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
+import static java.nio.file.StandardCopyOption.COPY_ATTRIBUTES;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -26,8 +32,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.CopyOption;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileSystemLoopException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -206,7 +219,7 @@ public final class NarUtil
             File subjectFile = ( File )i.next();
             String subjectName = subjectFile.getName();
             String subjectPath = subjectFile.getPath();
-            
+
             int idResult = runCommand(
                     "install_name_tool",
                     new String[] { "-id", subjectPath, subjectPath },
@@ -231,7 +244,7 @@ public final class NarUtil
                  String dependentPath = dependentFile.getPath();
 
                  if (dependentPath == subjectPath) continue;
-                 
+
                  int changeResult = runCommand(
                         "install_name_tool",
                          new String[] { "-change", subjectName, subjectPath, dependentPath },
@@ -458,7 +471,7 @@ public final class NarUtil
                 // create destination symbolic link
                 // does destination directory exist ?
                 {
-                    final File parent = destination.getParentFile(); 
+                    final File parent = destination.getParentFile();
                     if ( parent != null && !parent.exists() )
                     {
                         parent.mkdirs();
@@ -736,4 +749,66 @@ public final class NarUtil
 
 		return profiles;
 	}
+
+    /**
+     * A {@code FileVisitor} that copies a file-tree ("cp -r"). Java 7 specific, needed to re-create symb links instead
+     * of creating files.
+     * @author Oracle Java Tutorial
+     * @author Oodrive
+     */
+    static class TreeCopier implements FileVisitor<Path> {
+        private final Path source;
+        private final Path target;
+        private final Log log;
+
+        TreeCopier(Path source, Path target, Log log) {
+            this.source = source;
+            this.target = target;
+            this.log = log;
+        }
+
+        @Override
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+            // Before visiting entries in a directory, we create the directory if necessary
+            CopyOption[] options = new CopyOption[] { COPY_ATTRIBUTES };
+            try {
+                Path newdir = target.resolve(source.relativize(dir));
+                Files.copy(dir, newdir, options);
+            }
+            catch (FileAlreadyExistsException x) {
+                // Ignored
+            }
+            return CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+            CopyOption[] options = new CopyOption[] { COPY_ATTRIBUTES, REPLACE_EXISTING, NOFOLLOW_LINKS };
+            Files.copy(file, target.resolve(source.relativize(file)), options);
+            return CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+            // Fix up modification time of directory when done
+            if (exc == null) {
+                Path newdir = target.resolve(source.relativize(dir));
+                FileTime time = Files.getLastModifiedTime(dir);
+                Files.setLastModifiedTime(newdir, time);
+            }
+            return CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult visitFileFailed(Path file, IOException exc) {
+            if (exc instanceof FileSystemLoopException) {
+                log.error("Cycle detected: " + file);
+            }
+            else {
+                log.error("Unable to copy: " + file, exc);
+            }
+            return TERMINATE;
+        }
+    }
+
 }

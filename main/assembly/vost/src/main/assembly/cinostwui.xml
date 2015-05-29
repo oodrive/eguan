@@ -64,7 +64,7 @@
             <directory>src/main/skel/commons</directory>
             <outputDirectory></outputDirectory>
         </fileSet>
-         <fileSet>
+        <fileSet>
             <directory>src/main/skel/cinostwui</directory>
             <outputDirectory></outputDirectory>
         </fileSet>

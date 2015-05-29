@@ -1,59 +1,59 @@
 <assembly>
-  <id>ibstools</id>
-  <formats>
-    <format>tar.bz2</format>
-  </formats>
-  <baseDirectory>ibstools-${project.version}</baseDirectory>
-  
-  <!-- Adds dependencies: only ibsbench under the lib directory -->
-  <dependencySets>
-    <dependencySet>
-      <useProjectArtifact>false</useProjectArtifact>
-      <unpack>true</unpack>
-      <includes>
-	<include>${project.groupId}:ibs</include>
-      </includes>
-      <unpackOptions>
-        <excludes>
-	  <exclude>**/*</exclude>
-        </excludes>
-      </unpackOptions>
-    </dependencySet>
-  </dependencySets>
-  
-  <fileSets>
-    <!-- Skeleton: copied under assembly root -->
-    <fileSet>
-      <directory>src/main/skel</directory>
-      <outputDirectory></outputDirectory>
-    </fileSet>
-    
-    <!-- Native libraries: under lib directory -->
-    <fileSet>
-      <directory>target/nar</directory>
-      <outputDirectory></outputDirectory>
-      <includes>
-	<include>**/lib/lib*so*</include>
-      </includes>
-      <excludes>
-	<exclude>**/*-*/lib/lib*so*</exclude>
-      </excludes>
-    </fileSet>
-    
-    <!-- Native binaries: under bin directory -->
-    <fileSet>
-      <directory>target/nar</directory>
-      <outputDirectory></outputDirectory>
-      <fileMode>0550</fileMode>
-      <includes>
-	<include>/bin/ibsbench</include>
-	<include>/bin/ibsreplay</include>
-      </includes>
-      <excludes>
-	<exclude>**/*-*/bin/ibsbench</exclude>
-	<exclude>**/*-*/bin/ibsreplay</exclude>
-      </excludes>
-    </fileSet>
-  </fileSets>
-  
+    <id>ibstools</id>
+    <formats>
+        <format>tar.bz2</format>
+    </formats>
+    <baseDirectory>ibstools-${project.version}</baseDirectory>
+
+    <!-- Adds dependencies: only ibsbench under the lib directory -->
+    <dependencySets>
+        <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
+            <unpack>true</unpack>
+            <includes>
+                <include>${project.groupId}:ibs</include>
+            </includes>
+            <unpackOptions>
+                <excludes>
+                    <exclude>**/*</exclude>
+                </excludes>
+            </unpackOptions>
+        </dependencySet>
+    </dependencySets>
+
+    <fileSets>
+        <!-- Skeleton: copied under assembly root -->
+        <fileSet>
+            <directory>src/main/skel</directory>
+            <outputDirectory></outputDirectory>
+        </fileSet>
+
+        <!-- Native libraries: under lib directory -->
+        <fileSet>
+            <directory>target/nar</directory>
+            <outputDirectory></outputDirectory>
+            <includes>
+                <include>**/lib/lib*so*</include>
+            </includes>
+            <excludes>
+                <exclude>**/*-*/lib/lib*so*</exclude>
+            </excludes>
+        </fileSet>
+
+        <!-- Native binaries: under bin directory -->
+        <fileSet>
+            <directory>target/nar</directory>
+            <outputDirectory></outputDirectory>
+            <fileMode>0550</fileMode>
+            <includes>
+                <include>/bin/ibsbench</include>
+                <include>/bin/ibsreplay</include>
+            </includes>
+            <excludes>
+                <exclude>**/*-*/bin/ibsbench</exclude>
+                <exclude>**/*-*/bin/ibsreplay</exclude>
+            </excludes>
+        </fileSet>
+    </fileSets>
+
 </assembly>
