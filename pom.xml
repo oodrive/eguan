@@ -147,6 +147,12 @@
                             <configuration>
                                 <destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
                                 <propertyName>surefireArgLine</propertyName>
+                                <!-- Exclude generated code from coverage -->
+                                <excludes>
+                                    <exclude>com.oodrive.nuage.proto.*</exclude>
+                                    <exclude>com.oodrive.nuage.vold.rest.generated.*</exclude>
+                                    <exclude>*NarSystem*</exclude>
+                                </excludes>
                             </configuration>
                         </execution>
                         <!-- Create report if the tests are successful -->
@@ -160,6 +166,12 @@
                                 <!-- Data file: same as prepare-agent -->
                                 <dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
                                 <outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
+                                <!-- Exclude generated code from coverage -->
+                                <excludes>
+                                    <exclude>com.oodrive.nuage.proto.*</exclude>
+                                    <exclude>com.oodrive.nuage.vold.rest.generated.*</exclude>
+                                    <exclude>*NarSystem*</exclude>
+                                </excludes>
                             </configuration>
                         </execution>
                     </executions>
