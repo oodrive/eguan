@@ -23,18 +23,27 @@ package com.oodrive.nuage.utils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Utility class to run commands.
- * 
+ *
  * @author oodrive
  * @author ebredzinski
  * @author llambert
  */
 public final class RunCmdUtils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RunCmdUtils.class);
+
+    // Use the default Charset for console input/ouput
+    private static final Charset CONSOLE_CHARSET = Charset.defaultCharset();
 
     public static class RunningCmd {
         private final AtomicReference<Process> p;
@@ -43,13 +52,13 @@ public final class RunCmdUtils {
 
         private RunningCmd(final String[] cmdArray, final Object peer) {
             this.p = new AtomicReference<>();
-            this.cmdArray = cmdArray;
+            this.cmdArray = Arrays.copyOf(cmdArray, cmdArray.length); // defensive copy of input array
             this.peer = peer;
         }
 
         /**
          * Runs the command. Throws an exception if the command fails (return code != 0).
-         * 
+         *
          * @throws IOException
          */
         public final void run() throws IOException {
@@ -79,7 +88,7 @@ public final class RunCmdUtils {
 
     /**
      * Create a running command.
-     * 
+     *
      * @param cmdArray
      *            command and arguments.
      * @param peer
@@ -92,13 +101,13 @@ public final class RunCmdUtils {
 
     /**
      * Runs the command. Throws an exception if the command fails (return code != 0).
-     * 
+     *
      * @param cmdArray
      *            command and arguments.
      * @param peer
      *            object on which the command is run.
      * @return the output of the command
-     * 
+     *
      * @throws IOException
      *             if the command does not exist or if it fails
      */
@@ -108,13 +117,13 @@ public final class RunCmdUtils {
 
     /**
      * Runs the command. Throws an exception if the command fails (return code != 0).
-     * 
+     *
      * @param cmdArray
      *            command and arguments.
      * @param peer
      *            object on which the command is run.
      * @return the output of the command
-     * 
+     *
      * @throws IOException
      *             if the command does not exist or if it fails
      */
@@ -125,7 +134,7 @@ public final class RunCmdUtils {
 
     /**
      * Runs the command. Throws an exception if the command fails (return code != 0).
-     * 
+     *
      * @param cmdArray
      *            command and arguments.
      * @param peer
@@ -146,7 +155,7 @@ public final class RunCmdUtils {
     /**
      * Runs the command. Throws an exception if the command fails (return code != 0). This version passes some input to
      * the command.
-     * 
+     *
      * @param cmdArray
      *            command and arguments.
      * @param peer
@@ -166,7 +175,7 @@ public final class RunCmdUtils {
     /**
      * Runs the command. Throws an exception if the command fails (return code != 0). This version passes some input to
      * the command.
-     * 
+     *
      * @param cmdArray
      *            command and arguments.
      * @param peer
@@ -196,7 +205,7 @@ public final class RunCmdUtils {
         }
         final Process p = processBuilder.start();
         try {
-            final PrintStream pStdin = new PrintStream(p.getOutputStream());
+            final PrintStream pStdin = new PrintStream(p.getOutputStream(), false, CONSOLE_CHARSET.name());
             try {
                 // Verbose mode
                 if (displayErr) {
@@ -224,12 +233,12 @@ public final class RunCmdUtils {
 
     /**
      * Gets the output of the executed command.
-     * 
+     *
      * @param process
      *            the given process
      * @param builder
      *            the builder which will contain the result
-     * 
+     *
      * @return the Thread which reads the output
      */
     private static final Thread getOutput(final Process process, final StringBuilder builder) {
@@ -240,12 +249,13 @@ public final class RunCmdUtils {
             public final void run() {
                 final byte[] buf = new byte[1024];
                 try {
-                    while ((is.read(buf)) >= 0) {
-                        builder.append(new String(buf).trim());
+                    int readLen;
+                    while ((readLen = is.read(buf)) >= 0) {
+                        builder.append(new String(buf, 0, readLen, CONSOLE_CHARSET).trim());
                     }
                 }
                 catch (final IOException e) {
-                    e.printStackTrace();
+                    LOGGER.warn("Exception ignored", e);
                 }
                 finally {
                     try {
@@ -263,7 +273,7 @@ public final class RunCmdUtils {
 
     /**
      * Display the stderr of the given process.
-     * 
+     *
      * @param process
      */
     private static final Thread displayErr(final Process process) {
@@ -280,7 +290,7 @@ public final class RunCmdUtils {
                     }
                 }
                 catch (final IOException e) {
-                    e.printStackTrace();
+                    LOGGER.warn("Exception ignored", e);
                 }
                 finally {
                     try {
