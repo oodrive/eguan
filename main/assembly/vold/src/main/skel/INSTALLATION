@@ -8,11 +8,11 @@ the sample configuration files.
 
 Set the owner of the volumes. Create a unique identifier with
 the command 'uuid' and set the value in the 'vold.cfg' file
-(com.oodrive.nuage.vold.owner).
+(io.eguan.vold.owner).
 
 Set the identifier of the current node. Create a unique identifier
 with the command 'uuid' and set the value in the 'vold.cfg' file
-(com.oodrive.nuage.vold.node).
+(io.eguan.vold.node).
 
 2- Storage configuration
 

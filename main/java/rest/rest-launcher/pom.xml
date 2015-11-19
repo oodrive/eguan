@@ -29,7 +29,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.oodrive.nuage.vold.adm.RestLauncher</mainClass>
+                                    <mainClass>io.eguan.vold.adm.RestLauncher</mainClass>
                                 </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer">
                                 </transformer>
@@ -46,23 +46,23 @@
                                 </filter>
                                 <!-- keep only adm-stub class -->
                                 <filter>
-                                    <artifact>com.oodrive.nuage:dtx*</artifact>
+                                    <artifact>io.eguan:dtx*</artifact>
                                     <includes>
-                                        <include>com/oodrive/nuage/dtx/DtxTaskStatus.class</include>
-                                        <include>com/oodrive/nuage/dtx/DtxTaskAdm.class</include>
-                                        <include>com/oodrive/nuage/dtx/DtxResourceManagerAdm.class</include>
-                                        <include>com/oodrive/nuage/dtx/DtxRequestQueueAdm.class</include>
-                                        <include>com/oodrive/nuage/dtx/DtxTaskInfo.class</include>
-                                        <include>com/oodrive/nuage/dtx/DtxNodeState.class</include>
-                                        <include>com/oodrive/nuage/dtx/DtxResourceManagerState</include>
+                                        <include>io/eguan/dtx/DtxTaskStatus.class</include>
+                                        <include>io/eguan/dtx/DtxTaskAdm.class</include>
+                                        <include>io/eguan/dtx/DtxResourceManagerAdm.class</include>
+                                        <include>io/eguan/dtx/DtxRequestQueueAdm.class</include>
+                                        <include>io/eguan/dtx/DtxTaskInfo.class</include>
+                                        <include>io/eguan/dtx/DtxNodeState.class</include>
+                                        <include>io/eguan/dtx/DtxResourceManagerState</include>
                                     </includes>
                                 </filter>
                                 <filter>
-                                    <artifact>com.oodrive.nuage:vvr*</artifact>
+                                    <artifact>io.eguan:vvr*</artifact>
                                     <includes>
-                                        <include>com/oodrive/nuage/vvr/persistence/repository/VvrTaskInfo.class</include>
-                                        <include>com/oodrive/nuage/vvr/persistence/repository/VvrTaskOperation.class</include>
-                                        <include>com/oodrive/nuage/vvr/persistence/repository/VvrTargetType.class</include>
+                                        <include>io/eguan/vvr/persistence/repository/VvrTaskInfo.class</include>
+                                        <include>io/eguan/vvr/persistence/repository/VvrTaskOperation.class</include>
+                                        <include>io/eguan/vvr/persistence/repository/VvrTargetType.class</include>
                                     </includes>
                                 </filter>
 
@@ -70,11 +70,11 @@
                             <!-- Remove adm-stub dependencies -->
                             <artifactSet>
                                 <excludes>
-                                    <exclude>com.oodrive.nuage:net-proto</exclude>
-                                    <exclude>com.oodrive.nuage:java-net</exclude>
-                                    <exclude>com.oodrive.nuage:nrs</exclude>
-                                    <exclude>com.oodrive.nuage:ibs*</exclude>
-                                    <exclude>com.oodrive.nuage:hash-java</exclude>
+                                    <exclude>io.eguan:net-proto</exclude>
+                                    <exclude>io.eguan:java-net</exclude>
+                                    <exclude>io.eguan:nrs</exclude>
+                                    <exclude>io.eguan:ibs*</exclude>
+                                    <exclude>io.eguan:hash-java</exclude>
                                     <exclude>org.jscsi:*</exclude>
                                     <exclude>com.hazelcast:*</exclude>
                                     <exclude>com.googlecode.*</exclude>

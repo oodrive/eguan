@@ -35,7 +35,7 @@
 <flagvalue id="cflags-gprof" value="true"/>
 <flagvalue id="cflags-gcov" value="false"/>
 </flag>
-<option id="user" value="LDFLAGS=&quot;-L${NUAGE_SHARED}/lib -L${NUAGE_MAIN}/ibs/build-${ConfigName}/.libs&quot; CXXFLAGS=&quot;-std=c++0x -I${NUAGE_SHARED}/include -I${NUAGE_MAIN}/ibs/include&quot;"/>
+<option id="user" value="LDFLAGS=&quot;-L${EGUAN_SHARED}/lib -L${EGUAN_MAIN}/ibs/build-${ConfigName}/.libs&quot; CXXFLAGS=&quot;-std=c++0x -I${EGUAN_SHARED}/include -I${EGUAN_MAIN}/ibs/include&quot;"/>
 <option id="autogen" value="autogen.sh"/>
 <option id="autogenOpts" value=""/>
 </configuration>
@@ -74,7 +74,7 @@
 <flagvalue id="cflags-gprof" value="false"/>
 <flagvalue id="cflags-gcov" value="false"/>
 </flag>
-<option id="user" value="LDFLAGS=&quot;-L${NUAGE_SHARED}/lib -L${NUAGE_MAIN}/ibs/build-${ConfigName}/.libs&quot; CXXFLAGS=&quot;-std=c++0x -I${NUAGE_SHARED}/include -I${NUAGE_MAIN}/ibs/include&quot;"/>
+<option id="user" value="LDFLAGS=&quot;-L${EGUAN_SHARED}/lib -L${EGUAN_MAIN}/ibs/build-${ConfigName}/.libs&quot; CXXFLAGS=&quot;-std=c++0x -I${EGUAN_SHARED}/include -I${EGUAN_MAIN}/ibs/include&quot;"/>
 <option id="autogen" value="autogen.sh"/>
 <option id="autogenOpts" value=""/>
 </configuration>

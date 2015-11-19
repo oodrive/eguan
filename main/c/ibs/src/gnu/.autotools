@@ -35,7 +35,7 @@
 <flagvalue id="cflags-gprof" value="true"/>
 <flagvalue id="cflags-gcov" value="false"/>
 </flag>
-<option id="user" value="LDFLAGS=-L${NUAGE_SHARED}/lib CXXFLAGS=&quot;-std=c++0x -g -pg -I${NUAGE_SHARED}/include&quot;"/>
+<option id="user" value="LDFLAGS=-L${EGUAN_SHARED}/lib CXXFLAGS=&quot;-std=c++0x -g -pg -I${EGUAN_SHARED}/include&quot;"/>
 <option id="autogen" value="autogen.sh"/>
 <option id="autogenOpts" value=""/>
 </configuration>
@@ -74,7 +74,7 @@
 <flagvalue id="cflags-gprof" value="false"/>
 <flagvalue id="cflags-gcov" value="false"/>
 </flag>
-<option id="user" value="LDFLAGS=-L${NUAGE_SHARED}/lib CXXFLAGS=&quot;-std=c++0x -I${NUAGE_SHARED}/include&quot;"/>
+<option id="user" value="LDFLAGS=-L${EGUAN_SHARED}/lib CXXFLAGS=&quot;-std=c++0x -I${EGUAN_SHARED}/include&quot;"/>
 <option id="autogen" value="autogen.sh"/>
 <option id="autogenOpts" value=""/>
 </configuration>
@@ -113,7 +113,7 @@
 <flagvalue id="cflags-gprof" value="true"/>
 <flagvalue id="cflags-gcov" value="false"/>
 </flag>
-<option id="user" value="LDFLAGS=-L${NUAGE_SHARED}/lib CXXFLAGS=&quot;-std=c++0x -pg -g -I${NUAGE_SHARED}/include&quot;"/>
+<option id="user" value="LDFLAGS=-L${EGUAN_SHARED}/lib CXXFLAGS=&quot;-std=c++0x -pg -g -I${EGUAN_SHARED}/include&quot;"/>
 <option id="autogen" value="autogen.sh"/>
 <option id="autogenOpts" value=""/>
 </configuration>

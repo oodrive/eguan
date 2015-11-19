@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <application xmlns="http://wadl.dev.java.net/2009/02" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://wadl.dev.java.net/2009/02 xsd/wadl.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-    xmlns:vold="http://www.oodrive.com/nuage/vold/model">
+    xmlns:vold="http://www.eguan.io/vold/model">
     <grammars>
         <include href="xsd/vold.xsd" />
     </grammars>

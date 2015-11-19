@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "http://www.eclipse.org/jetty/configure.dtd">
 
-<Configure class="com.oodrive.nuage.rest.jaxrs.JaxRsAppContext">
+<Configure class="io.eguan.rest.jaxrs.JaxRsAppContext">
 
     <Call name="addAllResources">
         <Arg>
             <Array type="java.lang.Object">
                 <Item>
-                    <New class="com.oodrive.nuage.rest.container.DummyRestResource" />
+                    <New class="io.eguan.rest.container.DummyRestResource" />
                 </Item>
             </Array>
         </Arg>

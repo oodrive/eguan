@@ -1,5 +1,5 @@
 import "common.proto";
-package com.oodrive.nuage.proto.nrs;
+package io.eguan.proto.nrs;
 
 // Smaller classes
 option optimize_for = LITE_RUNTIME;

@@ -31,7 +31,7 @@
         <SessionType>Normal</SessionType>
     </global>
 
-    <target id="test-nuage" address="localhost" port="3260">
+    <target id="test-eguan" address="localhost" port="3260">
         <ImmediateData>No</ImmediateData>
         <InitiatorName>TestingInitiator</InitiatorName>
         <TargetName>iqn.2000-06.com.oodrive:test-target</TargetName>

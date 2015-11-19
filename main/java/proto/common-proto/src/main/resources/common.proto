@@ -1,4 +1,4 @@
-package com.oodrive.nuage.proto;
+package io.eguan.proto;
 
 // Smaller classes
 option optimize_for = LITE_RUNTIME;

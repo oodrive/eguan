@@ -25,18 +25,18 @@ update_config()
         sudo -u $NAME sed -i "s%$key%$value%g" $VOLD_DIR_ABS/rest.cfg
         sudo -u $NAME sed -i "s%$key%$value%g" $VOLD_DIR_ABS/cinder.cfg
     
-        if [ "$key" = "COM_OODRIVE_NUAGE_VOLD_OWNER" ]; then
+        if [ "$key" = "IO_EGUAN_VOLD_OWNER" ]; then
             VOLD_OWNER_ID=$value
             VOLD_OWNER=`echo $VOLD_OWNER_ID | sed "s/-//g"`
         fi
     
         # Change owner of IBPGEN path
-        if [ "$key" = "COM_OODRIVE_NUAGE_VVR_IBS_IBPGEN_PATH" ]; then
+        if [ "$key" = "IO_EGUAN_VVR_IBS_IBPGEN_PATH" ]; then
             sudo chown -R $NAME.nogroup $value
         fi
     
         # Change owner of IPBs path
-        if [ "$key" = "COM_OODRIVE_NUAGE_VVR_IBS_IPB_PATH" ]; then
+        if [ "$key" = "IO_EGUAN_VVR_IBS_IPB_PATH" ]; then
             for i in `echo $value | sed "s%,% %g"`; do 
                 sudo chown -R $NAME.nogroup $i
             done
@@ -44,11 +44,11 @@ update_config()
     done <<< "`awk -F"=" '/=/{print $1,$2}' $CONFIG_DIR/$NAME.cfg`"
 
     # get rest server address in rest.cfg
-    REST_ADDRESS=`awk -F"com.oodrive.nuage.jetty.server.address=" '/com.oodrive.nuage.jetty.server.address=/{print $2}' $VOLD_DIR_ABS/rest.cfg`
-    REST_PORT=`awk -F"com.oodrive.nuage.jetty.server.port=" '/com.oodrive.nuage.jetty.server.port=/{print $2}' $VOLD_DIR_ABS/rest.cfg`
+    REST_ADDRESS=`awk -F"io.eguan.jetty.server.address=" '/io.eguan.jetty.server.address=/{print $2}' $VOLD_DIR_ABS/rest.cfg`
+    REST_PORT=`awk -F"io.eguan.jetty.server.port=" '/io.eguan.jetty.server.port=/{print $2}' $VOLD_DIR_ABS/rest.cfg`
 
     # Get rest path
-    COMPLETE_REST_PATH=`awk -F"com.oodrive.nuage.jetty.rest.contextpath=" '/com.oodrive.nuage.jetty.rest.contextpath=/{print $2}' $VOLD_DIR_ABS/rest.cfg`
+    COMPLETE_REST_PATH=`awk -F"io.eguan.jetty.rest.contextpath=" '/io.eguan.jetty.rest.contextpath=/{print $2}' $VOLD_DIR_ABS/rest.cfg`
     REST_PATH=`echo $COMPLETE_REST_PATH | sed "s%^/%%"` 
 
     # add vold_rest_uri in cinder config file
@@ -150,7 +150,7 @@ trap do_abort SIGINT SIGTERM
 
 echo "Add user $NAME if not exists"
 if ! getent passwd $NAME >/dev/null; then    
-    sudo adduser $NAME --system --disabled-login --disabled-password  --no-create-home
+    sudo adduser $NAME --system --disabled-login --disabled-password --no-create-home
 fi
 
 echo "Change owner of the vold directory"

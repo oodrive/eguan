@@ -1,0 +1,4 @@
+# This file serves as place holder for a future custom web application
+# configuration. Add all configuration files (e.g. web.xml) here and
+# leave the io.eguan.jetty.rest.contextpath config key
+# undefined.

@@ -244,11 +244,11 @@ extern jbyteArray getByteStrArray(JNIEnv *env, jobject data);
 #define ERR_EXCEPTION                   2
 
 /*
- * Class:     com_oodrive_nuage_hash_TigerNative
+ * Class:     io_eguan_hash_TigerNative
  * Method:    tigerNative
  * Signature: (Ljava/nio/ByteBuffer;IILjava/nio/ByteBuffer;I)I
  */
-JNIEXPORT int JNICALL Java_com_oodrive_nuage_hash_TigerNative_tigerNativeDirect(JNIEnv *env , const jclass clazz,
+JNIEXPORT int JNICALL Java_io_eguan_hash_TigerNative_tigerNativeDirect(JNIEnv *env , const jclass clazz,
         const jobject src, const jint offsetSrc, const jint lengthSrc, const jobject dst, const jint offsetDst) {
     /* Ignored parameter */
     (void) clazz;
@@ -275,11 +275,11 @@ JNIEXPORT int JNICALL Java_com_oodrive_nuage_hash_TigerNative_tigerNativeDirect(
 }
 
 /*
- * Class:     com_oodrive_nuage_hash_TigerNative
+ * Class:     io_eguan_hash_TigerNative
  * Method:    tigerNative
  * Signature: ([BIILjava/nio/ByteBuffer;I)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_hash_TigerNative_tigerNative(JNIEnv *env, const jclass clazz,
+JNIEXPORT jint JNICALL Java_io_eguan_hash_TigerNative_tigerNative(JNIEnv *env, const jclass clazz,
         const jbyteArray src, const jint offsetSrc, const jint lengthSrc, const jobject dst, const jint offsetDst) {
     /* Ignored parameter */
     (void) clazz;
@@ -310,11 +310,11 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_hash_TigerNative_tigerNative(JNIEn
 }
 
 /*
- * Class:     com_oodrive_nuage_hash_TigerNative
+ * Class:     io_eguan_hash_TigerNative
  * Method:    tigerNativeByteStr
  * Signature: (Lcom/google/protobuf/ByteString;Ljava/nio/ByteBuffer;I)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_hash_TigerNative_tigerNativeByteStr(JNIEnv *env, const jclass clazz,
+JNIEXPORT jint JNICALL Java_io_eguan_hash_TigerNative_tigerNativeByteStr(JNIEnv *env, const jclass clazz,
         const jobject src, const jobject dst, const jint offsetDst) {
     jbyteArray srcArray;
 
@@ -326,6 +326,6 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_hash_TigerNative_tigerNativeByteSt
         /* Unexpected value */
         return ERR_EXCEPTION;
     }
-    return Java_com_oodrive_nuage_hash_TigerNative_tigerNative(env, clazz, srcArray, 0,
+    return Java_io_eguan_hash_TigerNative_tigerNative(env, clazz, srcArray, 0,
             (*env)->GetArrayLength(env, srcArray), dst, offsetDst);
 }

@@ -10,7 +10,7 @@
 
     <artifactId>java</artifactId>
     <packaging>pom</packaging>
-    <name>nuage SP2 Java modules</name>
+    <name>eguan Java modules</name>
 
     <modules>
         <module>dtx</module>

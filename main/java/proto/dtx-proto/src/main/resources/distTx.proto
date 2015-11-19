@@ -1,5 +1,5 @@
 import "common.proto";
-package com.oodrive.nuage.proto.dtx;
+package io.eguan.proto.dtx;
 
 option optimize_for = LITE_RUNTIME;
 option java_outer_classname = "DistTxWrapper";

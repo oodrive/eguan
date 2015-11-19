@@ -31,9 +31,9 @@
                                     <wadl>${basedir}/src/main/resources/vold.wadl</wadl>
                                     <interface>true</interface>
                                     <impl>false</impl>
-                                    <packagename>com.oodrive.nuage.vold.rest.generated.resources</packagename>
+                                    <packagename>io.eguan.vold.rest.generated.resources</packagename>
                                     <schemaPackagenames>
-                                        <schemaPackagename>http://www.oodrive.com/nuage/vold/model=com.oodrive.nuage.vold.rest.generated.model</schemaPackagename>
+                                        <schemaPackagename>http://www.eguan.io/vold/model=io.eguan.vold.rest.generated.model</schemaPackagename>
                                     </schemaPackagenames>
                                     <extraargs>
                                         <extraarg>-verbose</extraarg>

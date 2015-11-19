@@ -40,7 +40,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.oodrive.nuage.vold.Vold</mainClass>
+                                    <mainClass>io.eguan.vold.Vold</mainClass>
                                 </transformer>
                             </transformers>
                             <minimizeJar>true</minimizeJar>
@@ -89,19 +89,19 @@
 
                                 <!-- Make sure NarSystem classes are not removed -->
                                 <filter>
-                                    <artifact>com.oodrive.nuage:hash-java</artifact>
+                                    <artifact>io.eguan:hash-java</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>
                                 </filter>
                                 <filter>
-                                    <artifact>com.oodrive.nuage:ibs-java</artifact>
+                                    <artifact>io.eguan:ibs-java</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>
                                 </filter>
                                 <filter>
-                                    <artifact>com.oodrive.nuage:java-utils</artifact>
+                                    <artifact>io.eguan:java-utils</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>

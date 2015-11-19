@@ -31,8 +31,8 @@
 									<listOptionValue builtIn="false" value="__GXX_EXPERIMENTAL_CXX0X__=1"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.143320224" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${NUAGE_SHARED}/include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NUAGE_MAIN}/ibs/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${EGUAN_SHARED}/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${EGUAN_MAIN}/ibs/include&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1299659706" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -74,8 +74,8 @@
 									<listOptionValue builtIn="false" value="__GXX_EXPERIMENTAL_CXX0X__=1"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.482459567" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${NUAGE_SHARED}/include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NUAGE_MAIN}/ibs/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${EGUAN_SHARED}/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${EGUAN_MAIN}/ibs/include&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.359517849" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>

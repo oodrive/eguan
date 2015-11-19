@@ -78,7 +78,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.oodrive.nuage.vost.Vost</mainClass>
+                            <mainClass>io.eguan.vost.Vost</mainClass>
                         </manifest>
                         <manifestEntries>
                             <Class-Path>vold.jar rest-launcher.jar</Class-Path>

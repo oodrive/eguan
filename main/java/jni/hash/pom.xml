@@ -28,7 +28,7 @@
                     <libraries>
                         <library>
                             <type>jni</type>
-                            <narSystemPackage>com.oodrive.nuage.hash</narSystemPackage>
+                            <narSystemPackage>io.eguan.hash</narSystemPackage>
                             <linkCPP>false</linkCPP>
                         </library>
                     </libraries>

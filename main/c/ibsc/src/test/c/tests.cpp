@@ -24,7 +24,7 @@ using namespace std;
 
 #define GTEST_COLOR
 
-class NuagePrinter: public ::testing::EmptyTestEventListener {
+class EguanPrinter: public ::testing::EmptyTestEventListener {
         virtual void OnTestProgramStart(const ::testing::UnitTest& test) {
             cout << "-------------------------------------------------------" << endl;
             cout << " T E S T S" << endl;
@@ -70,7 +70,7 @@ GTEST_API_ int main(int argc, char **argv) {
 
     if (keepDefaultPrinter == false) {
         delete listeners.Release(listeners.default_result_printer());
-        listeners.Append(new NuagePrinter);
+        listeners.Append(new EguanPrinter);
         listeners.Append(new tap::TapListener());
     }
     ret = RUN_ALL_TESTS();

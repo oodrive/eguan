@@ -1,5 +1,5 @@
 #
-# Configuration file for nu@ge Volume manager daemon.
+# Configuration file for eguan Volume manager daemon.
 #
 # Without any change, this file works 'out-of-the-box', but does not define
 # a safe configuration. You MUST update the values defined in the 'MUST READ'
@@ -26,62 +26,62 @@
 # least acknowledged as valid by the user.
 # =============================================================================
 
-# com.oodrive.nuage.vold.owner defines the ownership of the managed volumes.
+# io.eguan.vold.owner defines the ownership of the managed volumes.
 #
 # The owner is identified by a unique identifier (UUID, see RFC 4122). The
 # command 'uuid' produces valid random unique identifiers.
 #
 # Default value: none
-# Example: com.oodrive.nuage.vold.owner=ad9fb5f4-3a12-11e2-bfaa-180373e17308
+# Example: io.eguan.vold.owner=ad9fb5f4-3a12-11e2-bfaa-180373e17308
 #
-com.oodrive.nuage.vold.owner=
+io.eguan.vold.owner=
 
-# com.oodrive.nuage.vold.node defines the node on which this vold is
+# io.eguan.vold.node defines the node on which this vold is
 # running.
 #
 # The node is identified by a unique identifier (UUID, see RFC 4122). The
 # command 'uuid' produces valid random unique identifiers.
 #
 # Default value: none
-# Example: com.oodrive.nuage.vold.node=9d076da6-4906-11e2-b385-180373e17308
+# Example: io.eguan.vold.node=9d076da6-4906-11e2-b385-180373e17308
 #
-com.oodrive.nuage.vold.node=
+io.eguan.vold.node=
 
-# com.oodrive.nuage.vold.iscsi.started tells if the iSCSI server associated
+# io.eguan.vold.iscsi.started tells if the iSCSI server associated
 # to the vold must be started by default.
 #
 # Legal values are 'yes', 'true', 'no' and 'false'.
 # Default value: 'no'
-# Example: com.oodrive.nuage.vold.iscsi.started=yes
+# Example: io.eguan.vold.iscsi.started=yes
 #
-#com.oodrive.nuage.vold.iscsi.started=no
+#io.eguan.vold.iscsi.started=no
 
-# com.oodrive.nuage.iscsisrv.address selects the address on which the iSCSI
+# io.eguan.iscsisrv.address selects the address on which the iSCSI
 # server associated to the vold will be bound.
 #
 # Legal values are a valid IP local address.
 # Default value: '0.0.0.0'
-# Example: com.oodrive.nuage.iscsisrv.address=192.168.55.11
+# Example: io.eguan.iscsisrv.address=192.168.55.11
 #
-#com.oodrive.nuage.iscsisrv.address=0.0.0.0
+#io.eguan.iscsisrv.address=0.0.0.0
 
-# com.oodrive.nuage.vold.nbd.started tells if the NBD server associated
+# io.eguan.vold.nbd.started tells if the NBD server associated
 # to the vold must be started by default.
 #
 # Legal values are 'yes', 'true', 'no' and 'false'.
 # Default value: 'no'
-# Example: com.oodrive.nuage.vold.nbd.started=yes
+# Example: io.eguan.vold.nbd.started=yes
 #
-#com.oodrive.nuage.vold.nbd.started=no
+#io.eguan.vold.nbd.started=no
 
-# com.oodrive.nuage.nbdsrv.address selects the address on which the NBD
+# io.eguan.nbdsrv.address selects the address on which the NBD
 # server associated to the vold will be bound.
 #
 # Legal values are a valid IP local address.
 # Default value: '0.0.0.0'
-# Example: com.oodrive.nuage.nbdsrv.address=192.168.55.11
+# Example: io.eguan.nbdsrv.address=192.168.55.11
 #
-#com.oodrive.nuage.nbdsrv.address=0.0.0.0
+#io.eguan.nbdsrv.address=0.0.0.0
 
 # =============================================================================
 # END 'MUST READ' SECTION
@@ -94,25 +94,25 @@ com.oodrive.nuage.vold.node=
 # along the way, yet with the option to going back to the safe default.
 # =============================================================================
 
-# com.oodrive.nuage.iscsisrv.port selects the TCP port on which the iSCSI
+# io.eguan.iscsisrv.port selects the TCP port on which the iSCSI
 # server associated to the vold will be bound. The default value is the
 # well-known TCP port reserved for iSCSI (see RFC 3720).
 #
 # Legal values are a valid IP port.
 # Default value: 3260
-# Example: com.oodrive.nuage.iscsisrv.port=55001
+# Example: io.eguan.iscsisrv.port=55001
 #
-#com.oodrive.nuage.iscsisrv.port=3260
+#io.eguan.iscsisrv.port=3260
 
-# com.oodrive.nuage.nbdsrv.port selects the TCP port on which the NBD
+# io.eguan.nbdsrv.port selects the TCP port on which the NBD
 # server associated to the vold will be bound. The default value is the
 # well-known TCP port reserved for NBD.
 #
 # Legal values are a valid IP port.
 # Default value: 10809
-# Example: com.oodrive.nuage.nbdsrv.port=55001
+# Example: io.eguan.nbdsrv.port=55001
 #
-#com.oodrive.nuage.nbdsrv.port=10809
+#io.eguan.nbdsrv.port=10809
 
 # =============================================================================
 # END ADVANCED SECTION

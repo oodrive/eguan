@@ -10,7 +10,7 @@
 
     <artifactId>proto</artifactId>
     <packaging>pom</packaging>
-    <name>nuage SP2 Java modules with protobuf protocols</name>
+    <name>eguan Java modules with protobuf protocols</name>
 
     <modules>
         <module>common-proto</module>

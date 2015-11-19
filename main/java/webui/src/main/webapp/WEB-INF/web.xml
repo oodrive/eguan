@@ -10,7 +10,7 @@
 
         <init-param>
             <param-name>UI</param-name>
-            <param-value>com.oodrive.nuage.webui.VvrManagerUi</param-value>
+            <param-value>io.eguan.webui.VvrManagerUi</param-value>
         </init-param>
     </servlet>
 
@@ -20,7 +20,7 @@
     </servlet-mapping>
 
     <listener>
-        <listener-class>com.oodrive.nuage.webui.VvrManagerUi</listener-class>
+        <listener-class>io.eguan.webui.VvrManagerUi</listener-class>
     </listener>
 
 </web-app>

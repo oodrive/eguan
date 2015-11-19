@@ -23,7 +23,7 @@
                     <libraries>
                         <library>
                             <type>jni</type>
-                            <narSystemPackage>com.oodrive.nuage.ibs</narSystemPackage>
+                            <narSystemPackage>io.eguan.ibs</narSystemPackage>
                             <linkCPP>false</linkCPP>
                         </library>
                     </libraries>

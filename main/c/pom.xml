@@ -10,7 +10,7 @@
 
     <artifactId>c</artifactId>
     <packaging>pom</packaging>
-    <name>nuage SP2 C/C++ modules</name>
+    <name>eguan C/C++ modules</name>
 
     <modules>
         <module>ibs</module>

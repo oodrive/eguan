@@ -58,22 +58,22 @@
 
     <target id="dev0" address="127.0.0.1" port="3264">
         <ImmediateData>No</ImmediateData>
-        <InitiatorName>NuageInitiator</InitiatorName>
-        <TargetName>iqn.2000-06.com.oodrive.nuage:dev0</TargetName>
+        <InitiatorName>EguanInitiator</InitiatorName>
+        <TargetName>iqn.2014-07.io.eguan:dev0</TargetName>
     </target>
     <target id="dev1" address="127.0.0.1" port="3264">
         <ImmediateData>No</ImmediateData>
-        <InitiatorName>NuageInitiator</InitiatorName>
-        <TargetName>iqn.2000-06.com.oodrive.nuage:dev1</TargetName>
+        <InitiatorName>EguanInitiator</InitiatorName>
+        <TargetName>iqn.2014-07.io.eguan:dev1</TargetName>
     </target>
     <target id="anotherDev1" address="127.0.0.1" port="3264">
         <ImmediateData>No</ImmediateData>
-        <InitiatorName>NuageInitiator</InitiatorName>
-        <TargetName>iqn.2000-06.com.oodrive.nuage:anotherDev1</TargetName>
+        <InitiatorName>EguanInitiator</InitiatorName>
+        <TargetName>iqn.2014-07.io.eguan:anotherDev1</TargetName>
     </target>
     <target id="anotherDev0" address="127.0.0.1" port="3264">
         <ImmediateData>No</ImmediateData>
-        <InitiatorName>NuageInitiator</InitiatorName>
-        <TargetName>iqn.2000-06.com.oodrive.nuage:anotherDev0</TargetName>
+        <InitiatorName>EguanInitiator</InitiatorName>
+        <TargetName>iqn.2014-07.io.eguan:anotherDev0</TargetName>
     </target>
 </configuration>

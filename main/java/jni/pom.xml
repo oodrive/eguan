@@ -10,7 +10,7 @@
 
     <artifactId>jni</artifactId>
     <packaging>pom</packaging>
-    <name>nuage SP2 Java modules with native code</name>
+    <name>eguan Java modules with native code</name>
 
     <properties>
         <!-- Tests: can not run JNI unit tests during the nar-test goal -->

@@ -9,8 +9,8 @@
   </appender>
 
   <logger name="com.hazelcast" level="INFO" />
-  <logger name="com.oodrive.nuage.nrs" level="DEBUG" />
-  <logger name="com.oodrive.nuage.utils.Files" level="DEBUG" />
+  <logger name="io.eguan.nrs" level="DEBUG" />
+  <logger name="io.eguan.utils.Files" level="DEBUG" />
   <logger name="org.jscsi" level="WARN" />
 
   <root level="INFO">

@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "http://www.eclipse.org/jetty/configure.dtd">
 
-<Configure class="com.oodrive.nuage.rest.jaxrs.JaxRsAppContext">
+<Configure class="io.eguan.rest.jaxrs.JaxRsAppContext">
 
     <Call name="addAllResources">
         <Arg>
             <Array type="java.lang.Object">
                 <Item>
-                    <New class="com.oodrive.nuage.vold.rest.resources.VvrsResourceJmxImpl">
+                    <New class="io.eguan.vold.rest.resources.VvrsResourceJmxImpl">
                         <!-- JMX connector address, defaults to local MBean server if left empty. -->
                         <!-- URL syntax: service:jmx:rmi:///jndi/rmi://hostName:portNum/jmxrmi -->
                         <Arg type="String"></Arg>
@@ -18,12 +18,12 @@
     </Call>
     <Call name="addProvider">
         <Arg>
-            <New class="com.oodrive.nuage.vold.rest.providers.JsonFormatConfProvider" />
+            <New class="io.eguan.vold.rest.providers.JsonFormatConfProvider" />
         </Arg>
     </Call>
     <Call name="addProvider">
         <Arg>
-            <New class="com.oodrive.nuage.vold.rest.providers.CustomResourceExceptionMapper" />
+            <New class="io.eguan.vold.rest.providers.CustomResourceExceptionMapper" />
         </Arg>
     </Call>
 

@@ -33,7 +33,7 @@ esac
 
 echo "Add user $NAME if not exists"
 if ! getent passwd $NAME >/dev/null; then    
-    sudo adduser $NAME --system --disabled-login --disabled-password  --no-create-home
+    sudo adduser $NAME --system --disabled-login --disabled-password --no-create-home
 fi
 
 echo "Change owner of the vold directory"
@@ -56,12 +56,12 @@ do
     sudo -u $NAME sed -i "s%$key%$value%g" $VOLD_DIR_ABS/rest.cfg
     
     # Change owner of IBPGEN path
-    if [ "$key" = "COM_OODRIVE_NUAGE_VVR_IBS_IBPGEN_PATH" ]; then
+    if [ "$key" = "IO_EGUAN_VVR_IBS_IBPGEN_PATH" ]; then
         sudo chown -R $NAME.nogroup $value
     fi
     
     # Change owner of IPBs path
-    if [ "$key" = "COM_OODRIVE_NUAGE_VVR_IBS_IPB_PATH" ]; then
+    if [ "$key" = "IO_EGUAN_VVR_IBS_IPB_PATH" ]; then
         for i in `echo $value | sed "s%,% %g"`; do 
             sudo chown -R $NAME.nogroup $i
         done

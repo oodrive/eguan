@@ -1,5 +1,5 @@
 #
-# Configuration file for nu@ge VVR creation.
+# Configuration file for eguan VVR creation.
 #
 # Without any change, this file works 'out-of-the-box', but does not define
 # a safe configuration. You MUST update the values defined in the 'MUST READ'
@@ -22,11 +22,11 @@
 
 # =============================================================================
 # 'MUST READ' SECTION
-# Parameters in this section must be understood and set to custom values or at 
+# Parameters in this section must be understood and set to custom values or at
 # least acknowledged as valid by the user.
 # =============================================================================
 
-# com.oodrive.nuage.vvr.ibs.ibp.path takes a comma-separated list of path for
+# io.eguan.vvr.ibs.ibp.path takes a comma-separated list of path for
 # cold and immutable IBP data.
 #
 # The given path list is used to store the raw data and must provide sufficient
@@ -36,30 +36,30 @@
 #   user running the vold daemon.
 # - Paths must not point to the same directory or sub-directories of each other
 #   and have no common sub-directories with
-#   com.oodrive.nuage.vvr.ibs.ibpgen.path, either.
+#   io.eguan.vvr.ibs.ibpgen.path, either.
 #
 # Default value: undefined
-# Example: com.oodrive.nuage.vvr.ibs.ibp.path=/dir1,/dir2
+# Example: io.eguan.vvr.ibs.ibp.path=/dir1,/dir2
 #
-com.oodrive.nuage.vvr.ibs.ibp.path=/tmp/ibsIbp
+io.eguan.vvr.ibs.ibp.path=/tmp/ibsIbp
 
-# com.oodrive.nuage.vvr.ibs.ibpgen.path takes a path to store hot data and
+# io.eguan.vvr.ibs.ibpgen.path takes a path to store hot data and
 # persist configuration.
 #
 # The given path must point to an existing directory where short-lived data and
 # persistent configuration will be stored.
 # This location must provide moderate capacity but superior performance as 'hot'
 # data is temporarily stored for fast low-latency access before being committed
-# to slower storage locations pointed to by com.oodrive.nuage.vvr.ibs.ibp.path.
+# to slower storage locations pointed to by io.eguan.vvr.ibs.ibp.path.
 #
 # - The given path must be writable by the user running the vold daemon.
 # - For reasons mentioned above, it must not point to the same directory or a
-#   sub-directory of any path given under com.oodrive.nuage.vvr.ibs.ibp.path.
+#   sub-directory of any path given under io.eguan.vvr.ibs.ibp.path.
 #
 # Default value: undefined
-# Example: com.oodrive.nuage.vvr.ibs.ibpgen.path=/some/dir
+# Example: io.eguan.vvr.ibs.ibpgen.path=/some/dir
 #
-com.oodrive.nuage.vvr.ibs.ibpgen.path=/tmp/ibsIbpGen
+io.eguan.vvr.ibs.ibpgen.path=/tmp/ibsIbpGen
 
 # =============================================================================
 # END 'MUST READ' SECTION
@@ -72,27 +72,27 @@ com.oodrive.nuage.vvr.ibs.ibpgen.path=/tmp/ibsIbpGen
 # along the way, yet with the option to going back to the safe default.
 # =============================================================================
 
-# com.oodrive.nuage.vvr.common.hash.algorithm takes the identifier of a hash
+# io.eguan.vvr.common.hash.algorithm takes the identifier of a hash
 # algorithm to use for computing data block hash keys.
 #
 # Legal values are:
 # MD5, SHA1, SHA256, SHA512 and TIGER.
 #
 # Default value: MD5
-# Example: com.oodrive.nuage.vvr.common.hash.algorithm=SHA1
+# Example: io.eguan.vvr.common.hash.algorithm=SHA1
 #
-#com.oodrive.nuage.vvr.common.hash.algorithm=MD5
+#io.eguan.vvr.common.hash.algorithm=MD5
 
-# com.oodrive.nuage.vvr.ibs.loglevel defines how verbose IBS logging should be.
+# io.eguan.vvr.ibs.loglevel defines how verbose IBS logging should be.
 #
 # Valid log levels are: fatal, error, warn, info, debug, trace, off
 #
 # Default value: warn
-# Example: com.oodrive.nuage.vvr.ibs.loglevel=info
+# Example: io.eguan.vvr.ibs.loglevel=info
 #
-#com.oodrive.nuage.vvr.ibs.loglevel=warn
+#io.eguan.vvr.ibs.loglevel=warn
 
-# com.oodrive.nuage.vvr.ibs.compression sets the data compression option on the
+# io.eguan.vvr.ibs.compression sets the data compression option on the
 # file block storage.
 #
 # Compression uses more CPU and less disk space.
@@ -100,9 +100,9 @@ com.oodrive.nuage.vvr.ibs.ibpgen.path=/tmp/ibsIbpGen
 # Legal values are 'front', 'back' and 'no'.
 #
 # Default value: back
-# Example: com.oodrive.nuage.vvr.ibs.compression=front
+# Example: io.eguan.vvr.ibs.compression=front
 #
-#com.oodrive.nuage.vvr.ibs.compression=no
+#io.eguan.vvr.ibs.compression=no
 
 # =============================================================================
 # END ADVANCED SECTION
@@ -115,87 +115,87 @@ com.oodrive.nuage.vvr.ibs.ibpgen.path=/tmp/ibsIbpGen
 # Change them at your own risk.
 # =============================================================================
 
-# com.oodrive.nuage.vvr.common.device.block.size sets the device block size in
+# io.eguan.vvr.common.device.block.size sets the device block size in
 # bytes.
 #
 # This value determines the block size in bytes used for all devices managed by
 # the VVR. All devices and snapshots are built from blocks this size and will
 # not function unless the correct value is used.
-# A block is used as basic unit of deduplication and it's size must therefore 
+# A block is used as basic unit of deduplication and it's size must therefore
 # be chosen with care.
 # Alter only when creating a new VVR from scratch and considering the CPU,
 # memory and disk usage implications.
 #
 # Default value: 4096
-# Example: com.oodrive.nuage.vvr.common.device.block.size = 8192
+# Example: io.eguan.vvr.common.device.block.size = 8192
 #
-#com.oodrive.nuage.vvr.common.device.block.size = 4096
+#io.eguan.vvr.common.device.block.size = 4096
 
-# com.oodrive.nuage.vvr.persistence.nrs.devices.directory defines the relative
-# path based on com.oodrive.nuage.nrs.storage to store
+# io.eguan.vvr.persistence.nrs.devices.directory defines the relative
+# path based on io.eguan.nrs.storage to store
 # persistent metadata files associated to devices.
 #
 # Once set for a given persistent repository, this path is used to reload the
-# state from disk and must not have been changed between runs. 
-# It is recommended to change only if storage volumes and/or 
+# state from disk and must not have been changed between runs.
+# It is recommended to change only if storage volumes and/or
 # mount points require it.
 #
 # Default value: devices
-# Example: com.oodrive.nuage.vvr.persistence.nrs.devices.directory=devices
+# Example: io.eguan.vvr.persistence.nrs.devices.directory=devices
 #
-#com.oodrive.nuage.vvr.persistence.nrs.devices.directory=devices
+#io.eguan.vvr.persistence.nrs.devices.directory=devices
 
-# com.oodrive.nuage.vvr.persistence.nrs.snapshots.directory defines the 
-# relative path based on com.oodrive.nuage.nrs.storage to store
+# io.eguan.vvr.persistence.nrs.snapshots.directory defines the
+# relative path based on io.eguan.nrs.storage to store
 # persistent metadata files associated to snapshots.
 #
 # Once set for a given persistent repository, this path is used to reload the
-# state from disk and must not have been changed between runs. 
-# It is recommended to change only if storage volumes and/or 
+# state from disk and must not have been changed between runs.
+# It is recommended to change only if storage volumes and/or
 # mount points require it.
 #
 # Default value: snapshots
-# Example: com.oodrive.nuage.vvr.persistence.nrs.snapshots.directory=snapshots
+# Example: io.eguan.vvr.persistence.nrs.snapshots.directory=snapshots
 #
-#com.oodrive.nuage.vvr.persistence.nrs.snapshots.directory=snapshots
+#io.eguan.vvr.persistence.nrs.snapshots.directory=snapshots
 
-# com.oodrive.nuage.nrs.images.directory defines the relative
-# path based on com.oodrive.nuage.nrs.storage to store
+# io.eguan.nrs.images.directory defines the relative
+# path based on io.eguan.nrs.storage to store
 # persistent metadata files associated to repository block area images.
 #
 # Once set for a given persistent repository, this path is used to reload the
-# state from disk and must not have been changed between runs. 
-# It is recommended to change only if storage volumes and/or 
+# state from disk and must not have been changed between runs.
+# It is recommended to change only if storage volumes and/or
 # mount points require it.
 #
 # Default value: items
-# Example: com.oodrive.nuage.nrs.images.directory=images
+# Example: io.eguan.nrs.images.directory=images
 #
-#com.oodrive.nuage.nrs.images.directory=images
+#io.eguan.nrs.images.directory=images
 
-# com.oodrive.nuage.nrs.cluster.size takes the size of clusters
+# io.eguan.nrs.cluster.size takes the size of clusters
 # NRS file data are internally aligned to in bytes.
 #
 # As with most persistence parameters, it is not recommended to change them
 # between runs if existing persistent data is to be reloaded.
-# Probable (but unconfirmed) repercussions of changing this value are 
+# Probable (but unconfirmed) repercussions of changing this value are
 # persistent data disk space consumption and/or I/O performance, so change only
 # when trying to affect one or both of them.
 #
 # Default value: 4096
 # Minimum value: 1024
 # Maximum value: 32768
-# Example: com.oodrive.nuage.nrs.cluster.size=16384
+# Example: io.eguan.nrs.cluster.size=16384
 #
-#com.oodrive.nuage.nrs.cluster.size=4096
+#io.eguan.nrs.cluster.size=4096
 
-# com.oodrive.nuage.nrs.remaining.space.create.limit defines the
+# io.eguan.nrs.remaining.space.create.limit defines the
 # percentage of storage capacity left on the storage volume used for
 # persistence from which the storage provider should refuse to create new
 # objects.
 #
 # This applies to the location set by
-# com.oodrive.nuage.nrs.storage, but any object creation
+# io.eguan.nrs.storage, but any object creation
 # within the persistent VVR should raise an error on hitting the given limit.
 # Depending on the size of the volume provided to persist VVR data this serves
 # as an early warning mechanism to make new item allocation fail way before I/O
@@ -204,28 +204,28 @@ com.oodrive.nuage.vvr.ibs.ibpgen.path=/tmp/ibsIbpGen
 # Default value: 1
 # Minimum value: 0
 # Maximum value: 99
-# Example: com.oodrive.nuage.nrs.remaining.space.create.limit=85
+# Example: io.eguan.nrs.remaining.space.create.limit=85
 #
-#com.oodrive.nuage.nrs.remaining.space.create.limit=1
+#io.eguan.nrs.remaining.space.create.limit=1
 
-# com.oodrive.nuage.filemapping.filemapper denotes the file mapper
+# io.eguan.filemapping.filemapper denotes the file mapper
 # implementation to use.
 #
 # Choices are between FLAT and DEEP. FLAT provides an identity mapping and
 # DEEP adding sub-directories determined by the
-# com.oodrive.nuage.filemapping.dir.structure.depth and
-# com.oodrive.nuage.filemapping.dir.prefix.length values.
+# io.eguan.filemapping.dir.structure.depth and
+# io.eguan.filemapping.dir.prefix.length values.
 #
 # Default value: DEEP
-# Example: com.oodrive.nuage.filemapping.filemapper=FLAT
+# Example: io.eguan.filemapping.filemapper=FLAT
 #
-#com.oodrive.nuage.filemapping.filemapper=DEEP
+#io.eguan.filemapping.filemapper=DEEP
 
-# com.oodrive.nuage.filemapping.dir.structure.depth is the directory
+# io.eguan.filemapping.dir.structure.depth is the directory
 # structure depth for the DEEP file mapper.
 #
 # The value set for this key multiplied by the value set for
-# com.oodrive.nuage.filemapping.dir.prefix.length must not exceed the
+# io.eguan.filemapping.dir.prefix.length must not exceed the
 # length of the string representation of a UUID, i.e. 32.
 #
 # For example, using default values, the filename
@@ -235,15 +235,15 @@ com.oodrive.nuage.vvr.ibs.ibpgen.path=/tmp/ibsIbpGen
 # Default value: 1
 # Minimum value: 1
 # Maximum value: 31
-# Example: com.oodrive.nuage.filemapping.dir.structure.depth=4
+# Example: io.eguan.filemapping.dir.structure.depth=4
 #
-#com.oodrive.nuage.filemapping.dir.structure.depth = 1
+#io.eguan.filemapping.dir.structure.depth = 1
 
-# com.oodrive.nuage.filemapping.dir.prefix.length is the filename prefix
+# io.eguan.filemapping.dir.prefix.length is the filename prefix
 # length to use for the DEEP file mapper.
 #
 # The value set for this key multiplied by the value set for
-# com.oodrive.nuage.filemapping.dir.structure.depth must not exceed the
+# io.eguan.filemapping.dir.structure.depth must not exceed the
 # length of the string representation of a UUID, i.e. 32.
 #
 # For example, using default values, the filename
@@ -253,58 +253,58 @@ com.oodrive.nuage.vvr.ibs.ibpgen.path=/tmp/ibsIbpGen
 # Default value: 2
 # Minimum value: 1
 # Maximum value: 31
-# Example: com.oodrive.nuage.filemapping.dir.prefix.length = 4
+# Example: io.eguan.filemapping.dir.prefix.length = 4
 #
-#com.oodrive.nuage.filemapping.dir.prefix.length = 2
+#io.eguan.filemapping.dir.prefix.length = 2
 
-# com.oodrive.nuage.vvr.ibs.record.execution defines the file path of the 
-# record file when debugging the ibs. The indicated file must exists and be 
+# io.eguan.vvr.ibs.record.execution defines the file path of the
+# record file when debugging the ibs. The indicated file must exists and be
 # writable to store all calls. The easiest way to use this option is to create
-# the file with touch system utility and indicate the full path name of the 
-# file as the option value. 
+# the file with touch system utility and indicate the full path name of the
+# file as the option value.
 #
-# This option is optional, but if it's set and not valid Ibs will return with 
+# This option is optional, but if it's set and not valid Ibs will return with
 # a configuration error.
 #
 # by default this option is not activated
-# Example: com.oodrive.nuage.vvr.ibs.record.execution=/tmp/anExistingFile
-#com.oodrive.nuage.vvr.ibs.record.execution=/tmp/anExistingFile
+# Example: io.eguan.vvr.ibs.record.execution=/tmp/anExistingFile
+#io.eguan.vvr.ibs.record.execution=/tmp/anExistingFile
 
-# com.oodrive.nuage.vvr.ibs.ldb.blocksize defines the block size used by
+# io.eguan.vvr.ibs.ldb.blocksize defines the block size used by
 # levelDB instances within the IBS. This parameter is given using bytes.
 #
 # default levelDB value: 4096
-# Example: com.oodrive.nuage.vvr.ibs.ldb.blocksize=4096
-#com.oodrive.nuage.vvr.ibs.ldb.blocksize=4096
+# Example: io.eguan.vvr.ibs.ldb.blocksize=4096
+#io.eguan.vvr.ibs.ldb.blocksize=4096
 
-# com.oodrive.nuage.vvr.ibs.ldb.blockrestartinterval defines the block restart
+# io.eguan.vvr.ibs.ldb.blockrestartinterval defines the block restart
 # interval for levelDB used by the IBS. More details may be found in the
 # levelDB documentation.
-# 
+#
 # default levelDB value: 16
-# Example: com.oodrive.nuage.vvr.ibs.ldb.blockrestartinterval=16
-#com.oodrive.nuage.vvr.ibs.ldb.blockrestartinterval=16
+# Example: io.eguan.vvr.ibs.ldb.blockrestartinterval=16
+#io.eguan.vvr.ibs.ldb.blockrestartinterval=16
 
-# com.oodrive.nuage.vvr.ibs.ldb.bufferrotationthreshold defines the number of
+# io.eguan.vvr.ibs.ldb.bufferrotationthreshold defines the number of
 # record after the IBS will trigger buffer rotation in a given time interval
 # This value is only a hint IBS won't block writes to create a new buffer,
 # to enhance write performance it's better to increment write buffer size.
 # (see other parameters).
 #
 # Default value: 65536
-# Example: com.oodrive.nuage.vvr.ibs.ldb.bufferrotationthreshold=16384
-#com.oodrive.nuage.vvr.ibs.ldb.bufferrotationthreshold=16384
+# Example: io.eguan.vvr.ibs.ldb.bufferrotationthreshold=16384
+#io.eguan.vvr.ibs.ldb.bufferrotationthreshold=16384
 
-# com.oodrive.nuage.vvr.ibs.ldb.bufferrotationdelay defines the time (in
+# io.eguan.vvr.ibs.ldb.bufferrotationdelay defines the time (in
 # seconds) after which the IBS will trigger buffer if no write operation
 # happens.
 #
 # Default value: 30
-# Example: com.oodrive.nuage.vvr.ibs.ldb.bufferrotationdelay=16384
-#com.oodrive.nuage.vvr.ibs.ldb.bufferrotationdelay=30
+# Example: io.eguan.vvr.ibs.ldb.bufferrotationdelay=16384
+#io.eguan.vvr.ibs.ldb.bufferrotationdelay=30
 
-# com.oodrive.nuage.vvr.ibs.ldb.writedelaythreshold defines the threshold 
-# in microseconds measured against the number of levelDB instances held by 
+# io.eguan.vvr.ibs.ldb.writedelaythreshold defines the threshold
+# in microseconds measured against the number of levelDB instances held by
 # the IBS hot data buffer above which write operations are delayed.
 #
 # if i is the number of levelDB instances, t is the threshold, l the level
@@ -316,42 +316,42 @@ com.oodrive.nuage.vvr.ibs.ibpgen.path=/tmp/ibsIbpGen
 # with the size of hot data storage and available RAM in mind.
 #
 # Default value: 15
-# Example: com.oodrive.nuage.vvr.ibs.ldb.writedelaythreshold=20
-#com.oodrive.nuage.vvr.ibs.ldb.writedelaythreshold=15
+# Example: io.eguan.vvr.ibs.ldb.writedelaythreshold=20
+#io.eguan.vvr.ibs.ldb.writedelaythreshold=15
 
-# com.oodrive.nuage.vvr.ibs.ldb.writedelaylevelsize holds the size of one
+# io.eguan.vvr.ibs.ldb.writedelaylevelsize holds the size of one
 # level in the write delay process as a number of levelDB instances in hot
 # data. For every level in excess of the defined threshold, an additional
 # delay is applied to write operations.
 #
 # Default value: 5
-# Example: com.oodrive.nuage.vvr.ibs.ldb.writedelaylevelsize=3
-#com.oodrive.nuage.vvr.ibs.ldb.writedelaylevelsize=5
+# Example: io.eguan.vvr.ibs.ldb.writedelaylevelsize=3
+#io.eguan.vvr.ibs.ldb.writedelaylevelsize=5
 
-# com.oodrive.nuage.vvr.ibs.ldb.writedelayincrement defines the number of
+# io.eguan.vvr.ibs.ldb.writedelayincrement defines the number of
 # milliseconds by which each write operation will be delayed for every level
 # above the threshold.
 #
 # Default value: 10
-# Example: com.oodrive.nuage.vvr.ibs.ldb.writedelayincrement=5
-#com.oodrive.nuage.vvr.ibs.ldb.writedelayincrement=10
+# Example: io.eguan.vvr.ibs.ldb.writedelayincrement=5
+#io.eguan.vvr.ibs.ldb.writedelayincrement=10
 
-# com.oodrive.nuage.vvr.ibs.dumpAtStopBestEffortDelay defines the number of
+# io.eguan.vvr.ibs.dumpAtStopBestEffortDelay defines the number of
 # seconds to spend at stop for dumping IbpGen databases.
 #
 # Default value: 5
-# Example: com.oodrive.nuage.vvr.ibs.dumpAtStopBestEffortDelay=2
-#com.oodrive.nuage.vvr.ibs.dumpAtStopBestEffortDelay=5
+# Example: io.eguan.vvr.ibs.dumpAtStopBestEffortDelay=2
+#io.eguan.vvr.ibs.dumpAtStopBestEffortDelay=5
 
-# com.oodrive.nuage.vvr.ibs.autoConfRamSize defines the ram size to use
+# io.eguan.vvr.ibs.autoConfRamSize defines the ram size to use
 # in bytes. Recommended value it less than 65% of total ram size.
 #
 # If not set (or set to 0) will use 65% of total memory.
 # For example if the total memory is 8248082432 will use 5361253580.
 #
 # Default value: 65% of total memory
-# Example: com.oodrive.nuage.vvr.ibs.autoConfRamSize=268435456
-#com.oodrive.nuage.vvr.ibs.autoConfRamSize=8248082432
+# Example: io.eguan.vvr.ibs.autoConfRamSize=268435456
+#io.eguan.vvr.ibs.autoConfRamSize=8248082432
 
 # =============================================================================
 # END EXPERT SECTION
@@ -363,13 +363,13 @@ com.oodrive.nuage.vvr.ibs.ibpgen.path=/tmp/ibsIbpGen
 # created.
 # =============================================================================
 
-# com.oodrive.nuage.nrs.storage defines the path to store
+# io.eguan.nrs.storage defines the path to store
 # persistent repository metadata.
 #
 # Persistent storage for the metadata is used to manage all information on
 # snapshots, devices and data blocks associated to them.
 # It usually takes less than 1% of the capacity used by raw data
-# (com.oodrive.nuage.vvr.ibs.ibp.path), but should preferably be located on a
+# (io.eguan.vvr.ibs.ibp.path), but should preferably be located on a
 # fast and low-latency storage.
 #
 # The expected value is a path pointing to an existing directory for metadata
@@ -379,25 +379,25 @@ com.oodrive.nuage.vvr.ibs.ibpgen.path=/tmp/ibsIbpGen
 # directory.
 #
 # Default value: undefined
-# Example: com.oodrive.nuage.nrs.storage=/another/dir
+# Example: io.eguan.nrs.storage=/another/dir
 #
-com.oodrive.nuage.nrs.storage=/tmp
+io.eguan.nrs.storage=/tmp
 
-# com.oodrive.nuage.vvr.ibs.owner.uuid defines the owner of the IBS. The value
+# io.eguan.vvr.ibs.owner.uuid defines the owner of the IBS. The value
 # is set automatically and must not be changed.
 #
 # Default value: undefined
-# Example: com.oodrive.nuage.vvr.ibs.owner.uuid=<some uuid>
+# Example: io.eguan.vvr.ibs.owner.uuid=<some uuid>
 #
-com.oodrive.nuage.vvr.ibs.owner.uuid=8b6bf7b8-3a17-11e2-8c84-180373e17308
+io.eguan.vvr.ibs.owner.uuid=8b6bf7b8-3a17-11e2-8c84-180373e17308
 
-# com.oodrive.nuage.vvr.common.node defines the node on which this VVR is
+# io.eguan.vvr.common.node defines the node on which this VVR is
 # running. The value is set automatically and must not be changed.
 #
 # Default value: undefined
-# Example: com.oodrive.nuage.vvr.common.node=<some uuid>
+# Example: io.eguan.vvr.common.node=<some uuid>
 #
-com.oodrive.nuage.vvr.common.node=8b6bf7b8-3a17-11e2-8c84-180373e17308
+io.eguan.vvr.common.node=8b6bf7b8-3a17-11e2-8c84-180373e17308
 
 # =============================================================================
 # END OVERRIDDEN SECTION

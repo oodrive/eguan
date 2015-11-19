@@ -10,7 +10,7 @@ remove_peers_config()
 {
     # save vold.cfg and remove peers
     sudo -u $NAME cp $VOLD_DIR_ABS/vold.cfg $VOLD_DIR_ABS/vold.cfg.temp
-    sudo -u $NAME sed -i '/com.oodrive.nuage.vold.peers/d' $VOLD_DIR_ABS/vold.cfg
+    sudo -u $NAME sed -i '/io.eguan.vold.peers/d' $VOLD_DIR_ABS/vold.cfg
 }
 
 add_peers_config()

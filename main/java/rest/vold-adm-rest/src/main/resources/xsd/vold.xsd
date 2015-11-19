@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<xsd:schema xmlns:vold="http://www.oodrive.com/nuage/vold/model" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+<xsd:schema xmlns:vold="http://www.eguan.io/vold/model" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
     jxb:version="2.0" xmlns:jxb="http://java.sun.com/xml/ns/jaxb" xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
-    jxb:extensionBindingPrefixes="xjc" targetNamespace="http://www.oodrive.com/nuage/vold/model">
+    jxb:extensionBindingPrefixes="xjc" targetNamespace="http://www.eguan.io/vold/model">
     <xsd:annotation>
         <xsd:appinfo>
             <jxb:bindings node="/xsd:schema">
@@ -174,14 +174,14 @@
                 <xsd:attribute name="quota" type="xsd:long" use="optional">
                     <xsd:annotation>
                         <xsd:documentation>Maximum size in bytes. Set by an administrator of
-                            nu@ge
+                            eguan
                         </xsd:documentation>
                     </xsd:annotation>
                 </xsd:attribute>
                 <xsd:attribute name="instanceCount" type="xsd:int" use="required">
                     <xsd:annotation>
                         <xsd:documentation>Number of copies of the VVR to create Set by an
-                            administrator of nu@ge
+                            administrator of eguan
                         </xsd:documentation>
                     </xsd:annotation>
                 </xsd:attribute>

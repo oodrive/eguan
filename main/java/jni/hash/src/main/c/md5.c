@@ -285,11 +285,11 @@ extern jbyteArray getByteStrArray(JNIEnv *env, jobject data);
 #define ERR_EXCEPTION                   2
 
 /*
- * Class:     com_oodrive_nuage_hash_MD5Native
+ * Class:     io_eguan_hash_MD5Native
  * Method:    md5Native
  * Signature: (Ljava/nio/ByteBuffer;IILjava/nio/ByteBuffer;I)I
  */
-JNIEXPORT int JNICALL Java_com_oodrive_nuage_hash_MD5Native_md5NativeDirect(JNIEnv *env , const jclass clazz,
+JNIEXPORT int JNICALL Java_io_eguan_hash_MD5Native_md5NativeDirect(JNIEnv *env , const jclass clazz,
         const jobject src, const jint offsetSrc, const jint lengthSrc, const jobject dst, const jint offsetDst) {
     /* Ignored parameter */
     (void) clazz;
@@ -319,11 +319,11 @@ JNIEXPORT int JNICALL Java_com_oodrive_nuage_hash_MD5Native_md5NativeDirect(JNIE
 }
 
 /*
- * Class:     com_oodrive_nuage_hash_MD5Native
+ * Class:     io_eguan_hash_MD5Native
  * Method:    md5Native
  * Signature: ([BIILjava/nio/ByteBuffer;I)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_hash_MD5Native_md5Native(JNIEnv *env, const jclass clazz,
+JNIEXPORT jint JNICALL Java_io_eguan_hash_MD5Native_md5Native(JNIEnv *env, const jclass clazz,
         const jbyteArray src, const jint offsetSrc, const jint lengthSrc, const jobject dst, const jint offsetDst) {
     /* Ignored parameter */
     (void) clazz;
@@ -357,11 +357,11 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_hash_MD5Native_md5Native(JNIEnv *e
 }
 
 /*
- * Class:     com_oodrive_nuage_hash_MD5Native
+ * Class:     io_eguan_hash_MD5Native
  * Method:    md5NativeByteStr
  * Signature: (Lcom/google/protobuf/ByteString;Ljava/nio/ByteBuffer;I)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_hash_MD5Native_md5NativeByteStr(JNIEnv *env, const jclass clazz,
+JNIEXPORT jint JNICALL Java_io_eguan_hash_MD5Native_md5NativeByteStr(JNIEnv *env, const jclass clazz,
         const jobject src, const jobject dst, const jint offsetDst) {
     jbyteArray srcArray;
 
@@ -373,6 +373,6 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_hash_MD5Native_md5NativeByteStr(JN
         /* Unexpected value */
         return ERR_EXCEPTION;
     }
-    return Java_com_oodrive_nuage_hash_MD5Native_md5Native(env, clazz, srcArray, 0,
+    return Java_io_eguan_hash_MD5Native_md5Native(env, clazz, srcArray, 0,
             (*env)->GetArrayLength(env, srcArray), dst, offsetDst);
 }

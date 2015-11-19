@@ -18,7 +18,7 @@
  * #L%
  */
 /*
- * Native code of class com_oodrive_nuage_ibs_Ibs
+ * Native code of class io_eguan_ibs_IbsLevelDB
  */
 #include <jni.h>
 #include <libibsc.h>
@@ -42,11 +42,11 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved) {
 }
 
 /*
- * Class:     com_oodrive_nuage_ibs_Ibs
+ * Class:     io_eguan_ibs_Ibs
  * Method:    ibsCreate
  * Signature: (Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsCreate(JNIEnv *env, jclass clazz, jstring path) {
+JNIEXPORT jint JNICALL Java_io_eguan_ibs_IbsLevelDB_ibsCreate(JNIEnv *env, jclass clazz, jstring path) {
     /* Ignored parameter */
     (void) clazz;
 
@@ -68,11 +68,11 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsCreate(JNIEnv *e
 }
 
 /*
- * Class:     com_oodrive_nuage_ibs_Ibs
+ * Class:     io_eguan_ibs_Ibs
  * Method:    ibsInit
  * Signature: (Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsInit(JNIEnv *env, jclass clazz, jstring path) {
+JNIEXPORT jint JNICALL Java_io_eguan_ibs_IbsLevelDB_ibsInit(JNIEnv *env, jclass clazz, jstring path) {
     /* Ignored parameter */
     (void) clazz;
 
@@ -94,11 +94,11 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsInit(JNIEnv *env
 }
 
 /*
- * Class:     com_oodrive_nuage_ibs_Ibs
+ * Class:     io_eguan_ibs_Ibs
  * Method:    ibsStart
  * Signature: (I)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsStart(JNIEnv *env, jclass clazz, jint id) {
+JNIEXPORT jint JNICALL Java_io_eguan_ibs_IbsLevelDB_ibsStart(JNIEnv *env, jclass clazz, jint id) {
     /* Ignored parameters */
     (void) env;
     (void) clazz;
@@ -107,11 +107,11 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsStart(JNIEnv *en
 }
 
 /*
- * Class:     com_oodrive_nuage_ibs_Ibs
+ * Class:     io_eguan_ibs_Ibs
  * Method:    ibsStop
  * Signature: (I)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsStop(JNIEnv *env, jclass clazz, jint id) {
+JNIEXPORT jint JNICALL Java_io_eguan_ibs_IbsLevelDB_ibsStop(JNIEnv *env, jclass clazz, jint id) {
     /* Ignored parameters */
     (void) env;
     (void) clazz;
@@ -120,11 +120,11 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsStop(JNIEnv *env
 }
 
 /*
- * Class:     com_oodrive_nuage_ibs_Ibs
+ * Class:     io_eguan_ibs_Ibs
  * Method:    ibsDelete
  * Signature: (I)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsDelete(JNIEnv *env, jclass clazz, jint id) {
+JNIEXPORT jint JNICALL Java_io_eguan_ibs_IbsLevelDB_ibsDelete(JNIEnv *env, jclass clazz, jint id) {
     /* Ignored parameters */
     (void) env;
     (void) clazz;
@@ -133,11 +133,11 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsDelete(JNIEnv *e
 }
 
 /*
- * Class:     com_oodrive_nuage_ibs_Ibs
+ * Class:     io_eguan_ibs_Ibs
  * Method:    ibsDestroy
  * Signature: (I)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsDestroy(JNIEnv *env, jclass clazz, jint id) {
+JNIEXPORT jint JNICALL Java_io_eguan_ibs_IbsLevelDB_ibsDestroy(JNIEnv *env, jclass clazz, jint id) {
     /* Ignored parameters */
     (void) env;
     (void) clazz;
@@ -146,11 +146,11 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsDestroy(JNIEnv *
 }
 
 /*
- * Class:     com_oodrive_nuage_ibs_Ibs
+ * Class:     io_eguan_ibs_Ibs
  * Method:    ibsIsHotDataEnabled
  * Signature: (I)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsIsHotDataEnabled(JNIEnv *env, jclass clazz, jint id) {
+JNIEXPORT jint JNICALL Java_io_eguan_ibs_IbsLevelDB_ibsIsHotDataEnabled(JNIEnv *env, jclass clazz, jint id) {
     /* Ignored parameters */
     (void) env;
     (void) clazz;
@@ -159,11 +159,11 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsIsHotDataEnabled
 }
 
 /*
- * Class:     com_oodrive_nuage_ibs_Ibs
+ * Class:     io_eguan_ibs_Ibs
  * Method:    ibsGetDirect
  * Signature: (I[BLjava/nio/ByteBuffer;II)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsGetDirect(JNIEnv *env, jclass clazz, jint id,
+JNIEXPORT jint JNICALL Java_io_eguan_ibs_IbsLevelDB_ibsGetDirect(JNIEnv *env, jclass clazz, jint id,
         jbyteArray key, jobject data, jint offset, jint length) {
     /* Ignored parameter */
     (void) clazz;
@@ -206,11 +206,11 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsGetDirect(JNIEnv
 }
 
 /*
- * Class:     com_oodrive_nuage_ibs_Ibs
+ * Class:     io_eguan_ibs_Ibs
  * Method:    ibsGet
  * Signature: (I[B[BII)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsGet(JNIEnv *env, jclass clazz, jint id, jbyteArray key,
+JNIEXPORT jint JNICALL Java_io_eguan_ibs_IbsLevelDB_ibsGet(JNIEnv *env, jclass clazz, jint id, jbyteArray key,
         jbyteArray data, jint offset, jint length) {
     /* Ignored parameter */
     (void) clazz;
@@ -257,11 +257,11 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsGet(JNIEnv *env,
 }
 
 /*
- * Class:     com_oodrive_nuage_ibs_Ibs
+ * Class:     io_eguan_ibs_Ibs
  * Method:    ibsDel
  * Signature: (I[B)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsDel(JNIEnv *env, jclass clazz, jint id, jbyteArray key) {
+JNIEXPORT jint JNICALL Java_io_eguan_ibs_IbsLevelDB_ibsDel(JNIEnv *env, jclass clazz, jint id, jbyteArray key) {
     /* Ignored parameter */
     (void) clazz;
 
@@ -285,11 +285,11 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsDel(JNIEnv *env,
 }
 
 /*
- * Class:     com_oodrive_nuage_ibs_Ibs
+ * Class:     io_eguan_ibs_Ibs
  * Method:    ibsPutDirect
  * Signature: (II[BLjava/nio/ByteBuffer;II)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsPutDirect(JNIEnv *env, jclass clazz, jint id, jint txId,
+JNIEXPORT jint JNICALL Java_io_eguan_ibs_IbsLevelDB_ibsPutDirect(JNIEnv *env, jclass clazz, jint id, jint txId,
         jbyteArray key, jobject data, jint offset, jint length) {
     /* Ignored parameter */
     (void) clazz;
@@ -334,11 +334,11 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsPutDirect(JNIEnv
 }
 
 /*
- * Class:     com_oodrive_nuage_ibs_Ibs
+ * Class:     io_eguan_ibs_Ibs
  * Method:    ibsPut
  * Signature: (II[B[BII)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsPut(JNIEnv *env, jclass clazz, jint id, jint txId,
+JNIEXPORT jint JNICALL Java_io_eguan_ibs_IbsLevelDB_ibsPut(JNIEnv *env, jclass clazz, jint id, jint txId,
         jbyteArray key, jbyteArray data, jint offset, jint length) {
     /* Ignored parameter */
     (void) clazz;
@@ -381,11 +381,11 @@ static jclass protobufByteStringClass = NULL;
 static jfieldID protobufByteStringBytesField = NULL;
 
 /*
- * Class:     com_oodrive_nuage_ibs_IbsLevelDB
+ * Class:     io_eguan_ibs_IbsLevelDB
  * Method:    ibsPutByteStr
  * Signature: (I[BLcom/google/protobuf/ByteString;)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsPutByteStr(JNIEnv *env, jclass clazz, jint id,
+JNIEXPORT jint JNICALL Java_io_eguan_ibs_IbsLevelDB_ibsPutByteStr(JNIEnv *env, jclass clazz, jint id,
         jbyteArray key, jobject data) {
     jbyteArray dataArray;
 
@@ -413,16 +413,16 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsPutByteStr(JNIEn
         /* Unexpected value */
         return IBS__UNKNOW_ERROR;
     }
-    return Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsPut(env, clazz, id, 0, key, dataArray, 0,
+    return Java_io_eguan_ibs_IbsLevelDB_ibsPut(env, clazz, id, 0, key, dataArray, 0,
             (*env)->GetArrayLength(env, dataArray));
 }
 
 /*
- * Class:     com_oodrive_nuage_ibs_Ibs
+ * Class:     io_eguan_ibs_Ibs
  * Method:    ibsReplaceDirect
  * Signature: (II[B[BLjava/nio/ByteBuffer;II)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsReplaceDirect(JNIEnv *env, jclass clazz, jint id,
+JNIEXPORT jint JNICALL Java_io_eguan_ibs_IbsLevelDB_ibsReplaceDirect(JNIEnv *env, jclass clazz, jint id,
         jint txId, jbyteArray oldKey, jbyteArray newKey, jobject data, jint offset, jint length) {
     /* Ignored parameter */
     (void) clazz;
@@ -478,11 +478,11 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsReplaceDirect(JN
 }
 
 /*
- * Class:     com_oodrive_nuage_ibs_Ibs
+ * Class:     io_eguan_ibs_Ibs
  * Method:    ibsReplace
  * Signature: (II[B[B[BII)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsReplace(JNIEnv *env, jclass clazz, jint id, jint txId,
+JNIEXPORT jint JNICALL Java_io_eguan_ibs_IbsLevelDB_ibsReplace(JNIEnv *env, jclass clazz, jint id, jint txId,
         jbyteArray oldKey, jbyteArray newKey, jbyteArray data, jint offset, jint length) {
     /* Ignored parameter */
     (void) clazz;
@@ -532,11 +532,11 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsReplace(JNIEnv *
 }
 
 /*
- * Class:     com_oodrive_nuage_ibs_IbsLevelDB
+ * Class:     io_eguan_ibs_IbsLevelDB
  * Method:    ibsCreateTransaction
  * Signature: (I)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsCreateTransaction(JNIEnv *env, jclass clazz, jint id) {
+JNIEXPORT jint JNICALL Java_io_eguan_ibs_IbsLevelDB_ibsCreateTransaction(JNIEnv *env, jclass clazz, jint id) {
     /* Ignored parameter */
     (void) env;
     (void) clazz;
@@ -545,11 +545,11 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsCreateTransactio
 }
 
 /*
- * Class:     com_oodrive_nuage_ibs_IbsLevelDB
+ * Class:     io_eguan_ibs_IbsLevelDB
  * Method:    ibsCommitTransaction
  * Signature: (II)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsCommitTransaction(JNIEnv *env, jclass clazz, jint id,
+JNIEXPORT jint JNICALL Java_io_eguan_ibs_IbsLevelDB_ibsCommitTransaction(JNIEnv *env, jclass clazz, jint id,
         jint txId) {
     /* Ignored parameter */
     (void) env;
@@ -559,11 +559,11 @@ JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsCommitTransactio
 }
 
 /*
- * Class:     com_oodrive_nuage_ibs_IbsLevelDB
+ * Class:     io_eguan_ibs_IbsLevelDB
  * Method:    ibsRollbackTransaction
  * Signature: (II)I
  */
-JNIEXPORT jint JNICALL Java_com_oodrive_nuage_ibs_IbsLevelDB_ibsRollbackTransaction(JNIEnv *env, jclass clazz, jint id,
+JNIEXPORT jint JNICALL Java_io_eguan_ibs_IbsLevelDB_ibsRollbackTransaction(JNIEnv *env, jclass clazz, jint id,
         jint txId) {
     /* Ignored parameter */
     (void) env;

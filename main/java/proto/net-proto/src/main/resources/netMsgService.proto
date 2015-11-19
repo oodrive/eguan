@@ -1,5 +1,5 @@
 import "common.proto";
-package com.oodrive.nuage.proto.net;
+package io.eguan.proto.net;
 
 option optimize_for = LITE_RUNTIME;
 option java_outer_classname = "MsgWrapper";

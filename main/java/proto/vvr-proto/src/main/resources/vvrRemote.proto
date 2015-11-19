@@ -1,6 +1,6 @@
 import "common.proto";
 import "nrsRemote.proto";
-package com.oodrive.nuage.proto.vvr;
+package io.eguan.proto.vvr;
 
 // Smaller classes
 option optimize_for = LITE_RUNTIME;
@@ -51,9 +51,9 @@ message RemoteOperation {
     optional Item item = 8;
     optional Device device = 9; // (DEVICE) Maybe not be set if the header is set
     repeated Ibs ibs = 10; // IBS
-    repeated com.oodrive.nuage.proto.nrs.NrsFileHeaderMsg nrsFileHeader = 11;
-    repeated com.oodrive.nuage.proto.nrs.NrsVersion nrsVersions = 12; // message LIST
-    optional com.oodrive.nuage.proto.nrs.NrsFileUpdate nrsFileUpdate = 13; // message SET
-    optional com.oodrive.nuage.proto.nrs.NrsFileMapping nrsFileMapping = 14; // message UPDATE
+    repeated io.eguan.proto.nrs.NrsFileHeaderMsg nrsFileHeader = 11;
+    repeated io.eguan.proto.nrs.NrsVersion nrsVersions = 12; // message LIST
+    optional io.eguan.proto.nrs.NrsFileUpdate nrsFileUpdate = 13; // message SET
+    optional io.eguan.proto.nrs.NrsFileMapping nrsFileMapping = 14; // message UPDATE
     optional VoldPeerMsg peer = 15; // VOLD: add/remove a peer
 }

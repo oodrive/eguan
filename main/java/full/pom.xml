@@ -9,9 +9,9 @@
         <version>0.6-SNAPSHOT</version>
     </parent>
 
-    <artifactId>nuage-full</artifactId>
-    <name>nuage full</name>
-    <description>Builds the Java source of nuage and runs all the units tests within a single artifact</description>
+    <artifactId>eguan-full</artifactId>
+    <name>eguan full</name>
+    <description>Builds the Java source of eguan and runs all the units tests within a single artifact</description>
     <packaging>nar</packaging>
 
     <properties>

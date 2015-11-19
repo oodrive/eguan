@@ -31,8 +31,8 @@
 							</tool>
 							<tool id="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gpp.1390150626" name="GCC C++ Compiler" superClass="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gpp">
 								<option id="gnu.cpp.compiler.option.include.paths.1849089925" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${NUAGE_SHARED}/include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NUAGE_MAIN}/ibs/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${EGUAN_SHARED}/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${EGUAN_MAIN}/ibs/include&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1781572099" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -72,8 +72,8 @@
 							</tool>
 							<tool id="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gpp.853743984" name="GCC C++ Compiler" superClass="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gpp">
 								<option id="gnu.cpp.compiler.option.include.paths.1837605874" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${NUAGE_SHARED}/include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${NUAGE_MAIN}/ibs/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${EGUAN_SHARED}/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${EGUAN_MAIN}/ibs/include&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1332392905" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>

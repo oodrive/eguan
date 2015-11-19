@@ -58,7 +58,7 @@
                                     <directory>src/main</directory>
                                 </fileset>
                                 <fileset>
-                                    <directory>src/test/java/com/oodrive/nuage/vvr</directory>
+                                    <directory>src/test/java/io/eguan/vvr</directory>
                                     <excludes>
                                         <exclude>**/it/*.java</exclude>
                                     </excludes>

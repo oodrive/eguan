@@ -149,8 +149,8 @@
                                 <propertyName>surefireArgLine</propertyName>
                                 <!-- Exclude generated code from coverage -->
                                 <excludes>
-                                    <exclude>com.oodrive.nuage.proto.*</exclude>
-                                    <exclude>com.oodrive.nuage.vold.rest.generated.*</exclude>
+                                    <exclude>io.eguan.proto.*</exclude>
+                                    <exclude>io.eguan.vold.rest.generated.*</exclude>
                                     <exclude>*NarSystem*</exclude>
                                 </excludes>
                             </configuration>
@@ -168,8 +168,8 @@
                                 <outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
                                 <!-- Exclude generated code from coverage -->
                                 <excludes>
-                                    <exclude>com.oodrive.nuage.proto.*</exclude>
-                                    <exclude>com.oodrive.nuage.vold.rest.generated.*</exclude>
+                                    <exclude>io.eguan.proto.*</exclude>
+                                    <exclude>io.eguan.vold.rest.generated.*</exclude>
                                     <exclude>*NarSystem*</exclude>
                                 </excludes>
                             </configuration>

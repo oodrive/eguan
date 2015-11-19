@@ -14,7 +14,7 @@
 
     <name>Third-party projects</name>
     <description>
-    This project is the parent project for third-party projects, needed by the SP2 software.
+    This project is the parent project for third-party projects, needed by eguan.
     </description>
 
     <modules>
