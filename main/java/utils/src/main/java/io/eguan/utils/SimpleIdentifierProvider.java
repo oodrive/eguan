@@ -24,10 +24,10 @@ import java.util.UUID;
 
 /**
  * Basic identifier provider.
- * 
+ *
  * @author oodrive
  * @author llambert
- * 
+ *
  */
 public final class SimpleIdentifierProvider {
 
@@ -40,7 +40,7 @@ public final class SimpleIdentifierProvider {
 
     /**
      * Creates a new unique id out of the blue.
-     * 
+     *
      * @return a new (somehow random) unique id
      */
     public static final <F> UuidT<F> newId() {
@@ -50,7 +50,7 @@ public final class SimpleIdentifierProvider {
     /**
      * Create a new {@link UuidT} from the given {@link String}. The string format is the same as
      * {@link UUID#fromString(String)}.
-     * 
+     *
      * @param uuid
      *            uuid string to parse
      * @return a new {@link UuidT}.
@@ -61,7 +61,7 @@ public final class SimpleIdentifierProvider {
 
     /**
      * Create a new {@link UuidT} from the given {@link UUID}.
-     * 
+     *
      * @param uuid
      *            reference uuid
      * @return a new {@link UuidT}.
@@ -70,4 +70,13 @@ public final class SimpleIdentifierProvider {
         return new UuidT<F>(uuid);
     }
 
+    /**
+     * Simple UUID factory. Displays a new random {@link UUID} on the standard output of the process.
+     *
+     * @param args
+     *            ignored.
+     */
+    public static final void main(final String[] args) {
+        System.out.println(UUID.randomUUID().toString());
+    }
 }

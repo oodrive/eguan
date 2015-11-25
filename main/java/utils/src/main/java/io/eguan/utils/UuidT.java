@@ -91,8 +91,7 @@ public final class UuidT<F> {
         if (!(obj instanceof UuidT)) {
             return false;
         }
-        @SuppressWarnings("unchecked")
-        final UuidT<F> other = (UuidT<F>) obj;
+        final UuidT<?> other = (UuidT<?>) obj;
         return uuid.equals(other.uuid);
     }
 
