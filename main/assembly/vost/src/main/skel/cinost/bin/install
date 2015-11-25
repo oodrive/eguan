@@ -35,8 +35,8 @@ update_config()
             sudo chown -R $NAME.nogroup $value
         fi
     
-        # Change owner of IPBs path
-        if [ "$key" = "IO_EGUAN_VVR_IBS_IPB_PATH" ]; then
+        # Change owner of IBPs path
+        if [ "$key" = "IO_EGUAN_VVR_IBS_IBP_PATH" ]; then
             for i in `echo $value | sed "s%,% %g"`; do 
                 sudo chown -R $NAME.nogroup $i
             done

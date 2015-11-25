@@ -139,9 +139,9 @@ std::map<std::string, std::string> makeConfig(int n_ibp, bool hotData, int compr
         const std::string ibp_path = params->ibp_path;
         std::vector < std::string > ibpPaths;
         tokenizePath(ibp_path, ibpPaths);
-        for (auto& ipbDir : ibpPaths) {
-            FileTools::removeDirectory(ipbDir);
-            if (FileTools::createDirectory(ipbDir) == false) {
+        for (auto& ibpDir : ibpPaths) {
+            FileTools::removeDirectory(ibpDir);
+            if (FileTools::createDirectory(ibpDir) == false) {
                 /* TODO: handle exception */
             }
         }

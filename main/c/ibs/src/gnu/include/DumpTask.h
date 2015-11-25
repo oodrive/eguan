@@ -37,8 +37,8 @@ class IbpGenHandler;
  */
 class DumpTask: public AbstractTask<IbpGenHandler> {
     public:
-        DumpTask(IbpGenHandler& ipbGen) :
-                AbstractTask(ipbGen), dumping(false) {
+        DumpTask(IbpGenHandler& ibpGen) :
+                AbstractTask(ibpGen), dumping(false) {
         }
 
         virtual void createThread() {

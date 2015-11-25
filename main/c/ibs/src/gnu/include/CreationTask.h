@@ -124,8 +124,8 @@ inline void CreationConditions::reset() {
  */
 class CreationTask: public AbstractTask<IbpGenHandler> {
     public:
-        CreationTask(IbpGenHandler& ipbGen) :
-                AbstractTask(ipbGen), creationProtection(), conditions(), newestIndex(0) {
+        CreationTask(IbpGenHandler& ibpGen) :
+                AbstractTask(ibpGen), creationProtection(), conditions(), newestIndex(0) {
         }
 
         virtual void createThread() {

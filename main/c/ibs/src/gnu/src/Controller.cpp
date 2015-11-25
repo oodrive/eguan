@@ -501,13 +501,13 @@ bool Controller::checkIbpPath(const std::string& ibpgen_path, const std::vector<
 
     std::unique_ptr<ConfigFileReader> cfg(new ConfigFileReader(old_ibpgen_config));
     cfg->read();
-    std::string old_ipb_paths = cfg->getString(IBP_PATH);
+    std::string old_ibp_paths = cfg->getString(IBP_PATH);
     cfg.reset();
 
     // check ibp dirs
     std::vector<std::string> newIbps;
     std::vector<std::string> oldIbps;
-    if (!tokenizeIbpPathKeyAndCheck(old_ipb_paths, oldIbps))
+    if (!tokenizeIbpPathKeyAndCheck(old_ibp_paths, oldIbps))
         return false;
 
     newIbps = std::vector<std::string>(ibp_paths.begin(), ibp_paths.end());

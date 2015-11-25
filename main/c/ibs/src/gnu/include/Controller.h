@@ -217,7 +217,7 @@ class Controller: public AbstractController {
         /**
          * @brief Check that the persisted configuration file is consistent with the new one, checking ibp path.
          * @param Absolute path of the ibpgen
-         * @param Contain the ipb paths "list"
+         * @param Contain the ibp paths "list"
          * @return false only if the new configuration is not consistent concerning ibp path
          */
         bool checkIbpPath(const std::string& old_ibpgen_path, const std::vector<std::string>& ibp_paths);
