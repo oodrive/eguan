@@ -83,9 +83,11 @@ public abstract class IntegerConfigKey extends BoundedConfigKey<Integer> {
     }
 
     @Override
-    public final Integer parseValue(final String value) {
+    protected final Integer parseValue(final String value) {
         if (value.isEmpty()) {
-            return null;
+            // Returns the default value or null when there is no default value
+            final Integer defaultValue = (Integer) getDefaultValue();
+            return defaultValue;
         }
         return Integer.valueOf(Objects.requireNonNull(value));
     }

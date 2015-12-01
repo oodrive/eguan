@@ -57,7 +57,9 @@ public abstract class InetAddressConfigKey extends AbstractConfigKey {
     @Override
     protected final Object parseValue(final String value) throws IllegalArgumentException, NullPointerException {
         if (value.isEmpty()) {
-            return null;
+            // Returns the default value or null when there is no default value
+            final InetAddress defaultValue = (InetAddress) getDefaultValue();
+            return defaultValue;
         }
 
         try {

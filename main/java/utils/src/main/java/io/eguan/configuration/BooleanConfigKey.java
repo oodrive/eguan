@@ -68,7 +68,9 @@ public abstract class BooleanConfigKey extends AbstractConfigKey {
     @Override
     protected final Boolean parseValue(final String value) throws IllegalArgumentException, NullPointerException {
         if (value.isEmpty()) {
-            return null;
+            // Returns the default value or null when there is no default value
+            final Boolean defaultValue = (Boolean) getDefaultValue();
+            return defaultValue;
         }
 
         final String cleanValue = value.trim().toLowerCase();

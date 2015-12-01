@@ -9,9 +9,9 @@ package io.eguan.configuration;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,12 +28,12 @@ import javax.annotation.Nonnull;
 
 /**
  * Abstract implementation of the {@link ConfigKey} interface.
- * 
+ *
  * This class provides additional protected methods for internal usage.
- * 
+ *
  * @author oodrive
  * @author pwehrle
- * 
+ *
  */
 public abstract class AbstractConfigKey implements ConfigKey<MetaConfiguration> {
 
@@ -49,7 +49,7 @@ public abstract class AbstractConfigKey implements ConfigKey<MetaConfiguration> 
 
     /**
      * Validates a name against the {@link AbstractConfigKey}'s constraints on names.
-     * 
+     *
      * @param name
      *            the name to check against the mandatory syntax (i.e. {@value #NAME_REGEX})
      * @return {@code true} if the name is valid, {@code false} if the name is empty, {@code null} or otherwise invalid
@@ -68,7 +68,7 @@ public abstract class AbstractConfigKey implements ConfigKey<MetaConfiguration> 
 
     /**
      * Abstract constructor taking the mandatory name as argument.
-     * 
+     *
      * @param name
      *            the unique name identifying this key
      */
@@ -90,10 +90,10 @@ public abstract class AbstractConfigKey implements ConfigKey<MetaConfiguration> 
 
     /**
      * Gets the unique name to be used in .properties files for this key.
-     * 
+     *
      * The returned name uniquely identifies a configuration key within this context, following a syntax matching
      * {@value #NAME_REGEX}.
-     * 
+     *
      * @return the non-{@code null} unique name within the context
      */
     @Nonnull
@@ -103,14 +103,15 @@ public abstract class AbstractConfigKey implements ConfigKey<MetaConfiguration> 
 
     /**
      * Parses the given {@link String} value defined for the {@link ConfigKey}.
-     * 
+     *
      * This method returns a result of the accurate type if it can be parsed from the provided {@link String} value.
-     * 
+     *
      * If the method is passed an empty {@link String}, it can return either <code>null</code> or an empty String
-     * 
+     *
      * @param value
      *            the non-{@code null} value to parse as read from a .properties file.
-     * @return the typed value, <code>null</code> or an empty {@link String} iff the argument was an empty
+     * @return the typed value, or, when the <code>value</code> is empty, the default value or <code>null</code> if
+     *         there is no default value.
      * @throws IllegalArgumentException
      *             if no value can be parsed and/or conversion to the target type fails
      * @throws NullPointerException
@@ -122,7 +123,7 @@ public abstract class AbstractConfigKey implements ConfigKey<MetaConfiguration> 
      * Provides the inverse of {@link #parseValue(String)}, i.e. produces a {@link String} from the provided value that
      * can be parsed to the same (content) value by {@link #parseValue(String)}. Therefore, a <code>null</code>
      * parameter will be converted to an empty {@link String}.
-     * 
+     *
      * @param value
      *            the value of the same type as the one produced by {@link #parseValue(String)} or <code>null</code>
      * @return the {@link String} containing all the necessary information to be parsed back to the equivalent value
@@ -133,15 +134,15 @@ public abstract class AbstractConfigKey implements ConfigKey<MetaConfiguration> 
 
     /**
      * Checks the given value for validity regarding constraints defined by this {@link ConfigKey}.
-     * 
-     * 
+     *
+     *
      * The value parameter must be of the type obtained from {@link #parseValue(String)}.
      * <ul>
      * <li>allows {@code null} as a valid value for undefined values</li>
      * <li>performs basic sanity checks (not negative, correct syntax, ...) and</li>
      * <li>performs advanced range and domain checks (min and max limits, valid enum constant, ...).</li>
      * </ul>
-     * 
+     *
      * @param value
      *            the value to check, possibly {@code null}
      * @return a specific {@link ValidationError} if the check produced an error, {@link ValidationError#NO_ERROR}
@@ -151,9 +152,9 @@ public abstract class AbstractConfigKey implements ConfigKey<MetaConfiguration> 
 
     /**
      * Gets the default value for this key.
-     * 
+     *
      * Keys marked as required cannot have a non-{@code null} default value.
-     * 
+     *
      * @return the default value or {@code null} if there is none
      */
     protected abstract Object getDefaultValue();
@@ -161,7 +162,7 @@ public abstract class AbstractConfigKey implements ConfigKey<MetaConfiguration> 
     /**
      * Utility method that checks if the given configuration key is managed by the configuration provided and throw an
      * {@link IllegalStateException} if this is not the case.
-     * 
+     *
      * @param config
      *            the {@link MetaConfiguration} to check
      * @throws IllegalStateException
@@ -176,7 +177,7 @@ public abstract class AbstractConfigKey implements ConfigKey<MetaConfiguration> 
 
     /**
      * Checks if the given value is {@code null} and/or required.
-     * 
+     *
      * @param value
      *            the value to check
      * @return <ul>
@@ -201,9 +202,9 @@ public abstract class AbstractConfigKey implements ConfigKey<MetaConfiguration> 
 
     /**
      * Checks if the given {@link Object} is of the exact {@link Class} provided as second argument.
-     * 
+     *
      * As member classes pass this test, enums constants pass.
-     * 
+     *
      * @param value
      *            the Object to check
      * @param clazz
@@ -241,7 +242,7 @@ public abstract class AbstractConfigKey implements ConfigKey<MetaConfiguration> 
     /**
      * Return the {@link String} representation of this object, i.e. it's {@link Class#getCanonicalName() canonical
      * name}.
-     * 
+     *
      * Classes extending {@link AbstractConfigKey} are expected to be singletons, so this method is just for prettily
      * printing the class name.
      */

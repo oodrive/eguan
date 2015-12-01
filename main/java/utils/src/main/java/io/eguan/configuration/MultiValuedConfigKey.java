@@ -86,7 +86,10 @@ public abstract class MultiValuedConfigKey<T extends Collection<S>, S> extends A
             NullPointerException {
 
         if (value.isEmpty()) {
-            return null;
+            // Returns the default value or null when there is no default value
+            @SuppressWarnings("unchecked")
+            final T defaultValue = (T) getDefaultValue();
+            return defaultValue;
         }
 
         final String[] splitValues = value.split(separator);

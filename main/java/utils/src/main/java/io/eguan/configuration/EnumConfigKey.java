@@ -9,9 +9,9 @@ package io.eguan.configuration;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,11 +26,11 @@ import javax.annotation.Nonnull;
 
 /**
  * {@link ConfigKey} implementation taking the constants of one enum type as valid values.
- * 
+ *
  * @author oodrive
  * @author pwehrle
  * @author llambert
- * 
+ *
  * @param <E>
  *            the {@link Enum} type whose constants are accepted as valid values
  */
@@ -43,10 +43,10 @@ public abstract class EnumConfigKey<E extends Enum<E>> extends AbstractConfigKey
 
     /**
      * Constructs a key capable of validating all constants of the bound enum type.
-     * 
+     *
      * Providing the generic {@link Enum} type as argument is necessary as type erasure prevents runtime access to the
      * bound generic type.
-     * 
+     *
      * @param name
      *            the unique name of the configuration key
      * @param enumType
@@ -71,7 +71,10 @@ public abstract class EnumConfigKey<E extends Enum<E>> extends AbstractConfigKey
     @Override
     protected final E parseValue(final String value) throws IllegalArgumentException, NullPointerException {
         if (value.isEmpty()) {
-            return null;
+            // Returns the default value or null when there is no default value
+            @SuppressWarnings("unchecked")
+            final E defaultValue = (E) getDefaultValue();
+            return defaultValue;
         }
         return Enum.valueOf(this.enumClass, value);
     }

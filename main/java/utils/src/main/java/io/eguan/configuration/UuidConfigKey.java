@@ -54,7 +54,9 @@ public abstract class UuidConfigKey extends AbstractConfigKey {
     @Override
     protected final UUID parseValue(final String value) throws IllegalArgumentException, NullPointerException {
         if (value.isEmpty()) {
-            return null;
+            // Returns the default value or null when there is no default value
+            final UUID defaultValue = (UUID) getDefaultValue();
+            return defaultValue;
         }
         return UUID.fromString(Objects.requireNonNull(value));
     }

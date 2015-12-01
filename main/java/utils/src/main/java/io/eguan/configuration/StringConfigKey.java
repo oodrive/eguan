@@ -52,7 +52,9 @@ public abstract class StringConfigKey extends AbstractConfigKey {
     @Override
     protected final String parseValue(final String value) throws IllegalArgumentException, NullPointerException {
         if (value.isEmpty()) {
-            return "";
+            // Returns the default value or null when there is no default value
+            final String defaultValue = getDefaultValue();
+            return defaultValue;
         }
         return value;
     }

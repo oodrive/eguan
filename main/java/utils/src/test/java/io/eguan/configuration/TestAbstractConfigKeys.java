@@ -25,11 +25,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import io.eguan.configuration.AbstractConfigKey;
-import io.eguan.configuration.AbstractConfigurationContext;
-import io.eguan.configuration.ConfigValidationException;
-import io.eguan.configuration.MetaConfiguration;
-import io.eguan.configuration.ValidationError;
 import io.eguan.configuration.ValidationError.ErrorType;
 
 import java.io.ByteArrayInputStream;
@@ -118,7 +113,7 @@ public abstract class TestAbstractConfigKeys {
 
     /**
      * Tests successful execution of {@link AbstractConfigKey#parseValue(String)} with an empty {@link String} as
-     * parameter.
+     * parameter when the {@link AbstractConfigKey} does not have a default value.
      * 
      * @throws IllegalArgumentException
      *             if the value is not parsable. Considered a test failure.
@@ -135,6 +130,20 @@ public abstract class TestAbstractConfigKeys {
 
         assertEquals("", target.valueToString(value));
 
+    }
+
+    /**
+     * Tests that when the value is an empty {@link String} and when the {@link AbstractConfigKey} has a default value,
+     * the default value is returned.
+     */
+    @Test
+    public final void testParseValueEmptyDefaultString() {
+        final AbstractConfigKey target = getTestKey(false, true);
+
+        final Object value = target.parseValue("");
+        final Object defaultValue = target.getDefaultValue();
+
+        assertEquals(defaultValue, value);
     }
 
     /**

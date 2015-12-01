@@ -54,7 +54,9 @@ public abstract class UrlConfigKey extends AbstractConfigKey {
     @Override
     protected final URL parseValue(final String value) throws IllegalArgumentException, NullPointerException {
         if (value.isEmpty()) {
-            return null;
+            // Returns the default value or null when there is no default value
+            final URL defaultValue = (URL) getDefaultValue();
+            return defaultValue;
         }
         try {
             return new URL(value);

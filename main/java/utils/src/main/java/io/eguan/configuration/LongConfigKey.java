@@ -85,7 +85,9 @@ public abstract class LongConfigKey extends BoundedConfigKey<Long> {
     @Override
     protected final Long parseValue(final String value) throws IllegalArgumentException, NullPointerException {
         if (value.isEmpty()) {
-            return null;
+            // Returns the default value or null when there is no default value
+            final Long defaultValue = (Long) getDefaultValue();
+            return defaultValue;
         }
         return Long.valueOf(Objects.requireNonNull(value));
     }

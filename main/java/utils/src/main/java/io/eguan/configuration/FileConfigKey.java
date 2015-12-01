@@ -85,9 +85,11 @@ public abstract class FileConfigKey extends AbstractConfigKey {
     }
 
     @Override
-    public final File parseValue(final String value) throws IllegalArgumentException, NullPointerException {
+    protected final File parseValue(final String value) throws IllegalArgumentException, NullPointerException {
         if (value.isEmpty()) {
-            return null;
+            // Returns the default value or null when there is no default value
+            final File defaultValue = (File) getDefaultValue();
+            return defaultValue;
         }
         return new File(value);
     }

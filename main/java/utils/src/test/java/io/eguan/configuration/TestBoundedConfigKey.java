@@ -119,7 +119,9 @@ public final class TestBoundedConfigKey extends TestAbstractConfigKeys {
         protected final TestComparable parseValue(final String value) throws IllegalArgumentException,
                 NullPointerException {
             if (value.isEmpty()) {
-                return null;
+                // Returns the default value or null when there is no default value
+                final TestComparable defaultValue = (TestComparable) getDefaultValue();
+                return defaultValue;
             }
             return new TestComparable(Integer.parseInt(Objects.requireNonNull(value)));
         }

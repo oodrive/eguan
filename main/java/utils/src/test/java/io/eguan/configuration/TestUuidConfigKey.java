@@ -9,9 +9,9 @@ package io.eguan.configuration;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,19 +20,18 @@ package io.eguan.configuration;
  * #L%
  */
 
-import io.eguan.configuration.AbstractConfigKey;
-import io.eguan.configuration.UuidConfigKey;
-
 import java.util.UUID;
 
 /**
  * Implementation of {@link TestAbstractConfigKeys} for testing {@link UuidConfigKey}s.
- * 
+ *
  * @author oodrive
  * @author pwehrle
- * 
+ *
  */
 public final class TestUuidConfigKey extends TestAbstractConfigKeys {
+
+    private static final UUID DEFAULT_VALUE = UUID.randomUUID();
 
     @Override
     protected final AbstractConfigKey getTestKey(final boolean required, final boolean hasDefault) {
@@ -40,7 +39,7 @@ public final class TestUuidConfigKey extends TestAbstractConfigKeys {
 
             @Override
             protected final UUID getDefaultValue() {
-                return hasDefault ? UUID.randomUUID() : null;
+                return hasDefault ? DEFAULT_VALUE : null;
             }
 
             @Override
