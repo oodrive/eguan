@@ -13,8 +13,8 @@
     <name>Assembling projects</name>
 
     <modules>
+        <module>eguan</module>
         <module>ibstools</module>
         <module>vold</module>
-        <module>vost</module>
     </modules>
 </project>

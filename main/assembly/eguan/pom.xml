@@ -1,0 +1,269 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.eguan</groupId>
+        <artifactId>assembly</artifactId>
+        <version>0.6-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>eguan-assembly</artifactId>
+    <packaging>jar</packaging>
+    <name>Assembling eguan</name>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-nar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>expand-nar</id>
+                        <goals>
+                            <goal>nar-download</goal>
+                            <goal>nar-unpack</goal>
+                            <goal>nar-assembly</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Get the current git branch and commit -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <doCheck>false</doCheck>
+                    <doUpdate>false</doUpdate>
+                    <shortRevisionLength>10</shortRevisionLength>
+                </configuration>
+            </plugin>
+
+            <!-- Generate Version file with the revision number -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <configuration>
+                    <workingdirectory>${basedir}</workingdirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>version generate</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>src/main/assembly/version</executable>
+                            <arguments>
+                                <argument>-b ${scmBranch}</argument>
+                                <argument>-c ${buildNumber}</argument>
+                                <argument>-p ${project.build.directory}/VERSION</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>io.eguan.main.Eguan</mainClass>
+                        </manifest>
+                        <manifestEntries>
+                            <Class-Path>vold.jar rest-launcher.jar</Class-Path>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <!-- Run assembly during the packaging phase -->
+                <executions>
+                    <!-- Assembly VOLD+REST -->
+                    <execution>
+                        <id>make-assembly-eguan</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/eguan.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>rest-launcher</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>vold</artifactId>
+            <version>${project.version}</version>
+            <type>nar</type>
+        </dependency>
+        <!-- As the vold dependencies have been reduced, we have to add some dependencies to build a complete assembly (unpack 
+            of native libs) -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>vvr-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>hash-java</artifactId>
+            <version>${project.version}</version>
+            <type>nar</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>vold</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junitVersion}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>java-utils</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>eguanwui</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <!-- Run assembly during the packaging phase -->
+                        <executions>
+                            <!--Assembly VOLD+REST+WEBUI -->
+                            <execution>
+                                <id>make-assembly-eguanwui</id>
+                                <configuration>
+                                    <descriptors>
+                                        <descriptor>src/main/assembly/eguanwui.xml</descriptor>
+                                    </descriptors>
+                                </configuration>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+            <dependencies>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>webui</artifactId>
+                    <version>${project.version}</version>
+                    <type>war</type>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>eguancinder</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <!-- Run assembly during the packaging phase -->
+                        <executions>
+                            <!--Assembly VOLD+REST+CINDER -->
+                            <execution>
+                                <id>make-assembly-eguancinder</id>
+                                <configuration>
+                                    <descriptors>
+                                        <descriptor>src/main/assembly/eguancinder.xml</descriptor>
+                                    </descriptors>
+                                </configuration>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+            <dependencies>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>openstack-cinder</artifactId>
+                    <version>${project.version}</version>
+                    <type>zip</type>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>eguanwuicinder</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <!-- Run assembly during the packaging phase -->
+                        <executions>
+                            <!--Assembly VOLD+REST+CINDER+WEBUI -->
+                            <execution>
+                                <id>make-assembly-eguanwuicinder</id>
+                                <configuration>
+                                    <descriptors>
+                                        <descriptor>src/main/assembly/eguanwuicinder.xml</descriptor>
+                                    </descriptors>
+                                </configuration>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+            <dependencies>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>openstack-cinder</artifactId>
+                    <version>${project.version}</version>
+                    <type>zip</type>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>webui</artifactId>
+                    <version>${project.version}</version>
+                    <type>war</type>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+</project>

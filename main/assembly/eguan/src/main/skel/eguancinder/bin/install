@@ -1,0 +1,186 @@
+#!/bin/bash
+#
+# install a volume manager daemon, a rest server and a cinder volume server
+# Usage: $0 <path to VOLD>
+#
+NAME=eguan
+LAUNCH_DIR=`dirname $0`
+CONFIG_DIR=$LAUNCH_DIR/../config
+FIRSTNODE=0
+USAGE="Usage: $0 -d|--directory <path to VOLD> [--firstNode]"
+
+update_config()
+{
+    echo "Copy config files in vold directory"
+    sudo -u $NAME cp $CONFIG_DIR/vold-cfg.template $VOLD_DIR_ABS/vold.cfg
+    sudo -u $NAME cp $CONFIG_DIR/vvr-cfg.template $VOLD_DIR_ABS/vvr.cfg
+    sudo -u $NAME cp $CONFIG_DIR/rest-cfg.template $VOLD_DIR_ABS/rest.cfg
+    sudo -u $NAME cp $CONFIG_DIR/cinder-cfg.template $VOLD_DIR_ABS/cinder.cfg
+
+    # replace config value
+    while read key value
+    do
+        sudo -u $NAME sed -i "s%$key%$value%g" $VOLD_DIR_ABS/vold.cfg
+        sudo -u $NAME sed -i "s%$key%$value%g" $VOLD_DIR_ABS/vvr.cfg
+        sudo -u $NAME sed -i "s%$key%$value%g" $VOLD_DIR_ABS/rest.cfg
+        sudo -u $NAME sed -i "s%$key%$value%g" $VOLD_DIR_ABS/cinder.cfg
+    
+        if [ "$key" = "IO_EGUAN_VOLD_OWNER" ]; then
+            VOLD_OWNER_ID=$value
+            VOLD_OWNER=`echo $VOLD_OWNER_ID | sed "s/-//g"`
+        fi
+    
+        # Change owner of IBPGEN path
+        if [ "$key" = "IO_EGUAN_VVR_IBS_IBPGEN_PATH" ]; then
+            sudo chown -R $NAME.nogroup $value
+        fi
+    
+        # Change owner of IBPs path
+        if [ "$key" = "IO_EGUAN_VVR_IBS_IBP_PATH" ]; then
+            for i in `echo $value | sed "s%,% %g"`; do 
+                sudo chown -R $NAME.nogroup $i
+            done
+        fi        
+    done <<< "`awk -F"=" '/=/{print $1,$2}' $CONFIG_DIR/$NAME.cfg`"
+
+    # get rest server address in rest.cfg
+    REST_ADDRESS=`awk -F"io.eguan.jetty.server.address=" '/io.eguan.jetty.server.address=/{print $2}' $VOLD_DIR_ABS/rest.cfg`
+    REST_PORT=`awk -F"io.eguan.jetty.server.port=" '/io.eguan.jetty.server.port=/{print $2}' $VOLD_DIR_ABS/rest.cfg`
+
+    # Get rest path
+    COMPLETE_REST_PATH=`awk -F"io.eguan.jetty.rest.contextpath=" '/io.eguan.jetty.rest.contextpath=/{print $2}' $VOLD_DIR_ABS/rest.cfg`
+    REST_PATH=`echo $COMPLETE_REST_PATH | sed "s%^/%%"` 
+
+    # add vold_rest_uri in cinder config file
+    VOLD_REST_URI="$VOLD_OWNER|http://$REST_ADDRESS:$REST_PORT/$REST_PATH"
+    sudo -u $NAME sed -i "s%VOLD_REST_URI%$VOLD_REST_URI%g" $VOLD_DIR_ABS/cinder.cfg
+}
+
+update_launch_script()
+{
+    echo "Copy launch script and replace vold path"
+    cp $CONFIG_DIR/$NAME.template $LAUNCH_DIR/$NAME
+    sed -i "s%VOLD_DIR_ABS%$VOLD_DIR_ABS%g" $LAUNCH_DIR/$NAME
+    
+    CINDER_PATH=$1
+    sed -i "s%CINDER_PATH%$CINDER_PATH%g" $LAUNCH_DIR/$NAME
+}
+
+update_boot_script()
+{
+    echo "Copy init script and replace $NAME path"
+    TEMPFILE=`mktemp`
+    cp $CONFIG_DIR/$NAME-ini.template $TEMPFILE
+    sed -i "s%PATH_TO_EGUAN%`pwd`/$LAUNCH_DIR%g" $TEMPFILE
+    sudo mv $TEMPFILE /etc/init.d/$NAME
+    sudo chmod 755 /etc/init.d/$NAME
+
+    echo "Install init script links"
+    sudo update-rc.d $NAME defaults
+}
+
+install_cinder()
+{
+    # make temporary directory
+    export OS_TMP_INSTALL=`mktemp -d`
+
+    # install cinder
+    EGG_FILE=`find -type f -name "openstack*.egg"`
+
+    if (( $? != 0 )); then
+        echo ".egg file not found";
+        return 1;
+    fi
+
+    # extract the install script
+    unzip -d $OS_TMP_INSTALL -j $EGG_FILE EGG-INFO/scripts/install-cinder
+
+    # set the target install path and execute the install script
+    export OS_PREFIX=${OS_PREFIX:-"./openstack_env"}
+    $OS_TMP_INSTALL/install-cinder $EGG_FILE
+
+    if (( $? != 0 )); then
+        echo "Cinder installation failed";
+        return 1;
+    fi
+
+    # convert to absolute path
+    export OS_PREFIX=`readlink -en $OS_PREFIX`
+
+    # move the config file to the target install path
+    sudo mv $VOLD_DIR_ABS/cinder.cfg $OS_PREFIX/etc/cinder/cinder.conf
+
+    # post-configure cinder.conf
+    sudo sed -i "s%CINDER_PREFIX%$OS_PREFIX%g" $OS_PREFIX/etc/cinder/cinder.conf
+
+    rm -rf $OS_TMP_INSTALL
+}
+
+do_abort()
+{
+    echo "Installation aborted - Remove all eguan installation files"
+    $LAUNCH_DIR/uninstall
+    exit 1
+}
+
+[ $# == 0 ] && echo $USAGE && exit 1
+i=1
+while [ $i -le $# ]; do
+    case "${!i}" in
+        -h|--help) echo $USAGE; exit 1;;
+        -d|--directory)
+        (( i++ ))
+        VOLD_DIR=${!i};;
+        --firstNode) FIRSTNODE=1;;
+        *) echo "Invalid argument"; exit 1;;
+    esac
+    (( i++ ))
+done
+
+[ ! -e "$VOLD_DIR" ] && echo "'$VOLD_DIR' does not exist" && exit 2
+[ ! -d "$VOLD_DIR" ] && echo "'$VOLD_DIR' is not a directory" && exit 3
+
+case "$VOLD_DIR" in
+     /*) export VOLD_DIR_ABS="$VOLD_DIR" ;;
+     *)  export VOLD_DIR_ABS="`pwd`/$VOLD_DIR" ;;
+esac
+
+
+trap do_abort SIGINT SIGTERM
+
+echo "Add user $NAME if not exists"
+if ! getent passwd $NAME >/dev/null; then    
+    sudo adduser $NAME --system --disabled-login --disabled-password --no-create-home
+fi
+
+echo "Change owner of the vold directory"
+sudo chown -R $NAME.nogroup $VOLD_DIR_ABS
+
+# Check if user EGUAN has RW access on VOLD directory now
+sudo -u $NAME [ ! -r $VOLD_DIR_ABS ] && echo "'$VOLD_DIR' is not readable by $NAME" && exit 4
+sudo -u $NAME [ ! -w $VOLD_DIR_ABS ] && echo "'$VOLD_DIR' is not writable by $NAME" && exit 4
+
+# Setup configuration
+update_config
+
+# Install cinder volume
+install_cinder
+
+# create a launch script without cinder volume
+update_launch_script ""
+
+# create an init script in /etc/init.d
+update_boot_script 
+
+# Start and setup the first node
+if [ "$FIRSTNODE" = 1 ]; then
+    $LAUNCH_DIR/install_first_node "$VOLD_DIR_ABS" "http://$REST_ADDRESS:$REST_PORT/$REST_PATH" "$VOLD_OWNER_ID"
+    if [ $? -eq 1 ]; then
+        echo "Can not install the first node - Remove all eguan installation files"
+    $LAUNCH_DIR/uninstall
+    exit 1
+    fi
+fi
+
+# Update the launch script with cinder volume path
+update_launch_script "$OS_PREFIX/bin/launch-cinder-volume"

@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+# uninstall the volume manager daemon, the rest server and the cinder volume service
+#
+
+NAME=eguan
+
+# stop service
+sudo /etc/init.d/$NAME stop
+
+# uninstall init script links
+sudo update-rc.d -f $NAME remove
+
+# delete init script
+sudo rm -f /etc/init.d/$NAME
+
+# remove user eguan if exists
+if getent passwd $NAME >/dev/null; then    
+    sudo userdel $NAME
+fi
+
+# uninstall cinder
+if [[ $OS_PREFIX != "" ]]; then
+    sudo $OS_PREFIX/bin/uninstall-cinder
+fi

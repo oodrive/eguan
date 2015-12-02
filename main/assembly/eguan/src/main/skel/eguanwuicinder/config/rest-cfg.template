@@ -1,0 +1,6 @@
+io.eguan.jetty.server.address=127.0.0.1
+io.eguan.jetty.server.port=8080
+io.eguan.jetty.shutdownOnExit=true
+io.eguan.jetty.rest.contextpath=/storage
+io.eguan.jetty.webui.contextpath=IO_EGUAN_JETTY_REST_CONTEXTPATH
+io.eguan.jetty.webui.warname=webui.war

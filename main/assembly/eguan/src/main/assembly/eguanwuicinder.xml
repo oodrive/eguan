@@ -1,0 +1,94 @@
+<assembly>
+    <id>eguan-wui-cinder</id>
+    <formats>
+        <format>tar.bz2</format>
+    </formats>
+    <baseDirectory>eguan-wui-cinder-${project.version}</baseDirectory>
+
+    <!-- Adds files: eguan under the lib directory -->
+    <files>
+        <file>
+            <source>${project.build.directory}/${artifact.artifactId}-${project.version}.jar</source>
+            <outputDirectory>lib</outputDirectory>
+            <destName>eguan.jar</destName>
+        </file>
+        <file>
+            <source>${project.build.directory}/VERSION</source>
+            <outputDirectory></outputDirectory>
+        </file>
+    </files>
+
+    <!-- Adds dependencies: vold, rest-launcher, cinder and webui under the lib directory -->
+    <dependencySets>
+        <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
+            <outputDirectory>lib</outputDirectory>
+            <unpack>false</unpack>
+            <includes>
+                <include>${project.groupId}:vold</include>
+            </includes>
+            <outputFileNameMapping>${artifact.artifactId}.jar</outputFileNameMapping>
+        </dependencySet>
+        <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
+            <outputDirectory>lib</outputDirectory>
+            <unpack>false</unpack>
+            <includes>
+                <include>${project.groupId}:rest-launcher</include>
+            </includes>
+            <outputFileNameMapping>${artifact.artifactId}.jar</outputFileNameMapping>
+        </dependencySet>
+        <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
+            <outputDirectory>lib</outputDirectory>
+            <unpack>false</unpack>
+            <includes>
+                <include>${project.groupId}:openstack-cinder</include>
+            </includes>
+            <outputFileNameMapping>${artifact.artifactId}-${version}.egg</outputFileNameMapping>
+        </dependencySet>
+        <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
+            <outputDirectory>lib</outputDirectory>
+            <unpack>false</unpack>
+            <includes>
+                <include>${project.groupId}:webui</include>
+            </includes>
+            <outputFileNameMapping>${artifact.artifactId}.war</outputFileNameMapping>
+        </dependencySet>
+    </dependencySets>
+
+    <fileSets>
+        <!-- Skeleton: copied under assembly root -->
+        <fileSet>
+            <directory>src/main/skel/common</directory>
+            <outputDirectory></outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>src/main/skel/eguanwuicinder</directory>
+            <outputDirectory></outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>src/main/skel/eguancinder</directory>
+            <outputDirectory></outputDirectory>
+            <includes>
+                <include>**/bin/*</include>
+                <include>**/config/eguan-cinder*</include>
+                <include>**/config/cinder*</include>
+            </includes>
+        </fileSet>
+
+        <!-- Native libraries: under lib directory -->
+        <fileSet>
+            <directory>target/nar</directory>
+            <outputDirectory></outputDirectory>
+            <includes>
+                <include>**/lib/lib*so*</include>
+            </includes>
+            <excludes>
+                <exclude>**/*-*/lib/lib*so*</exclude>
+            </excludes>
+        </fileSet>
+    </fileSets>
+
+</assembly>
