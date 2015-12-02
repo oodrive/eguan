@@ -9,9 +9,9 @@ package io.eguan.vold;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -88,7 +88,7 @@ import org.slf4j.Logger;
 
 /**
  * Entry point to launch the volume management daemon (VOLD).
- * 
+ *
  * @author oodrive
  * @author llambert
  * @author jmcaba
@@ -100,8 +100,8 @@ public final class Vold implements VoldMXBean {
 
     /**
      * VOLD shutdown hook.
-     * 
-     * 
+     *
+     *
      */
     class ShutdownHook implements Runnable {
 
@@ -362,7 +362,9 @@ public final class Vold implements VoldMXBean {
             // if a new vold in the same JVM try to lock, it will throw OverlappingFileLockException
             this.fileLock = voldDirChannel.tryLock();
             // if a new vold not in the same JVM try to lock, fileLock will be returned null
-            assert this.fileLock != null;
+            if (this.fileLock == null) {
+                throw new IllegalStateException("Vold already started");
+            }
         }
         catch (final Exception e) {
             // close channel
@@ -375,7 +377,7 @@ public final class Vold implements VoldMXBean {
 
     /**
      * Initialize the daemon.
-     * 
+     *
      * @throws JMException
      * @throws IOException
      */
@@ -406,7 +408,7 @@ public final class Vold implements VoldMXBean {
 
     /**
      * Shuts down the daemon.
-     * 
+     *
      * @throws IOException
      */
     public final void fini() throws IOException {
@@ -466,7 +468,7 @@ public final class Vold implements VoldMXBean {
 
     /**
      * Start the daemon.
-     * 
+     *
      * @throws JMException
      * @throws IOException
      */
@@ -504,7 +506,7 @@ public final class Vold implements VoldMXBean {
 
     /**
      * Release resources before daemon end.
-     * 
+     *
      * @throws IOException
      */
     @Override
@@ -587,7 +589,7 @@ public final class Vold implements VoldMXBean {
 
     /**
      * Register a peer node in NET and DTX.
-     * 
+     *
      * @param uuid
      * @param address
      */
@@ -618,7 +620,7 @@ public final class Vold implements VoldMXBean {
 
     /**
      * Unregister a peer node from NET and DTX.
-     * 
+     *
      * @param uuid
      * @param address
      */
@@ -643,7 +645,7 @@ public final class Vold implements VoldMXBean {
 
     /**
      * Load a configuration file.
-     * 
+     *
      * @return the loaded configuration
      */
     private static final MetaConfiguration loadConfiguration(final File voldDir, final String configFile,
@@ -677,7 +679,7 @@ public final class Vold implements VoldMXBean {
     /**
      * Write the current configuration on disk. Keep the previous configuration: restore it if the write of the
      * configuration fails.
-     * 
+     *
      * @throws IOException
      *             if the configuration write failed
      * @throws ConfigValidationException
@@ -700,7 +702,7 @@ public final class Vold implements VoldMXBean {
 
     /**
      * Return peers list.
-     * 
+     *
      * @return Peers list (not null, may be empty)
      */
     final List<VoldLocation> getPeersList() {
@@ -720,7 +722,7 @@ public final class Vold implements VoldMXBean {
 
     /**
      * Return local node.
-     * 
+     *
      * @return local vold location.
      */
     final VoldLocation getVoldLocation() {
@@ -738,7 +740,7 @@ public final class Vold implements VoldMXBean {
 
     /**
      * Return owner UUID
-     * 
+     *
      * @return owner UUID
      */
     final UUID getOwnerUuid() {
@@ -753,7 +755,7 @@ public final class Vold implements VoldMXBean {
 
     /**
      * Return node UUID
-     * 
+     *
      * @return node UUID
      */
     final UUID getNodeUuid() {
@@ -869,7 +871,7 @@ public final class Vold implements VoldMXBean {
 
     /**
      * Initialize remote mode (client and server). The VVR manager must be set.
-     * 
+     *
      * @throws MalformedObjectNameException
      * @throws NotCompliantMBeanException
      * @throws MBeanRegistrationException
@@ -991,7 +993,7 @@ public final class Vold implements VoldMXBean {
 
     /**
      * Initialize the configuration of the iSCSI server.
-     * 
+     *
      * @throws JMException
      *             if JMX initialization failed
      */
@@ -1054,7 +1056,7 @@ public final class Vold implements VoldMXBean {
 
     /**
      * Initialize the configuration of the NBD server.
-     * 
+     *
      * @throws JMException
      *             if JMX initialization failed
      */
@@ -1117,7 +1119,7 @@ public final class Vold implements VoldMXBean {
 
     /**
      * Initialize VVR manager.
-     * 
+     *
      * @throws JMException
      * @throws IOException
      */
@@ -1232,7 +1234,7 @@ public final class Vold implements VoldMXBean {
 
     /**
      * Constructs information for Vold task.
-     * 
+     *
      * @param resourceId
      *            The globally unique ID of the resourceId
      * @param operation
@@ -1283,7 +1285,7 @@ public final class Vold implements VoldMXBean {
 
     /**
      * Launch the VOLD.
-     * 
+     *
      * @param args
      *            only one argument: the directory containing the configuration and the persistence of the VOLD.
      */
