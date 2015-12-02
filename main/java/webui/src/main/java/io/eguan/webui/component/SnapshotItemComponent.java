@@ -164,8 +164,8 @@ final class SnapshotItemComponent implements TreeItemComponent {
         final TextField deviceName = new TextField("Name", "");
         createDeviceLayout.addComponent(deviceName);
 
-        // Enter size
-        final TextField deviceSize = new TextField("Size", "");
+        // Enter size (size of the snapshot by default)
+        final TextField deviceSize = new TextField("Size", Long.toString(model.getSnapshotSize()));
         createDeviceLayout.addComponent(deviceSize);
 
         // Create button
@@ -176,8 +176,10 @@ final class SnapshotItemComponent implements TreeItemComponent {
         create.addClickListener(new Button.ClickListener() {
             @Override
             public void buttonClick(final ClickEvent event) {
+                boolean success = false;
                 try {
                     model.createDevice(deviceName.getValue(), Long.valueOf(deviceSize.getValue()));
+                    success = true;
                     Notification.show("New device created", Notification.Type.TRAY_NOTIFICATION);
                 }
                 catch (final NumberFormatException e) {
@@ -187,6 +189,12 @@ final class SnapshotItemComponent implements TreeItemComponent {
                 catch (final Exception e) {
                     final ErrorWindow err = new ErrorWindow("Device not created: " + e.getMessage());
                     err.add(model);
+                }
+
+                if (success) {
+                    // Reset text fields on success
+                    deviceName.setValue("");
+                    deviceSize.setValue(Long.toString(model.getSnapshotSize()));
                 }
             }
         });
@@ -235,11 +243,17 @@ final class SnapshotItemComponent implements TreeItemComponent {
             }
         }, "Description", snapshotAttributesLayout, model);
 
-        // Enter UUID (not editable)
+        // Display UUID (not editable)
         final TextField snapUUID = new TextField("UUID", model.getItemUuid().toString());
         snapUUID.setReadOnly(true);
         snapUUID.setWidth("300px");
         snapshotAttributesLayout.addComponent(snapUUID);
+
+        // Display size (not editable)
+        final TextField snapSize = new TextField("Size", Long.toString(model.getSnapshotSize()));
+        snapSize.setReadOnly(true);
+        snapSize.setWidth("300px");
+        snapshotAttributesLayout.addComponent(snapSize);
 
         return layout;
     }
