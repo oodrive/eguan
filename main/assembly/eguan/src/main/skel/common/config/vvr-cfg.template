@@ -1,5 +1,6 @@
 io.eguan.vvr.ibs.ibp.path=IO_EGUAN_VVR_IBS_IBP_PATH
 io.eguan.vvr.common.started=true
+io.eguan.vvr.common.hash.algorithm=IO_EGUAN_VVR_HASH_ALGORITHM
 io.eguan.vvr.ibs.ibpgen.path=IO_EGUAN_VVR_IBS_IBPGEN_PATH
 io.eguan.vvr.ibs.owner.uuid=8b6bf7b8-3a17-11e2-8c84-180373e17308
 io.eguan.vvr.common.node=8b6bf7b8-3a17-11e2-8c84-180373e17308

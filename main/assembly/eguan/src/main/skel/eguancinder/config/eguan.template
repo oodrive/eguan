@@ -11,4 +11,4 @@ else
  export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
 fi
 
-exec java -Dio.eguan.log.enableSyslog=true -jar eguan.jar VOLD_DIR_ABS VOLD_DIR_ABS/rest.cfg CINDER_PATH
+exec java IO_EGUAN_JAVA_OPTS -jar eguan.jar VOLD_DIR_ABS VOLD_DIR_ABS/rest.cfg CINDER_PATH

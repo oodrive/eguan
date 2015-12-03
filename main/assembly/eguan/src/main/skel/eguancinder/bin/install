@@ -24,24 +24,25 @@ update_config()
         sudo -u $NAME sed -i "s%$key%$value%g" $VOLD_DIR_ABS/vvr.cfg
         sudo -u $NAME sed -i "s%$key%$value%g" $VOLD_DIR_ABS/rest.cfg
         sudo -u $NAME sed -i "s%$key%$value%g" $VOLD_DIR_ABS/cinder.cfg
-    
+        sed -i "s%$key%$value%g" $LAUNCH_DIR/$NAME
+
         if [ "$key" = "IO_EGUAN_VOLD_OWNER" ]; then
             VOLD_OWNER_ID=$value
             VOLD_OWNER=`echo $VOLD_OWNER_ID | sed "s/-//g"`
         fi
-    
+
         # Change owner of IBPGEN path
         if [ "$key" = "IO_EGUAN_VVR_IBS_IBPGEN_PATH" ]; then
             sudo chown -R $NAME.nogroup $value
         fi
-    
+
         # Change owner of IBPs path
         if [ "$key" = "IO_EGUAN_VVR_IBS_IBP_PATH" ]; then
-            for i in `echo $value | sed "s%,% %g"`; do 
+            for i in `echo $value | sed "s%,% %g"`; do
                 sudo chown -R $NAME.nogroup $i
             done
-        fi        
-    done <<< "`awk -F"=" '/=/{print $1,$2}' $CONFIG_DIR/$NAME.cfg`"
+        fi
+    done <<< "`grep = $CONFIG_DIR/$NAME.cfg | sed 's/=/ /' `"
 
     # get rest server address in rest.cfg
     REST_ADDRESS=`awk -F"io.eguan.jetty.server.address=" '/io.eguan.jetty.server.address=/{print $2}' $VOLD_DIR_ABS/rest.cfg`
@@ -49,7 +50,7 @@ update_config()
 
     # Get rest path
     COMPLETE_REST_PATH=`awk -F"io.eguan.jetty.rest.contextpath=" '/io.eguan.jetty.rest.contextpath=/{print $2}' $VOLD_DIR_ABS/rest.cfg`
-    REST_PATH=`echo $COMPLETE_REST_PATH | sed "s%^/%%"` 
+    REST_PATH=`echo $COMPLETE_REST_PATH | sed "s%^/%%"`
 
     # add vold_rest_uri in cinder config file
     VOLD_REST_URI="$VOLD_OWNER|http://$REST_ADDRESS:$REST_PORT/$REST_PATH"
@@ -61,7 +62,7 @@ update_launch_script()
     echo "Copy launch script and replace vold path"
     cp $CONFIG_DIR/$NAME.template $LAUNCH_DIR/$NAME
     sed -i "s%VOLD_DIR_ABS%$VOLD_DIR_ABS%g" $LAUNCH_DIR/$NAME
-    
+
     CINDER_PATH=$1
     sed -i "s%CINDER_PATH%$CINDER_PATH%g" $LAUNCH_DIR/$NAME
 }
@@ -149,7 +150,7 @@ esac
 trap do_abort SIGINT SIGTERM
 
 echo "Add user $NAME if not exists"
-if ! getent passwd $NAME >/dev/null; then    
+if ! getent passwd $NAME >/dev/null; then
     sudo adduser $NAME --system --disabled-login --disabled-password --no-create-home
 fi
 
@@ -160,17 +161,17 @@ sudo chown -R $NAME.nogroup $VOLD_DIR_ABS
 sudo -u $NAME [ ! -r $VOLD_DIR_ABS ] && echo "'$VOLD_DIR' is not readable by $NAME" && exit 4
 sudo -u $NAME [ ! -w $VOLD_DIR_ABS ] && echo "'$VOLD_DIR' is not writable by $NAME" && exit 4
 
-# Setup configuration
-update_config
-
 # Install cinder volume
 install_cinder
 
 # create a launch script without cinder volume
 update_launch_script ""
 
+# Setup configuration
+update_config
+
 # create an init script in /etc/init.d
-update_boot_script 
+update_boot_script
 
 # Start and setup the first node
 if [ "$FIRSTNODE" = 1 ]; then

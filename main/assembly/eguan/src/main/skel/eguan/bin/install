@@ -32,7 +32,7 @@ esac
 
 
 echo "Add user $NAME if not exists"
-if ! getent passwd $NAME >/dev/null; then    
+if ! getent passwd $NAME >/dev/null; then
     sudo adduser $NAME --system --disabled-login --disabled-password --no-create-home
 fi
 
@@ -48,30 +48,30 @@ sudo -u $NAME cp $CONFIG_DIR/vold-cfg.template $VOLD_DIR_ABS/vold.cfg
 sudo -u $NAME cp $CONFIG_DIR/vvr-cfg.template $VOLD_DIR_ABS/vvr.cfg
 sudo -u $NAME cp $CONFIG_DIR/rest-cfg.template $VOLD_DIR_ABS/rest.cfg
 
-# replace config value
-awk -F"=" '/=/{print $1,$2}' $CONFIG_DIR/$NAME.cfg  | while read key value
+echo "Copy launch script and replace vold path"
+cp $CONFIG_DIR/$NAME.template $LAUNCH_DIR/$NAME
+sed -i "s%VOLD_DIR_ABS%$VOLD_DIR_ABS%g" $LAUNCH_DIR/$NAME
+
+# replace config values
+grep = $CONFIG_DIR/$NAME.cfg | sed 's/=/ /'  | while read key value
 do
     sudo -u $NAME sed -i "s%$key%$value%g" $VOLD_DIR_ABS/vold.cfg
     sudo -u $NAME sed -i "s%$key%$value%g" $VOLD_DIR_ABS/vvr.cfg
     sudo -u $NAME sed -i "s%$key%$value%g" $VOLD_DIR_ABS/rest.cfg
-    
+    sed -i "s%$key%$value%g" $LAUNCH_DIR/$NAME
+
     # Change owner of IBPGEN path
     if [ "$key" = "IO_EGUAN_VVR_IBS_IBPGEN_PATH" ]; then
         sudo chown -R $NAME.nogroup $value
     fi
-    
+
     # Change owner of IBPs path
     if [ "$key" = "IO_EGUAN_VVR_IBS_IBP_PATH" ]; then
-        for i in `echo $value | sed "s%,% %g"`; do 
+        for i in `echo $value | sed "s%,% %g"`; do
             sudo chown -R $NAME.nogroup $i
         done
-    fi        
+    fi
 done
-
-
-echo "Copy launch script and replace vold path"
-cp $CONFIG_DIR/$NAME.template $LAUNCH_DIR/$NAME
-sed -i "s%VOLD_DIR_ABS%$VOLD_DIR_ABS%g" $LAUNCH_DIR/$NAME
 
 echo "Copy init script and replace $NAME path"
 TEMPFILE=`mktemp`
@@ -82,5 +82,4 @@ sudo chmod 755 /etc/init.d/$NAME
 
 echo "Install init script links"
 sudo update-rc.d $NAME defaults
-
 
