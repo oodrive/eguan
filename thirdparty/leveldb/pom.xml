@@ -12,7 +12,7 @@
     <groupId>com.google</groupId>
     <artifactId>leveldb</artifactId>
     <packaging>nar</packaging>
-    <version>1.16.0-oodrive</version>
+    <version>1.18.0-oodrive</version>
 
     <name>levelDB</name>
 

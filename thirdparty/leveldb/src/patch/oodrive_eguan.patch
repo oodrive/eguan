@@ -1,0 +1,1539 @@
+diff -rupN leveldb/AUTHORS gnu/AUTHORS
+--- leveldb/AUTHORS	2014-10-06 14:31:42.787214949 +0200
++++ gnu/AUTHORS	2014-08-28 10:11:25.775219315 +0200
+@@ -10,3 +10,6 @@ Sanjay Ghemawat <sanjay@google.com>
+ # Partial list of contributors:
+ Kevin Regan <kevin.d.regan@gmail.com>
+ Johan Bilien <jobi@litl.com>
++
++# Modifications for Nuage Project (http://www.nuage-france.fr/) authors:
++Jean-Manuel CABA <j.caba@oodrive.fr>
+\ Pas de fin de ligne à la fin du fichier
+diff -rupN leveldb/build_detect_platform gnu/build_detect_platform
+--- leveldb/build_detect_platform	2014-10-06 14:31:42.787214949 +0200
++++ gnu/build_detect_platform	2014-10-06 14:42:05.635214874 +0200
+@@ -60,7 +60,7 @@ PLATFORM_CXXFLAGS=
+ PLATFORM_LDFLAGS=
+ PLATFORM_LIBS=
+ PLATFORM_SHARED_EXT="so"
+-PLATFORM_SHARED_LDFLAGS="-shared -Wl,-soname -Wl,"
++PLATFORM_SHARED_LDFLAGS="-shared "
+ PLATFORM_SHARED_CFLAGS="-fPIC"
+ PLATFORM_SHARED_VERSIONED=true
+ 
+@@ -226,3 +226,4 @@ echo "PLATFORM_SHARED_CFLAGS=$PLATFORM_S
+ echo "PLATFORM_SHARED_EXT=$PLATFORM_SHARED_EXT" >> $OUTPUT
+ echo "PLATFORM_SHARED_LDFLAGS=$PLATFORM_SHARED_LDFLAGS" >> $OUTPUT
+ echo "PLATFORM_SHARED_VERSIONED=$PLATFORM_SHARED_VERSIONED" >> $OUTPUT
++
+diff -rupN leveldb/db/dbformat.h gnu/db/dbformat.h
+--- leveldb/db/dbformat.h	2014-10-06 14:31:42.791214949 +0200
++++ gnu/db/dbformat.h	2014-10-06 14:37:54.667214904 +0200
+@@ -19,16 +19,16 @@ namespace leveldb {
+ // Grouping of constants.  We may want to make some of these
+ // parameters set via options.
+ namespace config {
+-static const int kNumLevels = 7;
++static const int kNumLevels = 10;
+ 
+-// Level-0 compaction is started when we hit this many files.
+-static const int kL0_CompactionTrigger = 4;
++// Level-0 compaction is started when we hit this many ".sst" files.
++static const int kL0_CompactionTrigger = 8;
+ 
+ // Soft limit on number of level-0 files.  We slow down writes at this point.
+-static const int kL0_SlowdownWritesTrigger = 8;
++static const int kL0_SlowdownWritesTrigger = 128;
+ 
+ // Maximum number of level-0 files.  We stop writes at this point.
+-static const int kL0_StopWritesTrigger = 12;
++static const int kL0_StopWritesTrigger = 256;
+ 
+ // Maximum level to which a new compacted memtable is pushed if it
+ // does not create overlap.  We try to push to level 2 to avoid the
+diff -rupN leveldb/db/db_impl.cc gnu/db/db_impl.cc
+--- leveldb/db/db_impl.cc	2014-10-06 14:31:42.791214949 +0200
++++ gnu/db/db_impl.cc	2014-10-06 14:36:48.175214912 +0200
+@@ -147,30 +147,46 @@ DBImpl::DBImpl(const Options& raw_option
+ 
+ DBImpl::~DBImpl() {
+   // Wait for background work to finish
+-  mutex_.Lock();
+-  shutting_down_.Release_Store(this);  // Any non-NULL value is ok
+-  while (bg_compaction_scheduled_) {
+-    bg_cv_.Wait();
++  {
++    MutexLock l(&mutex_);
++    shutting_down_.Release_Store(this);  // Any non-NULL value is ok
++    while (bg_compaction_scheduled_) {
++      bg_cv_.Wait();
++    }
+   }
+-  mutex_.Unlock();
+ 
+   if (db_lock_ != NULL) {
+     env_->UnlockFile(db_lock_);
+   }
+ 
+-  delete versions_;
+-  if (mem_ != NULL) mem_->Unref();
+-  if (imm_ != NULL) imm_->Unref();
+-  delete tmp_batch_;
+-  delete log_;
+-  delete logfile_;
+-  delete table_cache_;
+-
+-  if (owns_info_log_) {
+-    delete options_.info_log;
++  {
++    MutexLock l(&mutex_);
++    // unblock all waiters
++    // and avoid busy error
++    // on bg_cv_ destruction
++    bg_cv_.SignalAll();
+   }
+-  if (owns_cache_) {
+-    delete options_.block_cache;
++
++  {
++    MutexLock l(&mutex_);
++    delete versions_;
++    if (mem_ != NULL) {
++  	  mem_->Unref();
++    }
++    if (imm_ != NULL) {
++      imm_->Unref();
++    }
++    delete tmp_batch_;
++    delete log_;
++    delete logfile_;
++    delete table_cache_;
++
++    if (owns_info_log_) {
++      delete options_.info_log;
++    }
++    if (owns_cache_) {
++      delete options_.block_cache;
++    }
+   }
+ }
+ 
+@@ -536,12 +552,15 @@ void DBImpl::CompactMemTable() {
+ void DBImpl::CompactRange(const Slice* begin, const Slice* end) {
+   int max_level_with_files = 1;
+   {
+-    MutexLock l(&mutex_);
+-    Version* base = versions_->current();
+-    for (int level = 1; level < config::kNumLevels; level++) {
+-      if (base->OverlapInLevel(level, begin, end)) {
+-        max_level_with_files = level;
++    // only check if not already doing it ...
++    if (mutex_.TryLock()) {
++      Version* base = versions_->current();
++      for (int level = 1; level < config::kNumLevels; level++) {
++        if (base->OverlapInLevel(level, begin, end)) {
++          max_level_with_files = level;
++        }
+       }
++      mutex_.Unlock();
+     }
+   }
+   TEST_CompactMemTable(); // TODO(sanjay): Skip if memtable does not overlap
+@@ -720,6 +739,9 @@ void DBImpl::BackgroundCompaction() {
+   } else {
+     Log(options_.info_log,
+         "Compaction error: %s", status.ToString().c_str());
++    if (options_.paranoid_checks && bg_error_.ok()) {
++      bg_error_ = status;
++    }
+   }
+ 
+   if (is_manual) {
+@@ -1088,9 +1110,11 @@ Status DBImpl::Get(const ReadOptions& op
+ 
+   MemTable* mem = mem_;
+   MemTable* imm = imm_;
++  assert(versions_ != NULL);
+   Version* current = versions_->current();
+-  mem->Ref();
++  if (mem != NULL) mem->Ref();
+   if (imm != NULL) imm->Ref();
++  assert(current != NULL);
+   current->Ref();
+ 
+   bool have_stat_update = false;
+@@ -1101,7 +1125,7 @@ Status DBImpl::Get(const ReadOptions& op
+     mutex_.Unlock();
+     // First look in the memtable, then in the immutable memtable (if any).
+     LookupKey lkey(key, snapshot);
+-    if (mem->Get(lkey, value, &s)) {
++    if (mem != NULL && mem->Get(lkey, value, &s)) {
+       // Done
+     } else if (imm != NULL && imm->Get(lkey, value, &s)) {
+       // Done
+@@ -1121,6 +1145,54 @@ Status DBImpl::Get(const ReadOptions& op
+   return s;
+ }
+ 
++Status DBImpl::Contains(const ReadOptions& options,
++                        const Slice& key) {
++  Status s;
++  MutexLock l(&mutex_);
++  SequenceNumber snapshot;
++  if (options.snapshot != NULL) {
++    snapshot = reinterpret_cast<const SnapshotImpl*>(options.snapshot)->number_;
++  } else {
++    snapshot = versions_->LastSequence();
++  }
++
++  MemTable* mem = mem_;
++  MemTable* imm = imm_;
++  assert(versions_ != NULL);
++  Version* current = versions_->current();
++  if (mem != NULL) mem->Ref();
++  if (imm != NULL) imm->Ref();
++  assert(current != NULL);
++  current->Ref();
++
++  bool have_stat_update = false;
++  Version::GetStats stats;
++
++  // Unlock while reading from files and memtables
++  {
++    mutex_.Unlock();
++    // First look in the memtable, then in the immutable memtable (if any).
++    LookupKey lkey(key, snapshot);
++    if (mem != NULL && mem->Contains(lkey, &s)) {
++      // Done
++    } else if (imm != NULL && imm->Contains(lkey, &s)) {
++      // Done
++    } else {
++      s = current->Contains(options, lkey, &stats);
++      have_stat_update = true;
++    }
++    mutex_.Lock();
++  }
++
++  if (have_stat_update && current->UpdateStats(stats)) {
++    MaybeScheduleCompaction();
++  }
++  mem->Unref();
++  if (imm != NULL) imm->Unref();
++  current->Unref();
++  return s;
++}
++
+ Iterator* DBImpl::NewIterator(const ReadOptions& options) {
+   SequenceNumber latest_snapshot;
+   uint32_t seed;
+@@ -1307,7 +1379,7 @@ Status DBImpl::MakeRoomForWrite(bool for
+       allow_delay = false;  // Do not delay a single write more than once
+       mutex_.Lock();
+     } else if (!force &&
+-               (mem_->ApproximateMemoryUsage() <= options_.write_buffer_size)) {
++               (mem_ && (mem_->ApproximateMemoryUsage() <= options_.write_buffer_size))) {
+       // There is room in current memtable
+       break;
+     } else if (imm_ != NULL) {
+@@ -1377,19 +1449,35 @@ bool DBImpl::GetProperty(const Slice& pr
+              );
+     value->append(buf);
+     for (int level = 0; level < config::kNumLevels; level++) {
++      snprintf(buf, sizeof(buf), "%3d ", level);
++      value->append(buf);
+       int files = versions_->NumLevelFiles(level);
+-      if (stats_[level].micros > 0 || files > 0) {
++      if (files > 0) {
++        snprintf(buf, sizeof(buf), "%8d ", files);
++        value->append(buf);
++      }else{
++        snprintf(buf, sizeof(buf), "%s ", "N/A ");
++        value->append(buf);
++      }
++      snprintf(buf, sizeof(buf), "%8.0f ",
++          versions_->NumLevelBytes(level) / 1048576.0);
++      value->append(buf);
++      if (stats_[level].micros > 0) {
+         snprintf(
+             buf, sizeof(buf),
+-            "%3d %8d %8.0f %9.0f %8.0f %9.0f\n",
+-            level,
+-            files,
+-            versions_->NumLevelBytes(level) / 1048576.0,
+-            stats_[level].micros / 1e6,
+-            stats_[level].bytes_read / 1048576.0,
+-            stats_[level].bytes_written / 1048576.0);
++            "%9.0f ",
++            stats_[level].micros / 1e6);
+         value->append(buf);
+-      }
++      }else{
++          snprintf(buf, sizeof(buf), "%s", "N/A ");
++          value->append(buf);
++      }
++      snprintf(
++          buf, sizeof(buf),
++          "%8.0f %9.0f\n",
++          stats_[level].bytes_read / 1048576.0,
++          stats_[level].bytes_written / 1048576.0);
++      value->append(buf);
+     }
+     return true;
+   } else if (in == "sstables") {
+diff -rupN leveldb/db/db_impl.h gnu/db/db_impl.h
+--- leveldb/db/db_impl.h	2014-10-06 14:31:42.791214949 +0200
++++ gnu/db/db_impl.h	2014-08-28 10:11:25.775219315 +0200
+@@ -35,6 +35,8 @@ class DBImpl : public DB {
+   virtual Status Get(const ReadOptions& options,
+                      const Slice& key,
+                      std::string* value);
++  virtual Status Contains(const ReadOptions& options,
++                          const Slice& key);
+   virtual Iterator* NewIterator(const ReadOptions&);
+   virtual const Snapshot* GetSnapshot();
+   virtual void ReleaseSnapshot(const Snapshot* snapshot);
+diff -rupN leveldb/db/memtable.cc gnu/db/memtable.cc
+--- leveldb/db/memtable.cc	2014-10-06 14:31:42.791214949 +0200
++++ gnu/db/memtable.cc	2014-08-28 10:11:25.779219315 +0200
+@@ -12,7 +12,7 @@
+ namespace leveldb {
+ 
+ static Slice GetLengthPrefixedSlice(const char* data) {
+-  uint32_t len;
++  uint32_t len = 0;
+   const char* p = data;
+   p = GetVarint32Ptr(p, p + 5, &len);  // +5: we assume "p" is not corrupted
+   return Slice(p, len);
+@@ -21,14 +21,20 @@ static Slice GetLengthPrefixedSlice(cons
+ MemTable::MemTable(const InternalKeyComparator& cmp)
+     : comparator_(cmp),
+       refs_(0),
+-      table_(comparator_, &arena_) {
++      arena_(new Arena()),
++      table_(comparator_, arena_) {
+ }
+ 
+ MemTable::~MemTable() {
+   assert(refs_ == 0);
++  // protect destruction of arena
++  Arena* toDestroy = arena_.exchange(NULL);
++  if(toDestroy != NULL) {
++    toDestroy->destroy();
++  }
+ }
+ 
+-size_t MemTable::ApproximateMemoryUsage() { return arena_.MemoryUsage(); }
++size_t MemTable::ApproximateMemoryUsage() { return arena_.load()->MemoryUsage(); }
+ 
+ int MemTable::KeyComparator::operator()(const char* aptr, const char* bptr)
+     const {
+@@ -93,7 +99,7 @@ void MemTable::Add(SequenceNumber s, Val
+   const size_t encoded_len =
+       VarintLength(internal_key_size) + internal_key_size +
+       VarintLength(val_size) + val_size;
+-  char* buf = arena_.Allocate(encoded_len);
++  char* buf = arena_.load()->Allocate(encoded_len);
+   char* p = EncodeVarint32(buf, internal_key_size);
+   memcpy(p, key.data(), key_size);
+   p += key_size;
+@@ -134,6 +140,41 @@ bool MemTable::Get(const LookupKey& key,
+           return true;
+         }
+         case kTypeDeletion:
++          *s = Status::NotFound(Slice());
++          return true;
++      }
++    }
++  }
++  return false;
++}
++
++bool MemTable::Contains(const LookupKey& key, Status* s) {
++  Slice memkey = key.memtable_key();
++  Table::Iterator iter(&table_);
++  iter.Seek(memkey.data());
++  if (iter.Valid()) {
++    // entry format is:
++    //    klength  varint32
++    //    userkey  char[klength]
++    //    tag      uint64
++    //    vlength  varint32
++    //    value    char[vlength]
++    // Check that it belongs to same user key.  We do not check the
++    // sequence number since the Seek() call above should have skipped
++    // all entries with overly large sequence numbers.
++    const char* entry = iter.key();
++    uint32_t key_length;
++    const char* key_ptr = GetVarint32Ptr(entry, entry+5, &key_length);
++    if (comparator_.comparator.user_comparator()->Compare(
++            Slice(key_ptr, key_length - 8),
++            key.user_key()) == 0) {
++      // Correct user key
++      const uint64_t tag = DecodeFixed64(key_ptr + key_length - 8);
++      switch (static_cast<ValueType>(tag & 0xff)) {
++        case kTypeValue: {
++          return true;
++        }
++        case kTypeDeletion:
+           *s = Status::NotFound(Slice());
+           return true;
+       }
+diff -rupN leveldb/db/memtable.h gnu/db/memtable.h
+--- leveldb/db/memtable.h	2014-10-06 14:31:42.791214949 +0200
++++ gnu/db/memtable.h	2014-08-28 10:11:25.779219315 +0200
+@@ -6,6 +6,7 @@
+ #define STORAGE_LEVELDB_DB_MEMTABLE_H_
+ 
+ #include <string>
++#include <atomic>
+ #include "leveldb/db.h"
+ #include "db/dbformat.h"
+ #include "db/skiplist.h"
+@@ -63,6 +64,12 @@ class MemTable {
+   // Else, return false.
+   bool Get(const LookupKey& key, std::string* value, Status* s);
+ 
++  // If memtable contains a value for key, return true.
++  // If memtable contains a deletion for key, store a NotFound() error
++  // in *status and return true.
++  // Else, return false.
++  bool Contains(const LookupKey& key, Status* s);
++
+  private:
+   ~MemTable();  // Private since only Unref() should be used to delete it
+ 
+@@ -78,7 +85,7 @@ class MemTable {
+ 
+   KeyComparator comparator_;
+   int refs_;
+-  Arena arena_;
++  std::atomic<Arena*> arena_;
+   Table table_;
+ 
+   // No copying allowed
+diff -rupN leveldb/db/version_set.cc gnu/db/version_set.cc
+--- leveldb/db/version_set.cc	2014-10-06 14:31:42.791214949 +0200
++++ gnu/db/version_set.cc	2014-10-06 14:48:31.731214828 +0200
+@@ -20,11 +20,17 @@
+ 
+ namespace leveldb {
+ 
+-static const int kTargetFileSize = 2 * 1048576;
++static const int64_t kTargetFileSize = 32 * 1048576; // 32 Mb size limit for .sst file
++static const double kStartLevelMaxBytes = 128.0 * 1048576.0; // 128 Mb for level-0 size limit
++static const double kLevel0to1MaxBytesMultiplier = 2.0; // Duplicate size from level-0 to level-1
++static const double kLevelNMaxBytesMultiplier = 16.0; // multiplier for calculating level size starting from level-2
++static const int64_t kAllowedSeekThreshold = 16384; // threshold for allowed seek
++static const int64_t kMinimumAllowedSeekBeforeCompaction = kTargetFileSize/kAllowedSeekThreshold; // minimum allowed seek before compaction
++
+ 
+ // Maximum bytes of overlaps in grandparent (i.e., level+2) before we
+ // stop building a single file in a level->level+1 compaction.
+-static const int64_t kMaxGrandParentOverlapBytes = 10 * kTargetFileSize;
++static const int64_t kMaxGrandParentOverlapBytes = 25 * kTargetFileSize;
+ 
+ // Maximum number of bytes in all compacted files.  We avoid expanding
+ // the lower level file set of a compaction if it would make the
+@@ -34,16 +40,18 @@ static const int64_t kExpandedCompaction
+ static double MaxBytesForLevel(int level) {
+   // Note: the result for level zero is not really used since we set
+   // the level-0 compaction threshold based on number of files.
+-  double result = 10 * 1048576.0;  // Result for both level-0 and level-1
++
++  double result = kStartLevelMaxBytes;
++  if (1==level) result *= kLevel0to1MaxBytesMultiplier;
+   while (level > 1) {
+-    result *= 10;
++    result *= kLevelNMaxBytesMultiplier;
+     level--;
+   }
+   return result;
+ }
+ 
+ static uint64_t MaxFileSizeForLevel(int level) {
+-  return kTargetFileSize;  // We could vary per level to reduce number of files?
++  return kTargetFileSize << (level>>1); // Vary the size limit of .sst files depending on level to reduce the files number
+ }
+ 
+ static int64_t TotalFileSize(const std::vector<FileMetaData*>& files) {
+@@ -255,6 +263,11 @@ struct Saver {
+   Slice user_key;
+   std::string* value;
+ };
++struct EmptySaver {
++  SaverState state;
++  const Comparator* ucmp;
++  Slice user_key;
++};
+ }
+ static void SaveValue(void* arg, const Slice& ikey, const Slice& v) {
+   Saver* s = reinterpret_cast<Saver*>(arg);
+@@ -271,6 +284,20 @@ static void SaveValue(void* arg, const S
+   }
+ }
+ 
++static void SaveDummy(void* arg, const Slice& ikey, const Slice& v) {
++  EmptySaver* s = reinterpret_cast<EmptySaver*>(arg);
++  ParsedInternalKey parsed_key;
++  if (!ParseInternalKey(ikey, &parsed_key)) {
++    s->state = kCorrupt;
++  } else {
++    if (s->ucmp->Compare(parsed_key.user_key, s->user_key) == 0) {
++      s->state = (parsed_key.type == kTypeValue) ? kFound : kDeleted;
++      if (s->state == kFound) {
++      }
++    }
++  }
++}
++
+ static bool NewestFirst(FileMetaData* a, FileMetaData* b) {
+   return a->number > b->number;
+ }
+@@ -419,6 +446,103 @@ Status Version::Get(const ReadOptions& o
+   return Status::NotFound(Slice());  // Use an empty error message for speed
+ }
+ 
++Status Version::Contains(const ReadOptions& options,
++                         const LookupKey& k,
++                         GetStats* stats) {
++  Slice ikey = k.internal_key();
++  Slice user_key = k.user_key();
++  const Comparator* ucmp = vset_->icmp_.user_comparator();
++  Status s;
++
++  stats->seek_file = NULL;
++  stats->seek_file_level = -1;
++  FileMetaData* last_file_read = NULL;
++  int last_file_read_level = -1;
++
++  // We can search level-by-level since entries never hop across
++  // levels.  Therefore we are guaranteed that if we find data
++  // in an smaller level, later levels are irrelevant.
++  std::vector<FileMetaData*> tmp;
++  FileMetaData* tmp2;
++  for (int level = 0; level < config::kNumLevels; level++) {
++    size_t num_files = files_[level].size();
++    if (num_files == 0) continue;
++
++    // Get the list of files to search in this level
++    FileMetaData* const* files = &files_[level][0];
++    if (level == 0) {
++      // Level-0 files may overlap each other.  Find all files that
++      // overlap user_key and process them in order from newest to oldest.
++      tmp.reserve(num_files);
++      for (uint32_t i = 0; i < num_files; i++) {
++        FileMetaData* f = files[i];
++        if (ucmp->Compare(user_key, f->smallest.user_key()) >= 0 &&
++            ucmp->Compare(user_key, f->largest.user_key()) <= 0) {
++          tmp.push_back(f);
++        }
++      }
++      if (tmp.empty()) continue;
++
++      std::sort(tmp.begin(), tmp.end(), NewestFirst);
++      files = &tmp[0];
++      num_files = tmp.size();
++    } else {
++      // Binary search to find earliest index whose largest key >= ikey.
++      uint32_t index = FindFile(vset_->icmp_, files_[level], ikey);
++      if (index >= num_files) {
++        files = NULL;
++        num_files = 0;
++      } else {
++        tmp2 = files[index];
++        if (ucmp->Compare(user_key, tmp2->smallest.user_key()) < 0) {
++          // All of "tmp2" is past any data for user_key
++          files = NULL;
++          num_files = 0;
++        } else {
++          files = &tmp2;
++          num_files = 1;
++        }
++      }
++    }
++
++    for (uint32_t i = 0; i < num_files; ++i) {
++      if (last_file_read != NULL && stats->seek_file == NULL) {
++        // We have had more than one seek for this read.  Charge the 1st file.
++        stats->seek_file = last_file_read;
++        stats->seek_file_level = last_file_read_level;
++      }
++
++      FileMetaData* f = files[i];
++      last_file_read = f;
++      last_file_read_level = level;
++
++      EmptySaver saver;
++      saver.state = kNotFound;
++      saver.ucmp = ucmp;
++      saver.user_key = user_key;
++      s = vset_->table_cache_->Get(options, f->number, f->file_size,
++                                   ikey, &saver, SaveDummy);
++      if (!s.ok()) {
++        return s;
++      }
++      switch (saver.state) {
++        case kNotFound:
++          break;      // Keep searching in other files
++        case kFound:
++          return s;
++        case kDeleted:
++          s = Status::NotFound(Slice());  // Use empty error message for speed
++          return s;
++        case kCorrupt:
++          s = Status::Corruption("corrupted key for ", user_key);
++          return s;
++      }
++    }
++  }
++
++  return Status::NotFound(Slice());  // Use an empty error message for speed
++}
++
+ bool Version::UpdateStats(const GetStats& stats) {
+   FileMetaData* f = stats.seek_file;
+   if (f != NULL) {
+@@ -688,10 +812,10 @@ class VersionSet::Builder {
+       // This implies that 25 seeks cost the same as the compaction
+       // of 1MB of data.  I.e., one seek costs approximately the
+       // same as the compaction of 40KB of data.  We are a little
+-      // conservative and allow approximately one seek for every 16KB
++      // conservative and allow approximately one seek for every 16KB (kAllowedSeekThreshold)
+       // of data before triggering a compaction.
+-      f->allowed_seeks = (f->file_size / 16384);
+-      if (f->allowed_seeks < 100) f->allowed_seeks = 100;
++      f->allowed_seeks = (f->file_size / kAllowedSeekThreshold);
++      if (f->allowed_seeks < kMinimumAllowedSeekBeforeCompaction) f->allowed_seeks = kMinimumAllowedSeekBeforeCompaction;
+ 
+       levels_[level].deleted_files.erase(f->number);
+       levels_[level].added_files->insert(f);
+@@ -1089,16 +1213,20 @@ int VersionSet::NumLevelFiles(int level)
+ 
+ const char* VersionSet::LevelSummary(LevelSummaryStorage* scratch) const {
+   // Update code if kNumLevels changes
+-  assert(config::kNumLevels == 7);
++  // FIXME: use stringstream and remove the need for this assert ...
++  assert(config::kNumLevels == 10);
+   snprintf(scratch->buffer, sizeof(scratch->buffer),
+-           "files[ %d %d %d %d %d %d %d ]",
++           "files[ %d %d %d %d %d %d %d %d %d %d ]",
+            int(current_->files_[0].size()),
+            int(current_->files_[1].size()),
+            int(current_->files_[2].size()),
+            int(current_->files_[3].size()),
+            int(current_->files_[4].size()),
+            int(current_->files_[5].size()),
+-           int(current_->files_[6].size()));
++           int(current_->files_[6].size()),
++           int(current_->files_[7].size()),
++           int(current_->files_[8].size()),
++           int(current_->files_[9].size()));
+   return scratch->buffer;
+ }
+ 
+diff -rupN leveldb/db/version_set.h gnu/db/version_set.h
+--- leveldb/db/version_set.h	2014-10-06 14:31:42.791214949 +0200
++++ gnu/db/version_set.h	2014-08-28 10:11:25.779219315 +0200
+@@ -72,6 +72,7 @@ class Version {
+   };
+   Status Get(const ReadOptions&, const LookupKey& key, std::string* val,
+              GetStats* stats);
++  Status Contains(const ReadOptions&, const LookupKey& key, GetStats* stats);
+ 
+   // Adds "stats" into the current state.  Returns true if a new
+   // compaction may need to be triggered, false otherwise.
+diff -rupN leveldb/doc/impl.html gnu/doc/impl.html
+--- leveldb/doc/impl.html	2014-10-06 14:31:42.791214949 +0200
++++ gnu/doc/impl.html	2014-10-06 14:49:50.703214819 +0200
+@@ -151,7 +151,7 @@ compaction cost will be approximately 0.
+ If we throttle the background writing to something small, say 10% of
+ the full 100MB/s speed, a compaction may take up to 5 seconds.  If the
+ user is writing at 10MB/s, we might build up lots of level-0 files
+-(~50 to hold the 5*10MB).  This may significantly increase the cost of
++(~50 to hold the 5*10MB).  This may signficantly increase the cost of
+ reads due to the overhead of merging more files together on every
+ read.
+ 
+diff -rupN leveldb/.git/config gnu/.git/config
+--- leveldb/.git/config	2014-10-06 14:31:42.783214949 +0200
++++ gnu/.git/config	1970-01-01 01:00:00.000000000 +0100
+@@ -1,11 +0,0 @@
+-[core]
+-	repositoryformatversion = 0
+-	filemode = true
+-	bare = false
+-	logallrefupdates = true
+-[remote "origin"]
+-	url = https://github.com/google/leveldb.git
+-	fetch = +refs/heads/*:refs/remotes/origin/*
+-[branch "master"]
+-	remote = origin
+-	merge = refs/heads/master
+diff -rupN leveldb/.git/description gnu/.git/description
+--- leveldb/.git/description	2014-10-06 14:31:39.299214949 +0200
++++ gnu/.git/description	1970-01-01 01:00:00.000000000 +0100
+@@ -1 +0,0 @@
+-Unnamed repository; edit this file 'description' to name the repository.
+diff -rupN leveldb/.git/HEAD gnu/.git/HEAD
+--- leveldb/.git/HEAD	2014-10-06 14:31:42.779214949 +0200
++++ gnu/.git/HEAD	1970-01-01 01:00:00.000000000 +0100
+@@ -1 +0,0 @@
+-ref: refs/heads/master
+diff -rupN leveldb/.git/hooks/applypatch-msg.sample gnu/.git/hooks/applypatch-msg.sample
+--- leveldb/.git/hooks/applypatch-msg.sample	2014-10-06 14:31:39.299214949 +0200
++++ gnu/.git/hooks/applypatch-msg.sample	1970-01-01 01:00:00.000000000 +0100
+@@ -1,15 +0,0 @@
+-#!/bin/sh
+-#
+-# An example hook script to check the commit log message taken by
+-# applypatch from an e-mail message.
+-#
+-# The hook should exit with non-zero status after issuing an
+-# appropriate message if it wants to stop the commit.  The hook is
+-# allowed to edit the commit message file.
+-#
+-# To enable this hook, rename this file to "applypatch-msg".
+-
+-. git-sh-setup
+-test -x "$GIT_DIR/hooks/commit-msg" &&
+-	exec "$GIT_DIR/hooks/commit-msg" ${1+"$@"}
+-:
+diff -rupN leveldb/.git/hooks/commit-msg.sample gnu/.git/hooks/commit-msg.sample
+--- leveldb/.git/hooks/commit-msg.sample	2014-10-06 14:31:39.299214949 +0200
++++ gnu/.git/hooks/commit-msg.sample	1970-01-01 01:00:00.000000000 +0100
+@@ -1,24 +0,0 @@
+-#!/bin/sh
+-#
+-# An example hook script to check the commit log message.
+-# Called by "git commit" with one argument, the name of the file
+-# that has the commit message.  The hook should exit with non-zero
+-# status after issuing an appropriate message if it wants to stop the
+-# commit.  The hook is allowed to edit the commit message file.
+-#
+-# To enable this hook, rename this file to "commit-msg".
+-
+-# Uncomment the below to add a Signed-off-by line to the message.
+-# Doing this in a hook is a bad idea in general, but the prepare-commit-msg
+-# hook is more suited to it.
+-#
+-# SOB=$(git var GIT_AUTHOR_IDENT | sed -n 's/^\(.*>\).*$/Signed-off-by: \1/p')
+-# grep -qs "^$SOB" "$1" || echo "$SOB" >> "$1"
+-
+-# This example catches duplicate Signed-off-by lines.
+-
+-test "" = "$(grep '^Signed-off-by: ' "$1" |
+-	 sort | uniq -c | sed -e '/^[ 	]*1[ 	]/d')" || {
+-	echo >&2 Duplicate Signed-off-by lines.
+-	exit 1
+-}
+diff -rupN leveldb/.git/hooks/post-update.sample gnu/.git/hooks/post-update.sample
+--- leveldb/.git/hooks/post-update.sample	2014-10-06 14:31:39.299214949 +0200
++++ gnu/.git/hooks/post-update.sample	1970-01-01 01:00:00.000000000 +0100
+@@ -1,8 +0,0 @@
+-#!/bin/sh
+-#
+-# An example hook script to prepare a packed repository for use over
+-# dumb transports.
+-#
+-# To enable this hook, rename this file to "post-update".
+-
+-exec git update-server-info
+diff -rupN leveldb/.git/hooks/pre-applypatch.sample gnu/.git/hooks/pre-applypatch.sample
+--- leveldb/.git/hooks/pre-applypatch.sample	2014-10-06 14:31:39.299214949 +0200
++++ gnu/.git/hooks/pre-applypatch.sample	1970-01-01 01:00:00.000000000 +0100
+@@ -1,14 +0,0 @@
+-#!/bin/sh
+-#
+-# An example hook script to verify what is about to be committed
+-# by applypatch from an e-mail message.
+-#
+-# The hook should exit with non-zero status after issuing an
+-# appropriate message if it wants to stop the commit.
+-#
+-# To enable this hook, rename this file to "pre-applypatch".
+-
+-. git-sh-setup
+-test -x "$GIT_DIR/hooks/pre-commit" &&
+-	exec "$GIT_DIR/hooks/pre-commit" ${1+"$@"}
+-:
+diff -rupN leveldb/.git/hooks/pre-commit.sample gnu/.git/hooks/pre-commit.sample
+--- leveldb/.git/hooks/pre-commit.sample	2014-10-06 14:31:39.299214949 +0200
++++ gnu/.git/hooks/pre-commit.sample	1970-01-01 01:00:00.000000000 +0100
+@@ -1,49 +0,0 @@
+-#!/bin/sh
+-#
+-# An example hook script to verify what is about to be committed.
+-# Called by "git commit" with no arguments.  The hook should
+-# exit with non-zero status after issuing an appropriate message if
+-# it wants to stop the commit.
+-#
+-# To enable this hook, rename this file to "pre-commit".
+-
+-if git rev-parse --verify HEAD >/dev/null 2>&1
+-then
+-	against=HEAD
+-else
+-	# Initial commit: diff against an empty tree object
+-	against=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+-fi
+-
+-# If you want to allow non-ASCII filenames set this variable to true.
+-allownonascii=$(git config --bool hooks.allownonascii)
+-
+-# Redirect output to stderr.
+-exec 1>&2
+-
+-# Cross platform projects tend to avoid non-ASCII filenames; prevent
+-# them from being added to the repository. We exploit the fact that the
+-# printable range starts at the space character and ends with tilde.
+-if [ "$allownonascii" != "true" ] &&
+-	# Note that the use of brackets around a tr range is ok here, (it's
+-	# even required, for portability to Solaris 10's /usr/bin/tr), since
+-	# the square bracket bytes happen to fall in the designated range.
+-	test $(git diff --cached --name-only --diff-filter=A -z $against |
+-	  LC_ALL=C tr -d '[ -~]\0' | wc -c) != 0
+-then
+-	cat <<\EOF
+-Error: Attempt to add a non-ASCII file name.
+-
+-This can cause problems if you want to work with people on other platforms.
+-
+-To be portable it is advisable to rename the file.
+-
+-If you know what you are doing you can disable this check using:
+-
+-  git config hooks.allownonascii true
+-EOF
+-	exit 1
+-fi
+-
+-# If there are whitespace errors, print the offending file names and fail.
+-exec git diff-index --check --cached $against --
+diff -rupN leveldb/.git/hooks/prepare-commit-msg.sample gnu/.git/hooks/prepare-commit-msg.sample
+--- leveldb/.git/hooks/prepare-commit-msg.sample	2014-10-06 14:31:39.299214949 +0200
++++ gnu/.git/hooks/prepare-commit-msg.sample	1970-01-01 01:00:00.000000000 +0100
+@@ -1,36 +0,0 @@
+-#!/bin/sh
+-#
+-# An example hook script to prepare the commit log message.
+-# Called by "git commit" with the name of the file that has the
+-# commit message, followed by the description of the commit
+-# message's source.  The hook's purpose is to edit the commit
+-# message file.  If the hook fails with a non-zero status,
+-# the commit is aborted.
+-#
+-# To enable this hook, rename this file to "prepare-commit-msg".
+-
+-# This hook includes three examples.  The first comments out the
+-# "Conflicts:" part of a merge commit.
+-#
+-# The second includes the output of "git diff --name-status -r"
+-# into the message, just before the "git status" output.  It is
+-# commented because it doesn't cope with --amend or with squashed
+-# commits.
+-#
+-# The third example adds a Signed-off-by line to the message, that can
+-# still be edited.  This is rarely a good idea.
+-
+-case "$2,$3" in
+-  merge,)
+-    /usr/bin/perl -i.bak -ne 's/^/# /, s/^# #/#/ if /^Conflicts/ .. /#/; print' "$1" ;;
+-
+-# ,|template,)
+-#   /usr/bin/perl -i.bak -pe '
+-#      print "\n" . `git diff --cached --name-status -r`
+-#	 if /^#/ && $first++ == 0' "$1" ;;
+-
+-  *) ;;
+-esac
+-
+-# SOB=$(git var GIT_AUTHOR_IDENT | sed -n 's/^\(.*>\).*$/Signed-off-by: \1/p')
+-# grep -qs "^$SOB" "$1" || echo "$SOB" >> "$1"
+diff -rupN leveldb/.git/hooks/pre-push.sample gnu/.git/hooks/pre-push.sample
+--- leveldb/.git/hooks/pre-push.sample	2014-10-06 14:31:39.299214949 +0200
++++ gnu/.git/hooks/pre-push.sample	1970-01-01 01:00:00.000000000 +0100
+@@ -1,54 +0,0 @@
+-#!/bin/sh
+-
+-# An example hook script to verify what is about to be pushed.  Called by "git
+-# push" after it has checked the remote status, but before anything has been
+-# pushed.  If this script exits with a non-zero status nothing will be pushed.
+-#
+-# This hook is called with the following parameters:
+-#
+-# $1 -- Name of the remote to which the push is being done
+-# $2 -- URL to which the push is being done
+-#
+-# If pushing without using a named remote those arguments will be equal.
+-#
+-# Information about the commits which are being pushed is supplied as lines to
+-# the standard input in the form:
+-#
+-#   <local ref> <local sha1> <remote ref> <remote sha1>
+-#
+-# This sample shows how to prevent push of commits where the log message starts
+-# with "WIP" (work in progress).
+-
+-remote="$1"
+-url="$2"
+-
+-z40=0000000000000000000000000000000000000000
+-
+-IFS=' '
+-while read local_ref local_sha remote_ref remote_sha
+-do
+-	if [ "$local_sha" = $z40 ]
+-	then
+-		# Handle delete
+-		:
+-	else
+-		if [ "$remote_sha" = $z40 ]
+-		then
+-			# New branch, examine all commits
+-			range="$local_sha"
+-		else
+-			# Update to existing branch, examine new commits
+-			range="$remote_sha..$local_sha"
+-		fi
+-
+-		# Check for WIP commit
+-		commit=`git rev-list -n 1 --grep '^WIP' "$range"`
+-		if [ -n "$commit" ]
+-		then
+-			echo "Found WIP commit in $local_ref, not pushing"
+-			exit 1
+-		fi
+-	fi
+-done
+-
+-exit 0
+diff -rupN leveldb/.git/hooks/pre-rebase.sample gnu/.git/hooks/pre-rebase.sample
+--- leveldb/.git/hooks/pre-rebase.sample	2014-10-06 14:31:39.299214949 +0200
++++ gnu/.git/hooks/pre-rebase.sample	1970-01-01 01:00:00.000000000 +0100
+@@ -1,169 +0,0 @@
+-#!/bin/sh
+-#
+-# Copyright (c) 2006, 2008 Junio C Hamano
+-#
+-# The "pre-rebase" hook is run just before "git rebase" starts doing
+-# its job, and can prevent the command from running by exiting with
+-# non-zero status.
+-#
+-# The hook is called with the following parameters:
+-#
+-# $1 -- the upstream the series was forked from.
+-# $2 -- the branch being rebased (or empty when rebasing the current branch).
+-#
+-# This sample shows how to prevent topic branches that are already
+-# merged to 'next' branch from getting rebased, because allowing it
+-# would result in rebasing already published history.
+-
+-publish=next
+-basebranch="$1"
+-if test "$#" = 2
+-then
+-	topic="refs/heads/$2"
+-else
+-	topic=`git symbolic-ref HEAD` ||
+-	exit 0 ;# we do not interrupt rebasing detached HEAD
+-fi
+-
+-case "$topic" in
+-refs/heads/??/*)
+-	;;
+-*)
+-	exit 0 ;# we do not interrupt others.
+-	;;
+-esac
+-
+-# Now we are dealing with a topic branch being rebased
+-# on top of master.  Is it OK to rebase it?
+-
+-# Does the topic really exist?
+-git show-ref -q "$topic" || {
+-	echo >&2 "No such branch $topic"
+-	exit 1
+-}
+-
+-# Is topic fully merged to master?
+-not_in_master=`git rev-list --pretty=oneline ^master "$topic"`
+-if test -z "$not_in_master"
+-then
+-	echo >&2 "$topic is fully merged to master; better remove it."
+-	exit 1 ;# we could allow it, but there is no point.
+-fi
+-
+-# Is topic ever merged to next?  If so you should not be rebasing it.
+-only_next_1=`git rev-list ^master "^$topic" ${publish} | sort`
+-only_next_2=`git rev-list ^master           ${publish} | sort`
+-if test "$only_next_1" = "$only_next_2"
+-then
+-	not_in_topic=`git rev-list "^$topic" master`
+-	if test -z "$not_in_topic"
+-	then
+-		echo >&2 "$topic is already up-to-date with master"
+-		exit 1 ;# we could allow it, but there is no point.
+-	else
+-		exit 0
+-	fi
+-else
+-	not_in_next=`git rev-list --pretty=oneline ^${publish} "$topic"`
+-	/usr/bin/perl -e '
+-		my $topic = $ARGV[0];
+-		my $msg = "* $topic has commits already merged to public branch:\n";
+-		my (%not_in_next) = map {
+-			/^([0-9a-f]+) /;
+-			($1 => 1);
+-		} split(/\n/, $ARGV[1]);
+-		for my $elem (map {
+-				/^([0-9a-f]+) (.*)$/;
+-				[$1 => $2];
+-			} split(/\n/, $ARGV[2])) {
+-			if (!exists $not_in_next{$elem->[0]}) {
+-				if ($msg) {
+-					print STDERR $msg;
+-					undef $msg;
+-				}
+-				print STDERR " $elem->[1]\n";
+-			}
+-		}
+-	' "$topic" "$not_in_next" "$not_in_master"
+-	exit 1
+-fi
+-
+-<<\DOC_END
+-
+-This sample hook safeguards topic branches that have been
+-published from being rewound.
+-
+-The workflow assumed here is:
+-
+- * Once a topic branch forks from "master", "master" is never
+-   merged into it again (either directly or indirectly).
+-
+- * Once a topic branch is fully cooked and merged into "master",
+-   it is deleted.  If you need to build on top of it to correct
+-   earlier mistakes, a new topic branch is created by forking at
+-   the tip of the "master".  This is not strictly necessary, but
+-   it makes it easier to keep your history simple.
+-
+- * Whenever you need to test or publish your changes to topic
+-   branches, merge them into "next" branch.
+-
+-The script, being an example, hardcodes the publish branch name
+-to be "next", but it is trivial to make it configurable via
+-$GIT_DIR/config mechanism.
+-
+-With this workflow, you would want to know:
+-
+-(1) ... if a topic branch has ever been merged to "next".  Young
+-    topic branches can have stupid mistakes you would rather
+-    clean up before publishing, and things that have not been
+-    merged into other branches can be easily rebased without
+-    affecting other people.  But once it is published, you would
+-    not want to rewind it.
+-
+-(2) ... if a topic branch has been fully merged to "master".
+-    Then you can delete it.  More importantly, you should not
+-    build on top of it -- other people may already want to
+-    change things related to the topic as patches against your
+-    "master", so if you need further changes, it is better to
+-    fork the topic (perhaps with the same name) afresh from the
+-    tip of "master".
+-
+-Let's look at this example:
+-
+-		   o---o---o---o---o---o---o---o---o---o "next"
+-		  /       /           /           /
+-		 /   a---a---b A     /           /
+-		/   /               /           /
+-	       /   /   c---c---c---c B         /
+-	      /   /   /             \         /
+-	     /   /   /   b---b C     \       /
+-	    /   /   /   /             \     /
+-    ---o---o---o---o---o---o---o---o---o---o---o "master"
+-
+-
+-A, B and C are topic branches.
+-
+- * A has one fix since it was merged up to "next".
+-
+- * B has finished.  It has been fully merged up to "master" and "next",
+-   and is ready to be deleted.
+-
+- * C has not merged to "next" at all.
+-
+-We would want to allow C to be rebased, refuse A, and encourage
+-B to be deleted.
+-
+-To compute (1):
+-
+-	git rev-list ^master ^topic next
+-	git rev-list ^master        next
+-
+-	if these match, topic has not merged in next at all.
+-
+-To compute (2):
+-
+-	git rev-list master..topic
+-
+-	if this is empty, it is fully merged to "master".
+-
+-DOC_END
+diff -rupN leveldb/.git/hooks/update.sample gnu/.git/hooks/update.sample
+--- leveldb/.git/hooks/update.sample	2014-10-06 14:31:39.299214949 +0200
++++ gnu/.git/hooks/update.sample	1970-01-01 01:00:00.000000000 +0100
+@@ -1,128 +0,0 @@
+-#!/bin/sh
+-#
+-# An example hook script to blocks unannotated tags from entering.
+-# Called by "git receive-pack" with arguments: refname sha1-old sha1-new
+-#
+-# To enable this hook, rename this file to "update".
+-#
+-# Config
+-# ------
+-# hooks.allowunannotated
+-#   This boolean sets whether unannotated tags will be allowed into the
+-#   repository.  By default they won't be.
+-# hooks.allowdeletetag
+-#   This boolean sets whether deleting tags will be allowed in the
+-#   repository.  By default they won't be.
+-# hooks.allowmodifytag
+-#   This boolean sets whether a tag may be modified after creation. By default
+-#   it won't be.
+-# hooks.allowdeletebranch
+-#   This boolean sets whether deleting branches will be allowed in the
+-#   repository.  By default they won't be.
+-# hooks.denycreatebranch
+-#   This boolean sets whether remotely creating branches will be denied
+-#   in the repository.  By default this is allowed.
+-#
+-
+-# --- Command line
+-refname="$1"
+-oldrev="$2"
+-newrev="$3"
+-
+-# --- Safety check
+-if [ -z "$GIT_DIR" ]; then
+-	echo "Don't run this script from the command line." >&2
+-	echo " (if you want, you could supply GIT_DIR then run" >&2
+-	echo "  $0 <ref> <oldrev> <newrev>)" >&2
+-	exit 1
+-fi
+-
+-if [ -z "$refname" -o -z "$oldrev" -o -z "$newrev" ]; then
+-	echo "usage: $0 <ref> <oldrev> <newrev>" >&2
+-	exit 1
+-fi
+-
+-# --- Config
+-allowunannotated=$(git config --bool hooks.allowunannotated)
+-allowdeletebranch=$(git config --bool hooks.allowdeletebranch)
+-denycreatebranch=$(git config --bool hooks.denycreatebranch)
+-allowdeletetag=$(git config --bool hooks.allowdeletetag)
+-allowmodifytag=$(git config --bool hooks.allowmodifytag)
+-
+-# check for no description
+-projectdesc=$(sed -e '1q' "$GIT_DIR/description")
+-case "$projectdesc" in
+-"Unnamed repository"* | "")
+-	echo "*** Project description file hasn't been set" >&2
+-	exit 1
+-	;;
+-esac
+-
+-# --- Check types
+-# if $newrev is 0000...0000, it's a commit to delete a ref.
+-zero="0000000000000000000000000000000000000000"
+-if [ "$newrev" = "$zero" ]; then
+-	newrev_type=delete
+-else
+-	newrev_type=$(git cat-file -t $newrev)
+-fi
+-
+-case "$refname","$newrev_type" in
+-	refs/tags/*,commit)
+-		# un-annotated tag
+-		short_refname=${refname##refs/tags/}
+-		if [ "$allowunannotated" != "true" ]; then
+-			echo "*** The un-annotated tag, $short_refname, is not allowed in this repository" >&2
+-			echo "*** Use 'git tag [ -a | -s ]' for tags you want to propagate." >&2
+-			exit 1
+-		fi
+-		;;
+-	refs/tags/*,delete)
+-		# delete tag
+-		if [ "$allowdeletetag" != "true" ]; then
+-			echo "*** Deleting a tag is not allowed in this repository" >&2
+-			exit 1
+-		fi
+-		;;
+-	refs/tags/*,tag)
+-		# annotated tag
+-		if [ "$allowmodifytag" != "true" ] && git rev-parse $refname > /dev/null 2>&1
+-		then
+-			echo "*** Tag '$refname' already exists." >&2
+-			echo "*** Modifying a tag is not allowed in this repository." >&2
+-			exit 1
+-		fi
+-		;;
+-	refs/heads/*,commit)
+-		# branch
+-		if [ "$oldrev" = "$zero" -a "$denycreatebranch" = "true" ]; then
+-			echo "*** Creating a branch is not allowed in this repository" >&2
+-			exit 1
+-		fi
+-		;;
+-	refs/heads/*,delete)
+-		# delete branch
+-		if [ "$allowdeletebranch" != "true" ]; then
+-			echo "*** Deleting a branch is not allowed in this repository" >&2
+-			exit 1
+-		fi
+-		;;
+-	refs/remotes/*,commit)
+-		# tracking branch
+-		;;
+-	refs/remotes/*,delete)
+-		# delete tracking branch
+-		if [ "$allowdeletebranch" != "true" ]; then
+-			echo "*** Deleting a tracking branch is not allowed in this repository" >&2
+-			exit 1
+-		fi
+-		;;
+-	*)
+-		# Anything else (is there anything else?)
+-		echo "*** Update hook: unknown type of update to ref $refname of type $newrev_type" >&2
+-		exit 1
+-		;;
+-esac
+-
+-# --- Finished
+-exit 0
+Les fichiers binaires leveldb/.git/index et gnu/.git/index sont différents
+diff -rupN leveldb/.git/info/exclude gnu/.git/info/exclude
+--- leveldb/.git/info/exclude	2014-10-06 14:31:39.299214949 +0200
++++ gnu/.git/info/exclude	1970-01-01 01:00:00.000000000 +0100
+@@ -1,6 +0,0 @@
+-# git ls-files --others --exclude-from=.git/info/exclude
+-# Lines that start with '#' are comments.
+-# For a project mostly in C, the following would be a good set of
+-# exclude patterns (uncomment them if you want to use them):
+-# *.[oa]
+-# *~
+diff -rupN leveldb/.git/logs/HEAD gnu/.git/logs/HEAD
+--- leveldb/.git/logs/HEAD	2014-10-06 14:31:42.783214949 +0200
++++ gnu/.git/logs/HEAD	1970-01-01 01:00:00.000000000 +0100
+@@ -1 +0,0 @@
+-0000000000000000000000000000000000000000 803d69203a62faf50f1b77897310a3a1fcae712b Jean-Manuel Caba <j.caba@oodrive.fr> 1412598702 +0200	clone: from https://github.com/google/leveldb.git
+diff -rupN leveldb/.git/logs/refs/heads/master gnu/.git/logs/refs/heads/master
+--- leveldb/.git/logs/refs/heads/master	2014-10-06 14:31:42.779214949 +0200
++++ gnu/.git/logs/refs/heads/master	1970-01-01 01:00:00.000000000 +0100
+@@ -1 +0,0 @@
+-0000000000000000000000000000000000000000 803d69203a62faf50f1b77897310a3a1fcae712b Jean-Manuel Caba <j.caba@oodrive.fr> 1412598702 +0200	clone: from https://github.com/google/leveldb.git
+diff -rupN leveldb/.git/logs/refs/remotes/origin/HEAD gnu/.git/logs/refs/remotes/origin/HEAD
+--- leveldb/.git/logs/refs/remotes/origin/HEAD	2014-10-06 14:31:42.779214949 +0200
++++ gnu/.git/logs/refs/remotes/origin/HEAD	1970-01-01 01:00:00.000000000 +0100
+@@ -1 +0,0 @@
+-0000000000000000000000000000000000000000 803d69203a62faf50f1b77897310a3a1fcae712b Jean-Manuel Caba <j.caba@oodrive.fr> 1412598702 +0200	clone: from https://github.com/google/leveldb.git
+Les fichiers binaires leveldb/.git/objects/pack/pack-c3d1019f266723ac15df93f8c058322abb5a422e.idx et gnu/.git/objects/pack/pack-c3d1019f266723ac15df93f8c058322abb5a422e.idx sont différents
+Les fichiers binaires leveldb/.git/objects/pack/pack-c3d1019f266723ac15df93f8c058322abb5a422e.pack et gnu/.git/objects/pack/pack-c3d1019f266723ac15df93f8c058322abb5a422e.pack sont différents
+diff -rupN leveldb/.git/packed-refs gnu/.git/packed-refs
+--- leveldb/.git/packed-refs	2014-10-06 14:31:42.779214949 +0200
++++ gnu/.git/packed-refs	1970-01-01 01:00:00.000000000 +0100
+@@ -1,20 +0,0 @@
+-# pack-refs with: peeled fully-peeled 
+-adf4a95904d875a6d371cd62f55c9627785ce186 refs/remotes/origin/android
+-803d69203a62faf50f1b77897310a3a1fcae712b refs/remotes/origin/master
+-e028bdfa81378c30f682baa022a27b688903e62d refs/remotes/origin/windows
+-28dad918f2ffb80fd70110ed5cd47744339649f2 refs/tags/v1.10
+-7b094f12e46a45b911f20f7bd2ca96f83e272d91 refs/tags/v1.11
+-5bd76dc10d840df23255ba0e635083a2a94e0461 refs/tags/v1.12
+-748539c183453bdeaff1eb0da8ccf5adacb796e7 refs/tags/v1.13
+-0b9a89f40efdd143fa1426e7d5cd997f67ba6361 refs/tags/v1.14
+-0cfb990d58ffba9b56df6e9829ddb9d220824066 refs/tags/v1.15
+-269fc6ca9416129248db5ca57050cd5d39d177c8 refs/tags/v1.16
+-e353fbc7ea81f12a5694991b708f8f45343594b1 refs/tags/v1.17
+-803d69203a62faf50f1b77897310a3a1fcae712b refs/tags/v1.18
+-bc1ee4d25e09b04e074db330a41f54ef4af0e31b refs/tags/v1.3
+-85584d497e7b354853b72f450683d59fcf6b9c5c refs/tags/v1.4
+-dd0d562b4d4fbd07db6a44f9e221f8d368fee8e4 refs/tags/v1.5
+-946e5b5a4ce7980917b22a408f090a4e86c3fa44 refs/tags/v1.6
+-40768657bc8ec3ded60712eeeab7c25b1b07deca refs/tags/v1.7
+-ea2e9195fc241c8fe9f329679d7a424345c68c7b refs/tags/v1.8
+-d84c825a70a843bb107de8b732cb79e584cefd17 refs/tags/v1.9
+diff -rupN leveldb/.git/refs/heads/master gnu/.git/refs/heads/master
+--- leveldb/.git/refs/heads/master	2014-10-06 14:31:42.779214949 +0200
++++ gnu/.git/refs/heads/master	1970-01-01 01:00:00.000000000 +0100
+@@ -1 +0,0 @@
+-803d69203a62faf50f1b77897310a3a1fcae712b
+diff -rupN leveldb/.git/refs/remotes/origin/HEAD gnu/.git/refs/remotes/origin/HEAD
+--- leveldb/.git/refs/remotes/origin/HEAD	2014-10-06 14:31:42.779214949 +0200
++++ gnu/.git/refs/remotes/origin/HEAD	1970-01-01 01:00:00.000000000 +0100
+@@ -1 +0,0 @@
+-ref: refs/remotes/origin/master
+diff -rupN leveldb/.gitignore gnu/.gitignore
+--- leveldb/.gitignore	2014-10-06 14:31:42.787214949 +0200
++++ gnu/.gitignore	1970-01-01 01:00:00.000000000 +0100
+@@ -1,9 +0,0 @@
+-build_config.mk
+-*.a
+-*.o
+-*.dylib*
+-*.so
+-*.so.*
+-*_test
+-db_bench
+-leveldbutil
+diff -rupN leveldb/include/leveldb/db.h gnu/include/leveldb/db.h
+--- leveldb/include/leveldb/db.h	2014-10-06 14:31:42.795214949 +0200
++++ gnu/include/leveldb/db.h	2014-10-06 14:50:20.807214815 +0200
+@@ -83,6 +83,15 @@ class DB {
+   virtual Status Get(const ReadOptions& options,
+                      const Slice& key, std::string* value) = 0;
+ 
++  // If the database contains an entry for "key" return OK.
++  //
++  // If there is no entry for "key" leave value unchanged and return
++  // a status for which Status::IsNotFound() returns true.
++  //
++  // May return some other Status on an error.
++  virtual Status Contains(const ReadOptions& options,
++                          const Slice& key) = 0;
++
+   // Return a heap-allocated iterator over the contents of the database.
+   // The result of NewIterator() is initially invalid (caller must
+   // call one of the Seek methods on the iterator before using it).
+diff -rupN leveldb/Makefile gnu/Makefile
+--- leveldb/Makefile	2014-10-06 14:31:42.787214949 +0200
++++ gnu/Makefile	2014-10-06 14:46:18.163214844 +0200
+@@ -6,12 +6,11 @@
+ # Uncomment exactly one of the lines labelled (A), (B), and (C) below
+ # to switch between compilation modes.
+ 
+-# (A) Production use (optimized mode)
+-OPT ?= -O2 -DNDEBUG
+-# (B) Debug mode, w/ full line-level debugging symbols
+-# OPT ?= -g2
+-# (C) Profiling mode: opt, but w/debugging symbols
+-# OPT ?= -O2 -g2 -DNDEBUG
++CXXFLAGS=-std=c++0x
++OPT_INC ?= 
++OPT ?= -g0 -O3 -DNDEBUG   # (A) Production use (optimized mode)
++# OPT ?= -g2              # (B) Debug mode, w/ full line-level debugging symbols
++# OPT ?= -O2 -g2 -DNDEBUG # (C) Profiling mode: opt, but w/debugging symbols
+ #-----------------------------------------------
+ 
+ # detect what platform we're building on
+@@ -20,8 +19,8 @@ $(shell CC="$(CC)" CXX="$(CXX)" TARGET_O
+ # this file is generated by the previous line to set build flags and sources
+ include build_config.mk
+ 
+-CFLAGS += -I. -I./include $(PLATFORM_CCFLAGS) $(OPT)
+-CXXFLAGS += -I. -I./include $(PLATFORM_CXXFLAGS) $(OPT)
++CFLAGS += -I. -I./include $(PLATFORM_CCFLAGS) $(OPT) $(OPT_INC)
++CXXFLAGS += -I. -I./include $(PLATFORM_CXXFLAGS) $(OPT) $(OPT_INC)
+ 
+ LDFLAGS += $(PLATFORM_LDFLAGS)
+ LIBS += $(PLATFORM_LIBS)
+@@ -86,18 +85,18 @@ SHARED1 = libleveldb.$(PLATFORM_SHARED_E
+ SHARED2 = $(SHARED1).$(SHARED_MAJOR)
+ SHARED3 = $(SHARED1).$(SHARED_MAJOR).$(SHARED_MINOR)
+ SHARED = $(SHARED1) $(SHARED2) $(SHARED3)
+-$(SHARED1): $(SHARED3)
+-	ln -fs $(SHARED3) $(SHARED1)
+-$(SHARED2): $(SHARED3)
+-	ln -fs $(SHARED3) $(SHARED2)
++$(SHARED3): $(SHARED1)
++	ln -fs $(SHARED1) $@
++$(SHARED2): $(SHARED1)
++	ln -fs $(SHARED1) $@
+ endif
+ 
+-$(SHARED3):
+-	$(CXX) $(LDFLAGS) $(PLATFORM_SHARED_LDFLAGS)$(SHARED2) $(CXXFLAGS) $(PLATFORM_SHARED_CFLAGS) $(SOURCES) -o $(SHARED3) $(LIBS)
++$(SHARED1):
++	$(CXX) $(LDFLAGS) $(PLATFORM_SHARED_LDFLAGS) $(CXXFLAGS) $(PLATFORM_SHARED_CFLAGS) $(SOURCES) -o $@  $(LIBS) 
+ 
+ endif  # PLATFORM_SHARED_EXT
+ 
+-all: $(SHARED) $(LIBRARY)
++all: $(SHARED) 
+ 
+ check: all $(PROGRAMS) $(TESTS)
+ 	for t in $(TESTS); do echo "***** Running $$t"; ./$$t || exit 1; done
+@@ -225,3 +224,7 @@ else
+ .c.o:
+ 	$(CC) $(CFLAGS) -c $< -o $@
+ endif
++
++install: 
++	mkdir -p $(PREFIX)/lib
++	if test -f libleveldb.dylib ; then cp -a libleveldb.dylib* $(PREFIX)/lib ; else cp -a libleveldb.so* $(PREFIX)/lib ; fi
+diff -rupN leveldb/port/port_posix.cc gnu/port/port_posix.cc
+--- leveldb/port/port_posix.cc	2014-10-06 14:31:42.795214949 +0200
++++ gnu/port/port_posix.cc	2014-08-28 10:11:25.799219315 +0200
+@@ -7,6 +7,7 @@
+ #include <cstdlib>
+ #include <stdio.h>
+ #include <string.h>
++#include <errno.h>
+ #include "util/logging.h"
+ 
+ namespace leveldb {
+@@ -21,11 +22,38 @@ static void PthreadCall(const char* labe
+ 
+ Mutex::Mutex() { PthreadCall("init mutex", pthread_mutex_init(&mu_, NULL)); }
+ 
+-Mutex::~Mutex() { PthreadCall("destroy mutex", pthread_mutex_destroy(&mu_)); }
++Mutex::~Mutex() {
++  int rc = pthread_mutex_destroy(&mu_);
++  if(rc != 0){
++    if(rc == EBUSY){
++      rc = pthread_mutex_unlock(&mu_);
++      PthreadCall("destroy mutex unlock second chance", rc);
++    }else{
++      PthreadCall("destroy mutex", rc);
++    }
++  }
++}
+ 
+-void Mutex::Lock() { PthreadCall("lock", pthread_mutex_lock(&mu_)); }
++void Mutex::Lock() {
++  int rc = pthread_mutex_lock(&mu_);
++  if(rc != 0){
++    if(rc == EINVAL){
++      PthreadCall("init mutex", pthread_mutex_init(&mu_, NULL));
++      PthreadCall("lock second chance", pthread_mutex_lock(&mu_));
++    }else{
++	  PthreadCall("lock", rc);
++    }
++  }
++}
++
++void Mutex::Unlock() {
++  int rc = pthread_mutex_unlock(&mu_);
++  if(rc != 0 && rc != EINVAL){
++    PthreadCall("unlock", rc);
++  }
++}
+ 
+-void Mutex::Unlock() { PthreadCall("unlock", pthread_mutex_unlock(&mu_)); }
++bool Mutex::TryLock() { return pthread_mutex_trylock(&mu_) == 0; }
+ 
+ CondVar::CondVar(Mutex* mu)
+     : mu_(mu) {
+diff -rupN leveldb/port/port_posix.h gnu/port/port_posix.h
+--- leveldb/port/port_posix.h	2014-10-06 14:31:42.795214949 +0200
++++ gnu/port/port_posix.h	2014-10-06 14:51:35.727214806 +0200
+@@ -87,6 +87,7 @@ class Mutex {
+   void Lock();
+   void Unlock();
+   void AssertHeld() { }
++  bool TryLock();
+ 
+  private:
+   friend class CondVar;
+diff -rupN leveldb/table/block.cc gnu/table/block.cc
+--- leveldb/table/block.cc	2014-10-06 14:31:42.795214949 +0200
++++ gnu/table/block.cc	2014-10-06 14:52:20.159214801 +0200
+@@ -258,8 +258,12 @@ Iterator* Block::NewIterator(const Compa
+     return NewErrorIterator(Status::Corruption("bad block contents"));
+   }
+   const uint32_t num_restarts = NumRestarts();
++  size_t max_restarts_allowed = (size_-sizeof(uint32_t)) / sizeof(uint32_t);
+   if (num_restarts == 0) {
+     return NewEmptyIterator();
++  // add fix proposed in http://code.google.com/p/leveldb/issues/detail?id=217
++  } else if (num_restarts > max_restarts_allowed){ //check for crazy values by ceiling
++     return NewEmptyIterator();
+   } else {
+     return new Iter(cmp, data_, restart_offset_, num_restarts);
+   }
+diff -rupN leveldb/util/arena.cc gnu/util/arena.cc
+--- leveldb/util/arena.cc	2014-10-06 14:31:42.795214949 +0200
++++ gnu/util/arena.cc	2014-08-28 10:11:25.799219315 +0200
+@@ -13,6 +13,7 @@ Arena::Arena() {
+   blocks_memory_ = 0;
+   alloc_ptr_ = NULL;  // First allocation will allocate a block
+   alloc_bytes_remaining_ = 0;
++  destroying = false;
+ }
+ 
+ Arena::~Arena() {
+@@ -21,6 +22,14 @@ Arena::~Arena() {
+   }
+ }
+ 
++void Arena::destroy() noexcept {
++  if(destroying.exchange(true) == false) {
++    try {
++      delete this;
++    }catch(...){}
++  }
++}
++
+ char* Arena::AllocateFallback(size_t bytes) {
+   if (bytes > kBlockSize / 4) {
+     // Object is more than a quarter of our block size.  Allocate it separately
+diff -rupN leveldb/util/arena.h gnu/util/arena.h
+--- leveldb/util/arena.h	2014-10-06 14:31:42.795214949 +0200
++++ gnu/util/arena.h	2014-08-28 10:11:25.799219315 +0200
+@@ -9,14 +9,21 @@
+ #include <assert.h>
+ #include <stddef.h>
+ #include <stdint.h>
++#include <atomic>
+ 
+ namespace leveldb {
+ 
+ class Arena {
+  public:
+   Arena();
++
++ protected:
+   ~Arena();
+ 
++ public:
++
++  void destroy() noexcept;
++
+   // Return a pointer to a newly allocated memory block of "bytes" bytes.
+   char* Allocate(size_t bytes);
+ 
+@@ -44,6 +51,9 @@ class Arena {
+   // Bytes of memory in blocks allocated so far
+   size_t blocks_memory_;
+ 
++  // if destroy is pending
++  std::atomic<bool> destroying;
++
+   // No copying allowed
+   Arena(const Arena&);
+   void operator=(const Arena&);
+diff -rupN leveldb/util/env_posix.cc gnu/util/env_posix.cc
+--- leveldb/util/env_posix.cc	2014-10-06 14:31:42.795214949 +0200
++++ gnu/util/env_posix.cc	2014-10-06 14:44:14.283214859 +0200
+@@ -28,6 +28,8 @@ namespace leveldb {
+ 
+ namespace {
+ 
++static const int64_t kMaxMappedFile = 1000; // max mapped file on virtual memory for read
++
+ static Status IOError(const std::string& context, int err_number) {
+   return Status::IOError(context, strerror(err_number));
+ }
+@@ -94,9 +96,9 @@ class PosixRandomAccessFile: public Rand
+ // problems for very large databases.
+ class MmapLimiter {
+  public:
+-  // Up to 1000 mmaps for 64-bit binaries; none for smaller pointer sizes.
++  // Up to kMaxMappedFile mmaps for 64-bit binaries; none for smaller pointer sizes.
+   MmapLimiter() {
+-    SetAllowed(sizeof(void*) >= 8 ? 1000 : 0);
++    SetAllowed(sizeof(void*) >= 8 ? kMaxMappedFile : 0);
+   }
+ 
+   // If another mmap slot is available, acquire it and return true.
