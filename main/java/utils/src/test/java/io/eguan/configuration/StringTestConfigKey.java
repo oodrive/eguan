@@ -6,7 +6,7 @@ import io.eguan.configuration.StringConfigKey;
  * #%L
  * Project eguan
  * %%
- * Copyright (C) 2012 - 2016 Oodrive
+ * Copyright (C) 2012 - 2017 Oodrive
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
