@@ -1,6 +1,6 @@
 Eguan is a replicated storage system written in Java and C/C++.
 
-It was implemented by [Oodrive](http://www.oodrive.com/) as a storage prototype for the project [nu@ge](http://nuage-france.fr). Nu@ge is the project of a french consortium aimed at developing a green cloud platform based on open source software and small modular data centers.
+It was implemented by [Oodrive](https://www.oodrive.com/) as a storage prototype for the project [nu@ge](http://nuage-france.fr). Nu@ge is the project of a french consortium aimed at developing a green cloud platform based on open source software and small modular data centers.
 
 Eguan provides storage volumes to clients via an iSCSI or NBD connection and manages the history of this volumes. Each volume is composed of devices and snapshots, replicated on several nodes.
 
@@ -11,7 +11,7 @@ The system uses the strategy of copy-on-write for the snapshots and data dedupli
 To build the eguan server, you need to install:
 - Java JDK 7
 - gcc version 4.8 (or more) and the build essential tools for the C and C++ code
-- [Maven](http://maven.apache.org) version 3.0.4 or more
+- [Maven](https://maven.apache.org) version 3.0.4 or more
 
 First build the tools, go in the directory 'tools':
 
@@ -21,7 +21,7 @@ Then the project can be built quickly (without unit tests execution) in the root
 
     mvn clean ; mvn -DskipTests -DskipNarTests -DskipNarJniTests -PskipNarTestsCompile install
 
-For more information, see the build page.
+For more information, see the [build page](https://github.com/oodrive/eguan/wiki/build).
 
 ## Configuration and installation
 
@@ -29,7 +29,7 @@ You should have 2 kinds of local storage on your server:
 * fast device for the temporary storage.
 * high capacity device for the persistence.
 
-Edit the config file vost.cfg (or cinost.cfg) and fill the necessary fields (see Installation and configuration page for more information)
+Edit the config file vost.cfg (or cinost.cfg) and fill the necessary fields (see [Installation and configuration page](https://github.com/oodrive/eguan/wiki/install) for more information)
 
 To install the application:
 
